@@ -86,7 +86,7 @@ Mục từ Bách Khoa (từ carousel Trang chủ, trích dẫn Chat AI, hoặc m
 **Hero banner:** Ảnh nền phong cảnh văn hóa (đình làng, hoàng hôn) full-width, phía trên có gradient tối để nổi chữ. Nội dung overlay:
 - Tiêu đề lớn 2 dòng: "Khám phá / Văn Minh Việt"
 - Mô tả phụ 1 dòng: "Hành trình xuyên suốt lịch sử, văn hóa và con người Việt Nam"
-- Thanh tìm kiếm: placeholder "Bạn muốn tìm gì?" — gõ câu hỏi và nhấn Enter/gửi sẽ mở màn hình Chat AI (mục 4.2) kèm câu hỏi vừa nhập, là lối vào chính cho Trợ lý AI Văn Minh Việt ngay từ Trang chủ. Khác với thanh tìm kiếm riêng ở màn hình Bách Khoa Toàn Thư (mục 4.3) — nơi tìm kiếm Mục từ theo từ khoá (Business Requirements §2.6.2.1).
+- Thanh tìm kiếm: placeholder "Bạn muốn tìm gì?" — gõ câu hỏi và nhấn Enter/gửi sẽ mở màn hình Chat AI (mục 4.2) kèm câu hỏi vừa nhập, là lối vào chính cho Trợ lý AI Văn Minh Việt ngay từ Trang chủ. Khác với thanh tìm kiếm riêng ở màn hình Bách Khoa Toàn Thư (mục 4.3) — nơi tìm kiếm Mục từ theo từ khoá (Business Requirements R-PUB-004 (§2.6.2.1)).
 
 **Lưới chức năng chính (Grid 4x2, 8 icon):**
 1. Bách khoa
@@ -95,18 +95,18 @@ Mục từ Bách Khoa (từ carousel Trang chủ, trích dẫn Chat AI, hoặc m
 4. Bản đồ văn hóa
 5. Game lịch sử
 6. Phim & TV
-7. Giáo dục *(⚠ thiết kế đi trước — chưa có module tương ứng nào trong Business Requirements, kể cả ở danh sách ngoài phạm vi §2.5; cần đề xuất bổ sung ở luồng Requirements riêng)*
+7. Giáo dục *(⚠ thiết kế đi trước — chưa có module tương ứng nào trong Business Requirements, kể cả ở danh sách ngoài phạm vi R-OOS-001 (§2.5); cần đề xuất bổ sung ở luồng Requirements riêng)*
 8. Cộng đồng
 
 Mỗi item: icon minh hoạ màu, nền sáng, bo góc vuông + nhãn text bên dưới, căn giữa.
 
 **Section "Khám phá nổi bật":**
 - Header có link "Xem tất cả >" bên phải.
-- Danh sách carousel ngang gồm 3+ card, **mỗi card ứng với một Mục từ của Bách Khoa Toàn Thư** (Business Requirements §2.3.1–2.3.2): ảnh minh họa (từ file đính kèm của Mục từ), tiêu đề đậm (= tiêu đề Mục từ, §2.3.2.2), mô tả phụ 1 dòng (trích đoạn nội dung). Ví dụ tiêu đề minh hoạ: "Đình Làng Việt", "Trống Đồng", "Lễ Hội Truyền Thống" — đây là tên Mục từ tự do, không cần trùng tên cương vực (§2.3.7); một Mục từ có thể được gán một hoặc nhiều cương vực theo §2.3.6.
+- Danh sách carousel ngang gồm 3+ card, **mỗi card ứng với một Mục từ của Bách Khoa Toàn Thư** (Business Requirements R-ENC-002 (§2.3.1)–R-ENC-003 (§2.3.2)): ảnh minh họa (từ file đính kèm của Mục từ), tiêu đề đậm (= tiêu đề Mục từ, R-ENC-005 (§2.3.2.2)), mô tả phụ 1 dòng (trích đoạn nội dung). Ví dụ tiêu đề minh hoạ: "Đình Làng Việt", "Trống Đồng", "Lễ Hội Truyền Thống" — đây là tên Mục từ tự do, không cần trùng tên cương vực (R-ENC-032 (§2.3.7)); một Mục từ có thể được gán một hoặc nhiều cương vực theo R-ENC-031 (§2.3.6).
 
 **Section "Hôm nay" (Card sự kiện nổi bật):**
 
-> ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: nội dung sự kiện/ngày âm lịch ở đây thuộc phạm vi module Lịch & Sự Kiện (Business Requirements §2.5.5) — hiện ngoài phạm vi giai đoạn này, chưa có đặc tả về nguồn dữ liệu sự kiện, quy tắc chọn sự kiện nổi bật, v.v.
+> ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: nội dung sự kiện/ngày âm lịch ở đây thuộc phạm vi module Lịch & Sự Kiện (Business Requirements R-OOS-006 (§2.5.5)) — hiện ngoài phạm vi giai đoạn này, chưa có đặc tả về nguồn dữ liệu sự kiện, quy tắc chọn sự kiện nổi bật, v.v.
 
 - Card lớn, ảnh nhân vật lịch sử làm nền, overlay gradient.
 - Nội dung: nhãn "HÔM NAY", tiêu đề sự kiện (vd "Lễ Giỗ Tổ Hùng Vương"), ngày âm lịch, nút CTA "Tìm hiểu ngay".
@@ -117,7 +117,7 @@ Mỗi item: icon minh hoạ màu, nền sáng, bo góc vuông + nhãn text bên 
 
 ### 4.2 Màn hình Chat AI (AI Văn Minh Việt)
 
-> ⚠️ **Thiết kế đi trước / đơn giản hoá so với đặc tả nghiệp vụ**: Business Requirements §2.6.5 quy định Trợ lý AI cho phép chọn Cương vực để giới hạn phạm vi trả lời (§2.6.5.2), chọn ngôn ngữ trả lời theo §2.3.8 (§2.6.5.3). Ở giai đoạn thiết kế này, màn hình tạm **không có UI chọn Cương vực, chỉ hỗ trợ tiếng Việt** — đây là lựa chọn đơn giản hoá cho UI ở giai đoạn này, không phải đề xuất thay đổi Business Requirements. Riêng **quick-reply chips + nhập giọng nói** bên dưới (hai chi tiết chưa có cơ sở trong BR) tạm để xử lý sau.
+> ⚠️ **Thiết kế đi trước / đơn giản hoá so với đặc tả nghiệp vụ**: Business Requirements R-PUB-008 (§2.6.4) quy định Trợ lý AI cho phép chọn Cương vực để giới hạn phạm vi trả lời (R-PUB-009 (§2.6.4.1)); hệ thống chỉ hỗ trợ tiếng Việt (R-NFR-020 (§3.3.5)). Ở giai đoạn thiết kế này, màn hình tạm **không có UI chọn Cương vực, chỉ hỗ trợ tiếng Việt** — đây là lựa chọn đơn giản hoá cho UI ở giai đoạn này, không phải đề xuất thay đổi Business Requirements. Riêng **quick-reply chips + nhập giọng nói** bên dưới (hai chi tiết chưa có cơ sở trong BR) tạm để xử lý sau.
 
 **Top bar:** nút back — tiêu đề "AI VĂN MINH VIỆT" — icon mở rộng/full-screen.
 
@@ -125,7 +125,7 @@ Mỗi item: icon minh hoạ màu, nền sáng, bo góc vuông + nhãn text bên 
 - Tin nhắn người dùng: bong bóng bo góc, căn phải, nền đỏ nhạt/hồng phấn.
 - Tin nhắn AI: avatar icon tròn (logo trống đồng, nền đỏ) bên trái + bong bóng text căn trái, nền trắng, viền xám kem nhạt.
 - AI có thể trả lời kèm **dải ảnh minh họa ngang** (3 ảnh nhỏ bo góc) ngay dưới câu trả lời text.
-- Dưới mỗi câu trả lời của AI, hiển thị **danh sách trích dẫn Mục từ nguồn** đã dùng để trả lời (dạng chip nhỏ, ví dụ: "Nguồn: Đình Làng Việt · Trống Đồng Đông Sơn") — bấm vào một trích dẫn để mở Trang chi tiết Mục từ tương ứng (Business Requirements §2.6.3, §2.6.5.4).
+- Dưới mỗi câu trả lời của AI, hiển thị **danh sách trích dẫn Mục từ nguồn** đã dùng để trả lời (dạng chip nhỏ, ví dụ: "Nguồn: Đình Làng Việt · Trống Đồng Đông Sơn") — bấm vào một trích dẫn để mở Trang chi tiết Mục từ tương ứng (Business Requirements R-PUB-007 (§2.6.3), R-PUB-010 (§2.6.4.2)).
 
 **Gợi ý câu hỏi nhanh (Quick reply chips):** dạng nút bo tròn nhỏ, xếp dạng wrap, ví dụ: "Nguồn gốc đình làng", "Kiến trúc đình làng", "Vai trò đình làng".
 
@@ -137,9 +137,9 @@ Mỗi item: icon minh hoạ màu, nền sáng, bo góc vuông + nhãn text bên 
 
 **Top bar:** back/menu (trái) — tiêu đề "BÁCH KHOA TOÀN THƯ" (giữa).
 
-**Thanh tìm kiếm:** placeholder "Tìm mục từ theo tên hoặc nội dung...", tìm theo tiêu đề, nội dung (Business Requirements §2.6.2.1).
+**Thanh tìm kiếm:** placeholder "Tìm mục từ theo tên hoặc nội dung...", tìm theo tiêu đề, nội dung (Business Requirements R-PUB-004 (§2.6.2.1)).
 
-**Bộ lọc Cương vực** (filter chips, đa chọn, cuộn ngang): "Văn minh đình làng việt", "Văn minh gia lễ việt", "Văn minh quân sự việt", "Văn minh trống đồng" (§2.6.2.2, §2.3.7 — danh sách "dự kiến", có thể mở rộng khi Nhân viên tạo thêm Cương vực).
+**Bộ lọc Cương vực** (filter chips, đa chọn, cuộn ngang): "Văn minh đình làng việt", "Văn minh gia lễ việt", "Văn minh quân sự việt", "Văn minh trống đồng" (R-PUB-005 (§2.6.2.2), R-ENC-032 (§2.3.7) — danh sách "dự kiến", có thể mở rộng khi Nhân viên tạo thêm Cương vực).
 
 **Danh sách Mục từ — lưới 2 cột:** mỗi ô là một card dọc gồm:
 - Ảnh minh hoạ tỉ lệ vuông (1:1), bo góc, lấy từ file đính kèm của Mục từ.
@@ -149,7 +149,7 @@ Mỗi item: icon minh hoạ màu, nền sáng, bo góc vuông + nhãn text bên 
 
 Empty state khi tìm kiếm/lọc không có kết quả: minh hoạ + text "Không tìm thấy mục từ phù hợp".
 
-> Ghi chú: chỉ hiển thị Mục từ đang có phiên bản công khai (§2.6.2.3) — quy tắc dữ liệu, không cần UI riêng.
+> Ghi chú: chỉ hiển thị Mục từ đang có phiên bản công khai (R-PUB-006 (§2.6.2.3)) — quy tắc dữ liệu, không cần UI riêng.
 
 **Bottom tab bar:** Khám phá (active) · các tab còn lại như mục 2.3.
 
@@ -161,7 +161,7 @@ Empty state khi tìm kiếm/lọc không có kết quả: minh hoạ + text "Kh�
 
 **Header:** Tiêu đề Mục từ (lớn, đậm), chip Cương vực ngay dưới tiêu đề (có thể nhiều).
 
-**Nội dung:** render tuần tự theo danh sách block đã đặc tả (§2.3.2.3.1) — kiểu trang wiki:
+**Nội dung:** render tuần tự theo danh sách block đã đặc tả (R-ENC-007 (§2.3.2.3.1)) — kiểu trang wiki:
 - Block đoạn văn/tiêu đề phụ/chú thích: typography Body/H2-H3 (mục 2.2).
 - Block nhúng ảnh: full-width, bo góc.
 - Block nhúng âm thanh: thanh audio player ngang.
@@ -169,7 +169,7 @@ Empty state khi tìm kiếm/lọc không có kết quả: minh hoạ + text "Kh�
 
 > ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: section "Mục từ liên quan" (gợi ý các Mục từ khác cùng Cương vực) bên dưới nội dung — chưa có cơ sở trong Business Requirements, là đề xuất UI thêm để tăng khả năng khám phá nội dung.
 
-Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (mục 4.1), bấm trích dẫn Mục từ nguồn ở Chat AI (mục 4.2, §2.6.3), hoặc bấm một Mục từ ở màn hình Bách Khoa (mục 4.3).
+Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (mục 4.1), bấm trích dẫn Mục từ nguồn ở Chat AI (mục 4.2, R-PUB-007 (§2.6.3)), hoặc bấm một Mục từ ở màn hình Bách Khoa (mục 4.3).
 
 ---
 
@@ -204,7 +204,7 @@ Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (mục 4.1), 
 
 ### 4.7 Màn hình Game lịch sử
 
-> ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: module Game lịch sử hiện nằm trong danh sách module ngoài phạm vi giai đoạn này (Business Requirements §2.5.1) — chưa có đặc tả chi tiết về luồng chơi, cách tính điểm, lưu tiến độ, v.v. Màn hình dưới đây là thiết kế UI tham khảo, cần đối chiếu lại khi module được đặc tả chính thức.
+> ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: module Game lịch sử hiện nằm trong danh sách module ngoài phạm vi giai đoạn này (Business Requirements R-OOS-002 (§2.5.1)) — chưa có đặc tả chi tiết về luồng chơi, cách tính điểm, lưu tiến độ, v.v. Màn hình dưới đây là thiết kế UI tham khảo, cần đối chiếu lại khi module được đặc tả chính thức.
 
 **Top bar:** back — tiêu đề "GAME LỊCH SỬ" — icon share.
 
@@ -219,7 +219,7 @@ Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (mục 4.1), 
 
 ### 4.8 Màn hình Phim & Truyền hình
 
-> ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: module Phim & Truyền hình hiện nằm trong danh sách module ngoài phạm vi giai đoạn này (Business Requirements §2.5.2, "Phim Lịch Sử") — chưa có đặc tả chi tiết về bản quyền nội dung, nguồn phim, cơ chế lưu tiến độ xem, v.v. Màn hình dưới đây là thiết kế UI tham khảo, cần đối chiếu lại khi module được đặc tả chính thức.
+> ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: module Phim & Truyền hình hiện nằm trong danh sách module ngoài phạm vi giai đoạn này (Business Requirements R-OOS-003 (§2.5.2), "Phim Lịch Sử") — chưa có đặc tả chi tiết về bản quyền nội dung, nguồn phim, cơ chế lưu tiến độ xem, v.v. Màn hình dưới đây là thiết kế UI tham khảo, cần đối chiếu lại khi module được đặc tả chính thức.
 
 **Top bar:** tiêu đề "PHIM & TRUYỀN HÌNH" — icon search.
 
@@ -235,7 +235,7 @@ Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (mục 4.1), 
 
 ### 4.9 Màn hình Cộng đồng (Community)
 
-> ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: module Cộng Đồng Văn Hóa hiện nằm trong danh sách module ngoài phạm vi giai đoạn này (Business Requirements §2.5.3) — chưa có đặc tả chi tiết về entity, quy trình kiểm duyệt nội dung (xem thêm BR §3.5.1), v.v. Nội dung chi tiết màn hình dưới đây tạm để nguyên như hiện tại, chưa biên tập sâu thêm — sẽ quay lại sau.
+> ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: module Cộng Đồng Văn Hóa hiện nằm trong danh sách module ngoài phạm vi giai đoạn này (Business Requirements R-OOS-004 (§2.5.3)) — chưa có đặc tả chi tiết về entity, quy trình kiểm duyệt nội dung (xem thêm BR R-NFR-025 (§3.5.1)), v.v. Nội dung chi tiết màn hình dưới đây tạm để nguyên như hiện tại, chưa biên tập sâu thêm — sẽ quay lại sau.
 
 **Top bar:** icon menu (trái) — tiêu đề "CỘNG ĐỒNG" — icon search (phải).
 

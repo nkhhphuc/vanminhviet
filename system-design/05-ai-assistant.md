@@ -4,11 +4,11 @@
 
 ## 1. Tổng quan module
 
-- Module cuối trong chuỗi giá trị (§2.2 đặc tả gốc: `... → Trợ lý số → Sản phẩm → Đời sống`) — hiện thực AI Văn Minh Việt (§2.4), self-host RAG dựa trên Bách Khoa Toàn Thư.
+- Module cuối trong chuỗi giá trị (R-KB-001 (§2.2) đặc tả gốc: `... → Trợ lý số → Sản phẩm → Đời sống`) — hiện thực AI Văn Minh Việt (R-AI-001 (§2.4)), self-host RAG dựa trên Bách Khoa Toàn Thư.
 - Phụ thuộc vào module 04 (`/encyclopedia`): đọc nội dung phiên bản đang công khai, danh sách Cương vực của Mục từ, và danh sách Mục từ công khai theo Cương vực — qua 3 interface đã chốt ở `04-encyclopedia.md` mục 4.3 (`GetPublicVersion`, `ListPublicByScope`, `ListCulturalDomainsByEntry`) — chỉ đọc, không JOIN chéo. Chiều phụ thuộc một chiều (05 → 04) — `/encyclopedia` không import `/assistant`; việc kích hoạt re-index đi qua job queue, xem mục 4.3.
 - Phụ thuộc vào AI Gateway (`01-architecture-and-tech-stack.md` mục 6) qua API nội bộ cho: sinh embedding, rewrite câu hỏi, LLM generate, self-audit pass.
-- Đối tượng sử dụng: **tất cả người dùng** — cả Nhân viên và Người dùng công khai (§2.4.2) — nên route chat mount ở cả `admin` và `public` (đã chốt ranh giới ở `01` mục 2). ⚠ **Không mount ở `partner`**: §2.4.2 đặc tả gốc chỉ nêu Nhân viên Văn Minh Việt và Người dùng công khai là đối tượng sử dụng, không nhắc Nhân viên Tổ chức khác; Nhân viên Tổ chức khác cần dùng AI Văn Minh Việt thì dùng chung route `public` như người dùng thường (ẩn danh, không gắn `asked_by_employee_id`) — đây là chủ đích, không phải khoảng trống thiết kế.
-- Không có role riêng của module này (đặc tả §2.4 không giao vai trò nghiệp vụ nào cho AI Văn Minh Việt) — dùng lại `quan_tri_he_thong` cho việc rà soát log chất lượng.
+- Đối tượng sử dụng: **tất cả người dùng** — cả Nhân viên và Người dùng công khai (R-AI-003 (§2.4.2)) — nên route chat mount ở cả `admin` và `public` (đã chốt ranh giới ở `01` mục 2). ⚠ **Không mount ở `partner`**: R-AI-003 (§2.4.2) đặc tả gốc chỉ nêu Nhân viên Văn Minh Việt và Người dùng công khai là đối tượng sử dụng, không nhắc Nhân viên Tổ chức khác; Nhân viên Tổ chức khác cần dùng AI Văn Minh Việt thì dùng chung route `public` như người dùng thường (ẩn danh, không gắn `asked_by_employee_id`) — đây là chủ đích, không phải khoảng trống thiết kế.
+- Không có role riêng của module này (đặc tả R-AI-001 (§2.4) không giao vai trò nghiệp vụ nào cho AI Văn Minh Việt) — dùng lại `quan_tri_he_thong` cho việc rà soát log chất lượng.
 - Hỗ trợ hội thoại nhiều lượt (multi-turn) — người dùng hỏi tiếp trong cùng một hội thoại, AI trả lời có ngữ cảnh các lượt trước đó ⚠ Đề xuất bổ sung (xem mục 2.2, 3.2, 6).
 
 ## 2. Mô hình dữ liệu
@@ -21,7 +21,7 @@ Tên bảng/field tiếng Anh, path API tiếng Anh (theo `00-claude-instruction
 |---|---|---|
 | `id` | UUID | |
 | `entry_id` | UUID | FK → `entry.id` (module 04 — tham chiếu chéo module, khoá ngoại đơn thuần) |
-| `entry_version_id` | UUID | FK → `entry_version.id` — gắn theo đúng phiên bản đã sinh ra đoạn này (§2.3.2.4.1: một Mục từ có nhiều phiên bản, chỉ 1 là đang công khai tại một thời điểm) |
+| `entry_version_id` | UUID | FK → `entry_version.id` — gắn theo đúng phiên bản đã sinh ra đoạn này (R-ENC-010 (§2.3.2.4.1): một Mục từ có nhiều phiên bản, chỉ 1 là đang công khai tại một thời điểm) |
 | `chunk_index` | int | Thứ tự đoạn trong phiên bản |
 | `content_chunk` | text | Đoạn text đã cắt từ `content_plain_text` (module 04 mục 2.2) |
 | `embedding` | vector(N) | pgvector — N theo model embedding đã pin (mục 9 tài liệu 01) |
@@ -37,15 +37,15 @@ Tên bảng/field tiếng Anh, path API tiếng Anh (theo `00-claude-instruction
 | Field | Kiểu | Ghi chú |
 |---|---|---|
 | `id` | UUID | Do **client tự sinh** (không do server cấp phát) — client gửi kèm ngay từ lượt hỏi đầu tiên của một hội thoại mới; server upsert khi gặp `id` chưa tồn tại |
-| `channel` | text | `admin` / `public`, phân biệt hội thoại của Nhân viên hay Người dùng công khai (§2.4.2: cùng 1 module phục vụ cả 2 kênh). Cố định từ lượt hỏi đầu tiên, áp dụng cho mọi lượt trong hội thoại |
-| `asked_by_employee_id` | UUID (nullable) | FK → `employee.id`. Chỉ có giá trị khi hội thoại thuộc kênh `admin`. `NULL` với kênh `public` (ẩn danh, không có định danh — §1.2.2). Cố định từ lượt hỏi đầu tiên |
+| `channel` | text | `admin` / `public`, phân biệt hội thoại của Nhân viên hay Người dùng công khai (R-AI-003 (§2.4.2): cùng 1 module phục vụ cả 2 kênh). Cố định từ lượt hỏi đầu tiên, áp dụng cho mọi lượt trong hội thoại |
+| `asked_by_employee_id` | UUID (nullable) | FK → `employee.id`. Chỉ có giá trị khi hội thoại thuộc kênh `admin`. `NULL` với kênh `public` (ẩn danh, không có định danh — R-GEN-007 (§1.2.2)). Cố định từ lượt hỏi đầu tiên |
 | `started_at` | timestamptz | |
 | `last_message_at` | timestamptz | Cập nhật mỗi khi có lượt hỏi mới trong hội thoại |
 | `turn_count` | int | ⚠ Đề xuất bổ sung — đếm số lượt hỏi-đáp, tiện hiển thị/rà soát ở `assistant/query-logs` |
 
 **Index** (⚠ bổ sung, phục vụ filter ở mục 5.2): index trên `channel` và trên `asked_by_employee_id`.
 
-### 2.3. `assistant_query_log` (§2.4.1, mục 6 tài liệu 01 bước 5 "Log & feedback")
+### 2.3. `assistant_query_log` (R-AI-002 (§2.4.1), mục 6 tài liệu 01 bước 5 "Log & feedback")
 
 | Field | Kiểu | Ghi chú |
 |---|---|---|
@@ -53,11 +53,11 @@ Tên bảng/field tiếng Anh, path API tiếng Anh (theo `00-claude-instruction
 | `conversation_id` | UUID | FK → `assistant_conversation.id`, `ON DELETE CASCADE` (dọn theo hội thoại, mục 3.3) — mỗi lượt hỏi thuộc đúng 1 hội thoại (xem mục 2.2, 6) |
 | `turn_index` | int | Thứ tự lượt trong hội thoại, bắt đầu từ 0 |
 | `asked_at` | timestamptz | |
-| `cultural_domain_id` | UUID (nullable) | Bộ lọc Cương vực dùng khi hỏi (§2.4.3); `NULL` nếu không chọn (trả lời trên toàn bộ Bách khoa) |
+| `cultural_domain_id` | UUID (nullable) | Bộ lọc Cương vực dùng khi hỏi (R-AI-004 (§2.4.3)); `NULL` nếu không chọn (trả lời trên toàn bộ Bách khoa) |
 | `question` | text | Câu hỏi gốc do người dùng nhập |
 | `rewritten_question` | text (nullable) | ⚠ Đề xuất bổ sung — câu hỏi đã viết lại (self-contained) dùng cho bước Retrieve khi hội thoại đã có lượt trước đó (mục 3.2, 6); `NULL` ở lượt đầu tiên (không cần rewrite) |
 | `answer` | text | |
-| `cited_entry_ids` | UUID[] | §2.4.1/§2.6.4.2 — các Mục từ được trích dẫn kèm câu trả lời |
+| `cited_entry_ids` | UUID[] | R-AI-002 (§2.4.1)/R-PUB-010 (§2.6.4.2) — các Mục từ được trích dẫn kèm câu trả lời |
 | `self_audit_flags` | JSONB (nullable) | Kết quả bước self-audit (mục 6 tài liệu 01 bước 4) — danh sách phát biểu trong câu trả lời chưa được chứng thực bởi đoạn đã truy hồi |
 | `created_at` | timestamptz | |
 
@@ -68,7 +68,7 @@ Tên bảng/field tiếng Anh, path API tiếng Anh (theo `00-claude-instruction
 - Không có bảng `assistant_feedback` riêng — đặc tả gốc chỉ nói "lưu câu hỏi/đáp/nguồn để chuyên gia rà soát chất lượng sau này" (mục 6 tài liệu 01 bước 5), chưa mô tả cơ chế feedback tường minh (like/dislike...) — để ngỏ, xem mục 6.
 - Hỗ trợ hội thoại nhiều lượt (multi-turn) qua `conversation_id`/`turn_index` — xem mục 2.2, 3.2, 6.
 - Kênh hỏi (`channel`) và người hỏi (`asked_by_employee_id`) là thuộc tính của cả hội thoại, lưu ở `assistant_conversation` (mục 2.2) và không lặp lại trên từng lượt. Khi cần lọc hoặc hiển thị theo kênh/người hỏi thì JOIN qua `conversation_id` (cùng package `/assistant`, không phải JOIN chéo module).
-- Lưu có thời hạn (§2.4.9.4): hội thoại có `last_message_at` quá `assistant.query_log_retention_days` (mặc định 180 ngày) bị xoá cùng toàn bộ lượt hỏi–đáp của nó — mục 3.3. Lượt hỏi kênh `public` không lưu định danh hay địa chỉ IP người hỏi (§2.4.9.1).
+- Lưu có thời hạn (R-AI-014 (§2.4.9.4)): hội thoại có `last_message_at` quá `assistant.query_log_retention_days` (mặc định 180 ngày) bị xoá cùng toàn bộ lượt hỏi–đáp của nó — mục 3.3. Lượt hỏi kênh `public` không lưu định danh hay địa chỉ IP người hỏi (R-AI-011 (§2.4.9.1)).
 
 ## 3. Luồng nghiệp vụ
 
@@ -89,10 +89,10 @@ Kích hoạt bởi sự kiện từ `/encyclopedia` (module 04), qua hàng đợ
 
 0. **Xác định hội thoại** — request kèm `conversation_id` (do client tự sinh, xem mục 5.1, 6). Nếu `conversation_id` chưa tồn tại trong `assistant_conversation`: insert mới (`channel` và `asked_by_employee_id` theo nhóm route gọi vào, `started_at = now()`, `turn_count = 0`). Nếu đã tồn tại: ⚠ kiểm tra `channel` và `asked_by_employee_id` của hội thoại phải khớp với request hiện tại (cùng kênh; với kênh `admin` thì phải cùng Nhân viên). Nếu không khớp, trả sự kiện `error` với `error_code = conversation_mismatch` rồi dừng: không đọc lịch sử, không ghi log. Client sinh `conversation_id` mới để bắt đầu hội thoại mới. Sau đó đọc N lượt gần nhất (N = `assistant.history_turns`, mặc định 6 — `07-system-settings.md`; N = 0 thì không đọc lịch sử, mỗi lượt hỏi xử lý như lượt đầu tiên) từ `assistant_query_log` theo `conversation_id`, sắp theo `turn_index` giảm dần, làm lịch sử hội thoại cho các bước dưới. Lượt hỏi đầu tiên của một hội thoại mới không có lịch sử.
 1. **Rewrite query** ⚠ Đề xuất bổ sung — nếu `assistant.rewrite_query_enabled = true` và hội thoại đã có lịch sử (không phải lượt đầu tiên): gọi AI Gateway `POST /v1/rewrite-query` (`06` mục 3.3), truyền câu hỏi hiện tại + N lượt gần nhất, nhận về câu hỏi độc lập (self-contained), lưu vào `rewritten_question`. Lượt đầu tiên: bỏ qua bước này, dùng thẳng `question` gốc cho bước Retrieve. Tắt Rewrite → dùng thẳng `question` gốc cho Retrieve ở mọi lượt.
-2. **Retrieve** — hybrid search trên `assistant_chunk` (chỉ `is_active = true`): kết hợp vector similarity (`embedding`) + full-text (`content_chunk`) trên câu hỏi đã rewrite ở bước 1 (hoặc câu hỏi gốc nếu là lượt đầu tiên); lọc `cultural_domain_id = ANY(cultural_domain_ids)` nếu người dùng chọn Cương vực (§2.4.3), bỏ lọc nếu không chọn (§2.4.3: "trả lời trên toàn bộ Bách khoa"). Lấy top-K đoạn liên quan nhất (K = `assistant.retrieve_top_k`, mặc định 8 — `07-system-settings.md`). Nếu không truy hồi được đoạn nào (ví dụ Cương vực đã chọn chưa có Mục từ nào được đánh chỉ mục): bỏ qua bước 3–4, stream nguyên văn `assistant.no_context_answer` qua sự kiện `token`, `citations` rỗng, `self_audit` là `[]`, rồi tiếp tục bước 6 (vẫn ghi log). Sau khi có top-K, gọi `encyclopedia.GetEntryTitles` (`04` mục 4.3) cho các `entry_id` riêng biệt để gắn `title` vào `context_chunks` gửi AI Gateway (`06` mục 3.2).
-3. **Generate** — gọi AI Gateway (LLM), dựa trên các đoạn đã truy hồi ở bước 2 **và lịch sử hội thoại** (bước 0) làm ngữ cảnh, sinh câu trả lời kèm danh sách Mục từ nguồn (`cited_entry_ids`) — đúng §2.4.1, §2.4.4 (giới hạn trong phạm vi tri thức Bách khoa, không trả lời ngoài phạm vi). Truyền kèm `no_answer_text = assistant.no_context_answer` để LLM dùng đúng câu này khi các đoạn truy hồi không đủ thông tin trả lời (`06` mục 3.2).
+2. **Retrieve** — hybrid search trên `assistant_chunk` (chỉ `is_active = true`): kết hợp vector similarity (`embedding`) + full-text (`content_chunk`) trên câu hỏi đã rewrite ở bước 1 (hoặc câu hỏi gốc nếu là lượt đầu tiên); lọc `cultural_domain_id = ANY(cultural_domain_ids)` nếu người dùng chọn Cương vực (R-AI-004 (§2.4.3)), bỏ lọc nếu không chọn (R-AI-004 (§2.4.3): "trả lời trên toàn bộ Bách khoa"). Lấy top-K đoạn liên quan nhất (K = `assistant.retrieve_top_k`, mặc định 8 — `07-system-settings.md`). Nếu không truy hồi được đoạn nào (ví dụ Cương vực đã chọn chưa có Mục từ nào được đánh chỉ mục): bỏ qua bước 3–4, stream nguyên văn `assistant.no_context_answer` qua sự kiện `token`, `citations` rỗng, `self_audit` là `[]`, rồi tiếp tục bước 6 (vẫn ghi log). Sau khi có top-K, gọi `encyclopedia.GetEntryTitles` (`04` mục 4.3) cho các `entry_id` riêng biệt để gắn `title` vào `context_chunks` gửi AI Gateway (`06` mục 3.2).
+3. **Generate** — gọi AI Gateway (LLM), dựa trên các đoạn đã truy hồi ở bước 2 **và lịch sử hội thoại** (bước 0) làm ngữ cảnh, sinh câu trả lời kèm danh sách Mục từ nguồn (`cited_entry_ids`) — đúng R-AI-002 (§2.4.1), R-AI-005 (§2.4.4) (giới hạn trong phạm vi tri thức Bách khoa, không trả lời ngoài phạm vi). Truyền kèm `no_answer_text = assistant.no_context_answer` để LLM dùng đúng câu này khi các đoạn truy hồi không đủ thông tin trả lời (`06` mục 3.2).
 4. **Self-audit pass** — gọi AI Gateway lần nữa (model khác hoặc cùng model, vai trò kiểm tra), rà lại câu trả lời so với các đoạn đã truy hồi, gắn cờ phát biểu chưa được chứng thực (`self_audit_flags`) — không chặn trả lời, chỉ gắn cờ để hiển thị cảnh báo hoặc phục vụ rà soát sau. Chạy **sau khi** phần Generate đã stream xong cho người dùng. Lỗi/timeout ở bước này không làm hỏng lượt hỏi: ghi `self_audit_flags = NULL` (chưa kiểm được), vẫn tiếp tục bước 5–6.
-5. **Trả lời cho người dùng** — trả dạng streaming SSE (đã chốt ở `01` mục 3, đáp ứng NFR token đầu ≤3s — `01` mục 8/§3.2.2, xem rủi ro độ trễ do bước Rewrite ở mục 6), kèm trích dẫn Mục từ nguồn để người dùng bấm xem (§2.6.4.2). Thứ tự sự kiện: `token` trong lúc Generate → `citations` khi Generate xong (tiêu đề đã có từ bước 2) → `self_audit` sau bước 4 → `done` sau bước 6 — hợp đồng chi tiết ở mục 5.1.
+5. **Trả lời cho người dùng** — trả dạng streaming SSE (đã chốt ở `01` mục 3, đáp ứng NFR token đầu ≤3s — `01` mục 8/R-NFR-011 (§3.2.2), xem rủi ro độ trễ do bước Rewrite ở mục 6), kèm trích dẫn Mục từ nguồn để người dùng bấm xem (R-PUB-010 (§2.6.4.2)). Thứ tự sự kiện: `token` trong lúc Generate → `citations` khi Generate xong (tiêu đề đã có từ bước 2) → `self_audit` sau bước 4 → `done` sau bước 6 — hợp đồng chi tiết ở mục 5.1.
 6. **Log & feedback** — sau khi trả lời xong: ghi 1 dòng `assistant_query_log` (mục 2.3) với `conversation_id`/`turn_index` đúng hội thoại; cập nhật `last_message_at = now()`, `turn_count += 1` trên `assistant_conversation` (mục 2.2). Nếu lỗi xảy ra trước khi Generate hoàn tất (gửi sự kiện `error`), lượt hỏi không được ghi log và `turn_count` không tăng.
 
 ### 3.3. Dọn nhật ký hỏi đáp quá hạn — job nền
@@ -165,7 +165,7 @@ Cả 4 qua cùng AI Gateway (API nội bộ REST, `06` mục 1), hỗ trợ 3 ch
 
 ## 5. Thiết kế API
 
-### 5.1. Chat — mount ở cả `admin` và `public` (§2.4.2: phục vụ cả Nhân viên lẫn Người dùng công khai)
+### 5.1. Chat — mount ở cả `admin` và `public` (R-AI-003 (§2.4.2): phục vụ cả Nhân viên lẫn Người dùng công khai)
 
 | Method | Path | Mô tả | Xác thực |
 |---|---|---|---|
@@ -183,7 +183,7 @@ Cả 4 qua cùng AI Gateway (API nội bộ REST, `06` mục 1), hỗ trợ 3 ch
 
 Nếu lỗi xảy ra sau khi đã gửi `citations`, client giữ nguyên phần câu trả lời đã hiển thị và thông báo lỗi.
 
-- **Rate limit kênh `public`** (§3.1.6): khi bật (`assistant.public_rate_limit_enabled`), request vượt ngưỡng bị từ chối **trước khi** mở stream SSE — HTTP 429, body lỗi JSON theo quy ước chung (`error_code = rate_limited`), header `Retry-After`; không tạo/ghi hội thoại. Cơ chế ở `07-system-settings.md` mục 4.3. Kênh `admin` không áp dụng.
+- **Rate limit kênh `public`** (R-NFR-008 (§3.1.6)): khi bật (`assistant.public_rate_limit_enabled`), request vượt ngưỡng bị từ chối **trước khi** mở stream SSE — HTTP 429, body lỗi JSON theo quy ước chung (`error_code = rate_limited`), header `Retry-After`; không tạo/ghi hội thoại. Cơ chế ở `07-system-settings.md` mục 4.3. Kênh `admin` không áp dụng.
 - **Câu miễn trừ trách nhiệm và thời hạn hội thoại phía client**: frontend đọc `assistant.disclaimer_text` và `assistant.conversation_ttl_hours` qua `GET /client-settings` (`07-system-settings.md` mục 5.2).
 
 - Cùng 1 path `/assistant/chat`, mount riêng dưới `/api/v1/admin/...` và `/api/v1/public/...` — handler dùng chung logic (mục 3.2), chỉ khác `channel`/`asked_by_employee_id` gắn theo nhóm route gọi vào.
@@ -210,18 +210,18 @@ Nếu lỗi xảy ra sau khi đã gửi `citations`, client giữ nguyên phần
 
 ## 6. Vấn đề mở / giả định
 
-- **Rate limiting cho `/assistant/chat` (kênh `public`)** hiện thực §3.1.6: theo IP, Quản trị hệ thống bật/tắt và đặt hạn mức, mặc định tắt. ⚠ Cách làm — middleware Go, bộ đếm trong bộ nhớ tiến trình — là quyết định kỹ thuật (`07-system-settings.md` mục 4.3).
-- **Rà soát nhật ký hỏi đáp** (mục 5.2) do role `quan_tri_he_thong` thực hiện (§2.4.9.2).
+- **Rate limiting cho `/assistant/chat` (kênh `public`)** hiện thực R-NFR-008 (§3.1.6): theo IP, Quản trị hệ thống bật/tắt và đặt hạn mức, mặc định tắt. ⚠ Cách làm — middleware Go, bộ đếm trong bộ nhớ tiến trình — là quyết định kỹ thuật (`07-system-settings.md` mục 4.3).
+- **Rà soát nhật ký hỏi đáp** (mục 5.2) do role `quan_tri_he_thong` thực hiện (R-AI-012 (§2.4.9.2)).
 - **`is_active`/`cultural_domain_ids` denormalize trên `assistant_chunk`** (mục 2.1) — ⚠ giải pháp kỹ thuật để tránh JOIN chéo sang `/encyclopedia` khi truy hồi, đổi lại phải đồng bộ qua job mỗi khi phiên bản công khai/Cương vực thay đổi (mục 3.1, 4.3).
-- **Hội thoại nhiều lượt** hiện thực §2.4.6, §2.6.4.3. Các quyết định kỹ thuật đi kèm:
+- **Hội thoại nhiều lượt** hiện thực R-AI-007 (§2.4.6), R-PUB-011 (§2.6.4.3). Các quyết định kỹ thuật đi kèm:
   - `conversation_id` do client tự sinh (UUID) và tự quản lý (ví dụ lưu `localStorage` phía public-web/app) — server không cấp phát, không cần thêm cơ chế session/cookie hay định danh thiết bị ẩn danh riêng ở tầng ứng dụng (nhất quán với quyết định ở bullet rate limiting phía trên).
   - Lịch sử hội thoại giới hạn N lượt gần nhất, dùng cho cả bước Rewrite query và Generate (mục 3.2) — N là tham số cấu hình `assistant.history_turns` (`07-system-settings.md`).
   - Có bước Rewrite query (gọi AI Gateway `POST /v1/rewrite-query`, `06` mục 3.3) trước Retrieve khi hội thoại đã có lượt trước đó, để xử lý câu hỏi nối tiếp phụ thuộc ngữ cảnh (ví dụ "còn về X thì sao?"). ⚠ Cập nhật 2026-09-23: trước đó tài liệu ghi "dùng chung endpoint Generate, đổi prompt", nhưng schema của `/v1/generate` (`{question, context_chunks}`) không có chỗ truyền lịch sử hội thoại — nay tách thành endpoint riêng, cùng khuôn với `/v1/self-audit` (cũng dùng chung LLM nhưng là endpoint riêng).
   - Mô hình dữ liệu: bảng `assistant_conversation` riêng (mục 2.2) lưu metadata hội thoại, gồm cả `channel` và `asked_by_employee_id`. `assistant_query_log` (mục 2.3) lưu từng lượt với `conversation_id`, `turn_index`, `rewritten_question`.
 - **Ràng buộc hội thoại theo kênh/người hỏi** ⚠ Đề xuất bổ sung — vì `conversation_id` do client tự sinh, server kiểm tra hội thoại đã có phải khớp kênh và Nhân viên với request (mục 3.2 bước 0). Việc này ngăn dùng `conversation_id` của hội thoại `admin` để đọc lịch sử qua kênh `public`, hoặc đọc hội thoại của Nhân viên khác. Riêng giữa các người dùng ẩn danh ở kênh `public` thì không phân biệt được. Ở đây chỉ dựa vào việc UUID khó đoán, nhất quán với quyết định không có định danh thiết bị ẩn danh (bullet rate limiting ở trên).
-- **Rủi ro độ trễ do bước Rewrite query** ⚠ — bước Rewrite (mục 3.2 bước 1) thêm 1 lời gọi AI Gateway tuần tự trước Retrieve khi hội thoại đã có lịch sử, có thể ảnh hưởng NFR token đầu ≤3 giây (đặc tả gốc §3.2.2, `01` mục 8) — cần đo đạc thực tế lúc code; có thể cân nhắc rút gọn prompt rewrite hoặc dùng model nhỏ/nhanh hơn cho riêng bước này nếu cần (timeout đề xuất cho endpoint này là 5s, `06` mục 6). Quản trị hệ thống có thể tắt bước này (`assistant.rewrite_query_enabled`) nếu đo thực tế không đạt NFR.
-- **Không có chức năng đánh giá câu trả lời** (thích/không thích, báo sai) ở giai đoạn này (§2.4.9.3).
+- **Rủi ro độ trễ do bước Rewrite query** ⚠ — bước Rewrite (mục 3.2 bước 1) thêm 1 lời gọi AI Gateway tuần tự trước Retrieve khi hội thoại đã có lịch sử, có thể ảnh hưởng NFR token đầu ≤3 giây (đặc tả gốc R-NFR-011 (§3.2.2), `01` mục 8) — cần đo đạc thực tế lúc code; có thể cân nhắc rút gọn prompt rewrite hoặc dùng model nhỏ/nhanh hơn cho riêng bước này nếu cần (timeout đề xuất cho endpoint này là 5s, `06` mục 6). Quản trị hệ thống có thể tắt bước này (`assistant.rewrite_query_enabled`) nếu đo thực tế không đạt NFR.
+- **Không có chức năng đánh giá câu trả lời** (thích/không thích, báo sai) ở giai đoạn này (R-AI-013 (§2.4.9.3)).
 - **Chunking strategy cụ thể** (kích thước đoạn, overlap, chiến lược cắt theo block JSON hay theo `content_plain_text`) — chi tiết kỹ thuật, chưa chốt số liệu cụ thể, để lại cho lúc code (tương tự các mục "chốt sau khi có số liệu thực tế" ở tài liệu 01).
 - **Hợp đồng sự kiện SSE của `/assistant/chat`** (mục 3.2, 5.1) — ⚠ bổ sung: thứ tự `token` → `citations` → `self_audit` → `done`, cùng `error`; self-audit chạy sau khi đã stream câu trả lời; lỗi self-audit không làm hỏng lượt hỏi (`NULL` = chưa kiểm được); lỗi trước khi Generate xong thì không ghi log.
 - **`asked_by`, `cited_entries`, `self_audit_flag_count` và 2 filter mới ở API rà soát** (mục 2.3, 5.2) — ⚠ bổ sung: hoàn thiện kỹ thuật cho màn hình rà soát của Admin nội bộ; ghép dữ liệu ở tầng handler. Không đổi schema, không đổi hành vi nghiệp vụ.
-- **Thời hạn lưu nhật ký hỏi đáp** (mục 2.3, 3.3) hiện thực §2.4.9.4. ⚠ Mặc định 180 ngày và cách dọn theo cả hội thoại (không theo từng lượt) là quyết định của thiết kế.
+- **Thời hạn lưu nhật ký hỏi đáp** (mục 2.3, 3.3) hiện thực R-AI-014 (§2.4.9.4). ⚠ Mặc định 180 ngày và cách dọn theo cả hội thoại (không theo từng lượt) là quyết định của thiết kế.

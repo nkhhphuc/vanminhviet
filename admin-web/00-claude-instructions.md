@@ -1,6 +1,6 @@
 # Đặc Tả Giao Diện Web Admin Nội Bộ — Khung & Nguyên Tắc
 
-> Tài liệu điều phối cho quá trình thiết kế giao diện Admin nội bộ (Quasar SPA, dành cho Nhân viên thuộc Tổ chức Văn Minh Việt — §1.2.3.1 đặc tả gốc). Đọc `common/00-claude-instructions.md` trước, rồi đọc file này trước khi chỉnh sửa `admin-web-design.md`, kể cả ở một session khác.
+> Tài liệu điều phối cho quá trình thiết kế giao diện Admin nội bộ (Quasar SPA, dành cho Nhân viên thuộc Tổ chức Văn Minh Việt — R-GEN-009 (§1.2.3.1) đặc tả gốc). Đọc `common/00-claude-instructions.md` trước, rồi đọc file này trước khi chỉnh sửa `admin-web-design.md`, kể cả ở một session khác.
 
 ## 1. Mục tiêu
 
@@ -23,9 +23,8 @@
 
 ## 4. Quy trình chỉnh sửa
 
-- Preview trước khi ghi, và luôn `project_read` bản mới nhất trước khi ghi đè: theo nguyên tắc chung ở `common/00-claude-instructions.md` mục 3.
+- Preview trước khi ghi, và luôn đọc lại bản mới nhất từ máy trước khi ghi: theo nguyên tắc chung ở `common/00-claude-instructions.md` mục 3.
 - Sau khi ghi xong một thay đổi vào `admin-web-design.md`, tóm tắt ngắn gọn cho người dùng xem, đồng thời ghi thêm một mục vào `admin-web/changelog.md`.
-- Đồng bộ ra máy: theo nguyên tắc chung mục 1 (`admin-web/` ↔ `Z:\GoogleDrive\VanMinhViet\admin-web`).
 
 ## 5. Đối chiếu với Business Requirements / System Design — quy trình xử lý điểm lệch
 

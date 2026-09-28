@@ -1,5 +1,9 @@
 # Changelog — Partner Web
 
+## 2026-09-28
+
+- CR-20260928-01: đổi toàn bộ trích dẫn mục đặc tả `§...` sang dạng chuẩn `R-XXX-NNN (§...)`; khoảng mục ghi ID cho hai đầu mút; "module 2.7" ghi thành `R-PTN-001 (§2.7)`. Không đổi nội dung thiết kế. File: **partner-web-design.md** (47), **00-claude-instructions.md** (16).
+
 ## 2026-09-26
 - Đồng bộ theo `system-design/02-identity.md` mục 3.5, 5.1 (HTTP 401 `session_revoked`), file `partner-web-design.md`:
   - Mục 3: thêm bullet "Phiên đăng nhập". Access token hết hạn thì tự gọi `POST /auth/refresh`. Nhận `session_revoked` (từ bất kỳ API nào, kể cả refresh) thì không refresh, không gọi logout; xoá token và store, về 4.1 kèm thông báo "Phiên đăng nhập đã kết thúc, vui lòng đăng nhập lại". Không hiện hộp thoại "Thay đổi chưa lưu". Đăng nhập lại thì về màn hình trước đó nếu còn quyền, không thì về 4.11.

@@ -2,16 +2,12 @@
 
 > Áp dụng cho mọi luồng làm việc (conversation) trong project này. Mỗi luồng có file điều phối riêng `00-claude-instructions.md` trong thư mục của mình, chứa phần đặc thù và tham chiếu ngược lại file này cho phần dùng chung. Khi bắt đầu một luồng, đọc file này trước, rồi đọc file "00" của đúng luồng đang làm việc.
 
-## 1. Mỗi luồng = Một thư mục tương ứng trên máy
+## 1. Mỗi luồng = Một thư mục trên máy
 
-- Mỗi luồng làm việc (requirements, system-design, public-web, admin-web, partner-web, và các luồng phát sinh sau này) có một thư mục tương ứng cùng tên trên máy người dùng:
-  - `requirements` ↔ `Z:\GoogleDrive\VanMinhViet\requirements`
-  - `system-design` ↔ `Z:\GoogleDrive\VanMinhViet\system-design`
-  - `public-web` ↔ `Z:\GoogleDrive\VanMinhViet\public-web`
-  - `admin-web` ↔ `Z:\GoogleDrive\VanMinhViet\admin-web`
-  - `partner-web` ↔ `Z:\GoogleDrive\VanMinhViet\partner-web`
-  - `common` ↔ `Z:\GoogleDrive\VanMinhViet\common`
+- Toàn bộ tài liệu của project nằm trên máy người dùng, trong thư mục gốc `Z:\VanMinhSo\docs`. Đây là nơi lưu trữ duy nhất và là nguồn chân lý; Claude đọc và ghi trực tiếp vào đây. Project trên claude.ai không chứa bản sao tài liệu.
+- Mỗi luồng làm việc (requirements, system-design, public-web, admin-web, partner-web, và các luồng phát sinh sau này) có một thư mục con cùng tên: `Z:\VanMinhSo\docs\<tên luồng>` (ví dụ `Z:\VanMinhSo\docs\requirements`). Tài liệu dùng chung cho mọi luồng nằm ở `Z:\VanMinhSo\docs\common`.
 - Mọi file phát sinh từ một luồng chỉ lưu trong thư mục của luồng đó — không rải rác sang thư mục khác.
+- **Thư mục `outputs`** (`Z:\VanMinhSo\docs\outputs`) là nơi duy nhất chứa các file xuất/phái sinh: bản preview soạn ra file, báo cáo công việc, báo cáo tiến độ, bản xuất Word/PDF/HTML/sơ đồ… — ngoại lệ của quy tắc trên, kể cả khi file đó xuất từ một luồng cụ thể. File trong `outputs` không phải nguồn chân lý, không đồng bộ sang Code và có thể bị xoá bất cứ lúc nào. Không tạo thêm thư mục output nào khác ở gốc `docs` hay trong thư mục luồng. Tên file trong `outputs` vẫn theo quy ước đặt tên bên dưới, nên bắt đầu bằng tên luồng hoặc loại file và kèm ngày, ví dụ `requirements-export-2026-09-28.docx`, `bao-cao-tien-do-2026-09-28.html`.
 - Luôn hỏi/xác nhận trước khi lưu vào thư mục.
 - **Quy ước đặt tên thư mục & file**: tên thư mục và tên file trong project này dùng tiếng Anh, chữ thường (lowercase), không dấu, cách nhau bằng gạch ngang (`-`), không dùng khoảng trắng hay ký tự đặc biệt — để tránh lỗi khi đồng bộ/di chuyển file giữa các hệ điều hành. Nội dung bên trong file (tiêu đề, văn bản) vẫn viết bằng tiếng Việt như bình thường; chỉ tên thư mục/tên file/đường dẫn theo quy ước này.
 
@@ -25,13 +21,13 @@
 
 ## 3. Quy trình chỉnh sửa — luôn preview trước khi ghi
 
-- Nguyên tắc bắt buộc, áp dụng cho mọi luồng: trước khi ghi bất kỳ thay đổi nào vào file nguồn của một luồng, luôn trình bày bản preview đầy đủ nội dung sẽ thay đổi, chỉ ghi vào Project sau khi người dùng xác nhận (ví dụ gõ "duyệt").
+- Nguyên tắc bắt buộc, áp dụng cho mọi luồng: trước khi ghi bất kỳ thay đổi nào vào file nguồn của một luồng, luôn trình bày bản preview đầy đủ nội dung sẽ thay đổi, chỉ ghi vào file sau khi người dùng xác nhận (ví dụ gõ "duyệt").
 - Với các mục còn mơ hồ, thiếu quan hệ/quy tắc nghiệp vụ, hoặc là quyết định thiết kế có nhiều lựa chọn: đặt câu hỏi làm rõ trước (có thể qua nhiều vòng hỏi–đáp), không tự suy đoán rồi ghi thẳng.
-- Vì `Projects.project_write` không có patch tại chỗ (ghi đè toàn bộ nội dung), luôn `project_read` bản mới nhất trước khi soạn nội dung đầy đủ để ghi đè — tránh mất thay đổi mà session khác/người khác vừa thêm vào.
+- Ngay trước khi soạn preview và ngay trước khi ghi, luôn đọc lại bản mới nhất của file từ thư mục trên máy — tránh ghi đè thay đổi mà session khác hoặc người dùng vừa thêm vào. Nếu file đã đổi so với lúc soạn preview, báo người dùng và soạn lại preview. Khi ghi, sửa tại chỗ đúng phần đã duyệt (bằng lệnh/script đọc chính file đó), không gõ lại toàn bộ nội dung file.
 
 ## 4. Đồng bộ nhận biết giữa các session
 
-- Mỗi session không tự động biết tài liệu Project vừa được session khác (hoặc chính người dùng) cập nhật. Khi quay lại một session đang chờ, người dùng cần chủ động báo (ví dụ "mục X vừa cập nhật, đọc lại giúp mình") để session đó `project_read` lại.
+- Mọi session dùng chung một thư mục trên máy, nên không cần báo nhau khi file thay đổi — mỗi session tự đọc lại file từ máy trước khi dùng (mục 3). Nội dung đã đọc từ trước trong một session có thể đã cũ: khi quay lại một session đang chờ, đọc lại các file liên quan trước khi làm tiếp.
 - Nếu một session làm việc bị mất hoặc cần chuyển sang session mới: mở session mới, yêu cầu đọc file `00-claude-instructions.md` của đúng luồng cùng file này là đủ để tiếp tục đúng mạch, không cần chép lại lịch sử hội thoại cũ.
 
 ## 5. Làm việc với Git/GitHub

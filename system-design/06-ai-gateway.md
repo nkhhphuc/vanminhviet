@@ -1,12 +1,12 @@
 # Thiết Kế: AI Gateway (service Python riêng)
 
-> Trạng thái: đã chốt — đang được `03-cultural-knowledge-base.md` (§4.2–4.4, mục 8) và `05-ai-assistant.md` tham chiếu tới các endpoint cụ thể. Cập nhật 2026-09-23: thêm endpoint `/v1/rewrite-query` cho bước Rewrite query của hội thoại nhiều lượt (module 05); các mục con của mục 3 đánh số lại theo đó.
+> Trạng thái: đã chốt — đang được `03-cultural-knowledge-base.md` (mục 4.2–4.4, mục 8) và `05-ai-assistant.md` tham chiếu tới các endpoint cụ thể.
 >
 > Tài liệu này **không theo cấu trúc chuẩn module 02–05** (`00-claude-instructions.md` mục 5), vì AI Gateway không phải một module nghiệp vụ ánh xạ 1-1 với đặc tả gốc — nó là service hạ tầng đã được quyết định kiến trúc ở `01-architecture-and-tech-stack.md` mục 6 (self-host, GPU on-prem, vLLM + ASR riêng, 3 chế độ backend). Tài liệu này bổ sung phần `01` mục 6 còn để ngỏ: **hợp đồng API cụ thể** giữa Go monolith (`/assistant` — tài liệu 05, `/verification` — tài liệu 03) và AI Gateway, cùng **kiến trúc nội bộ** của chính service Python này — đủ chi tiết để tự implement (không chỉ để Go gọi vào).
 
 ## 1. Phạm vi & nguyên tắc
 
-- AI Gateway phục vụ đúng 2 năng lực nghiệp vụ đã chốt ở `01` mục 6: **RAG cho AI Văn Minh Việt** (module 05) và **AI Verification đa phương thức** (module 03, §2.2.6.6) — không phục vụ mục đích nào khác.
+- AI Gateway phục vụ đúng 2 năng lực nghiệp vụ đã chốt ở `01` mục 6: **RAG cho AI Văn Minh Việt** (module 05) và **AI Verification đa phương thức** (module 03, R-KB-080 (§2.2.6.6)) — không phục vụ mục đích nào khác.
 - **Không tự quyết định nghiệp vụ** (verdict cuối cùng ghi vào `claim_reference`/`claim`, quyết định trạng thái workflow...) — AI Gateway chỉ trả kết quả thô (verdict/note/embedding/answer) cho Go monolith; Go monolith (`/verification`, `/assistant`) chịu trách nhiệm ghi dữ liệu, validate quyền, quản lý transaction. Đúng nguyên tắc "AI Gateway chỉ là lớp trừu tượng hoá phía gọi" đã nêu ở `01` mục 6.
 - **Không gọi trực tiếp tới CSDL Postgres của Go monolith** — nhận input qua request (text, URL file trong MinIO/S3 nếu cần đọc file), trả output qua response. Việc đọc file (Tư liệu gốc/Nội dung) từ MinIO/S3 do chính AI Gateway thực hiện khi cần (ví dụ ASR, VLM) — MinIO/S3 credentials cấp riêng cho AI Gateway (chỉ quyền đọc), không đi qua Go monolith để tránh proxy file nặng qua REST/JSON (nhất quán với nguyên tắc "không proxy file lớn" ở `01` mục 3).
 - Giao thức: **REST/JSON**, không dùng gRPC — dù `01` mục 6 để ngỏ "gRPC/REST", chọn REST cho nhất quán với toàn bộ hệ thống (đã dùng REST/JSON cho mọi API khác — `01` mục 3), dễ debug/log, không cần thêm tooling codegen protobuf. ⚠ Quyết định bổ sung của tài liệu này — có thể đổi sang gRPC sau nếu đo được overhead JSON đáng kể ở tải cao.
@@ -22,12 +22,12 @@
 | 3 | Viết lại câu hỏi theo ngữ cảnh hội thoại | `POST /v1/rewrite-query` | `/assistant` (chat multi-turn, bước 1 mục 3.2 tài liệu 05) | Đồng bộ, JSON một lần — nằm trong request đồng bộ của người dùng |
 | 4 | Self-audit câu trả lời | `POST /v1/self-audit` | `/assistant` (chat, mục 3.2 tài liệu 05) | Đồng bộ, sau bước Generate |
 | 5 | Trích transcript ASR | `POST /v1/transcribe` | `/knowledge`/`/shared` (job nền sinh `transcript_storage_key` cho audio/video — mục 4.4 tài liệu 03) | Đồng bộ, trong job nền |
-| 6 | So khớp ngữ nghĩa văn bản | `POST /v1/verify/text-match` | `/verification` (AI Verification — văn bản, và âm thanh/phim sau khi có transcript, §2.2.6.6.1) | Đồng bộ, trong job nền |
-| 7 | So khớp nội dung vùng ảnh | `POST /v1/verify/image-region` | `/verification` (AI Verification — hình ảnh, và khung hình phim, §2.2.6.6.1) | Đồng bộ, trong job nền |
+| 6 | So khớp ngữ nghĩa văn bản | `POST /v1/verify/text-match` | `/verification` (AI Verification — văn bản, và âm thanh/phim sau khi có transcript, R-KB-081 (§2.2.6.6.1)) | Đồng bộ, trong job nền |
+| 7 | So khớp nội dung vùng ảnh | `POST /v1/verify/image-region` | `/verification` (AI Verification — hình ảnh, và khung hình phim, R-KB-081 (§2.2.6.6.1)) | Đồng bộ, trong job nền |
 
 **Không có endpoint riêng cho việc trích metadata file** (số trang, kích thước ảnh, độ dài audio/video — `01` mục 4) — đây là xử lý kỹ thuật thuần tuý (đọc header file), không cần model AI, thực hiện trực tiếp trong `/cmd/worker` bằng thư viện thông thường (ví dụ `ffprobe` cho audio/video, đọc thuộc tính ảnh, đếm trang PDF) — **không gọi AI Gateway**.
 
-**Không có endpoint trích transcript cho file văn bản** (`source_file.transcript_storage_key`/`knowledge_object_file.transcript_storage_key` khi `file_type = text`, cấu trúc `[{page, line, text}]` — mục 2.4 tài liệu 03) — tư liệu Hán Nôm đã được số hoá/OCR ở hệ thống thượng nguồn trước khi vào MinIO/S3 (§1.1.1 đặc tả gốc), nên đây là **trích xuất text đã có sẵn trong file** (PDF text layer/OCR layer), không phải nhận dạng lại — thực hiện bằng thư viện parsing thông thường (`pdfplumber`/tương tự) trong `/cmd/worker`, **không gọi AI Gateway**. Việc tách 2 đường sinh transcript được ghi ở `03-cultural-knowledge-base.md` mục 4.4: **ASR (audio/video) → AI Gateway `/v1/transcribe`**; **text → parsing thuần tuý, không qua AI Gateway**.
+**Không có endpoint trích transcript cho file văn bản** (`source_file.transcript_storage_key`/`knowledge_object_file.transcript_storage_key` khi `file_type = text`, cấu trúc `[{page, line, text}]` — mục 2.4 tài liệu 03) — tư liệu Hán Nôm đã được số hoá/OCR ở hệ thống thượng nguồn trước khi vào MinIO/S3 (R-GEN-003 (§1.1.1) đặc tả gốc), nên đây là **trích xuất text đã có sẵn trong file** (PDF text layer/OCR layer), không phải nhận dạng lại — thực hiện bằng thư viện parsing thông thường (`pdfplumber`/tương tự) trong `/cmd/worker`, **không gọi AI Gateway**. Việc tách 2 đường sinh transcript được ghi ở `03-cultural-knowledge-base.md` mục 4.4: **ASR (audio/video) → AI Gateway `/v1/transcribe`**; **text → parsing thuần tuý, không qua AI Gateway**.
 
 ## 3. Chi tiết từng endpoint
 
@@ -66,7 +66,7 @@ Request:
 
 - `no_answer_text` (tuỳ chọn): câu LLM phải dùng nguyên văn khi `context_chunks` không đủ thông tin trả lời; Go truyền giá trị cấu hình `assistant.no_context_answer` (`05` mục 3.2, `07-system-settings.md`). Không truyền → dùng câu mặc định trong prompt.
 
-Response — **streaming SSE** (đáp ứng NFR token đầu ≤3s, `01` mục 8/§3.2.2):
+Response — **streaming SSE** (đáp ứng NFR token đầu ≤3s, `01` mục 8/R-NFR-011 (§3.2.2)):
 ```
 data: {"delta": "Trống đồng Đông Sơn "}
 
@@ -76,7 +76,7 @@ data: {"done": true, "cited_entry_ids": ["uuid1", "uuid2"]}
 ```
 
 - Go (`/assistant.GenerateAnswer`, mục 4.4 tài liệu 05) đọc stream này và relay tiếp thành SSE cho client cuối (`POST /assistant/chat`, mục 5.1 tài liệu 05) — 2 tầng SSE nối tiếp nhau, không buffer toàn bộ câu trả lời rồi mới gửi (giữ đúng mục tiêu token đầu ≤3s xuyên suốt cả 2 tầng).
-- Prompt hệ thống (system prompt) ép LLM **chỉ trả lời dựa trên `context_chunks`**, không dùng kiến thức ngoài (§2.4.1, §2.4.4 đặc tả gốc) — chi tiết nội dung prompt ở mục 5.
+- Prompt hệ thống (system prompt) ép LLM **chỉ trả lời dựa trên `context_chunks`**, không dùng kiến thức ngoài (R-AI-002 (§2.4.1), R-AI-005 (§2.4.4) đặc tả gốc) — chi tiết nội dung prompt ở mục 5.
 - **⚠ Model đề xuất (ứng viên, chưa benchmark — xem mục 8)**: **Qwen3-30B-A3B-Instruct-2507** — kiến trúc MoE (30B tổng tham số, ~3.3B active mỗi token), context dài (262K token, dư sức chứa nhiều `context_chunks`), năng lực instruction-following mạnh — phù hợp trực tiếp yêu cầu bám sát context ở trên; tốc độ suy luận gần model 3B dù năng lực gần 30B, hỗ trợ đạt NFR token đầu ≤3s dễ hơn model dense cùng cỡ.
 
 ### 3.3. `POST /v1/rewrite-query`
@@ -99,7 +99,7 @@ Response:
 - Chỉ được gọi khi hội thoại **đã có lượt trước đó**; lượt đầu tiên Go bỏ qua bước này và dùng thẳng câu hỏi gốc (mục 3.2 bước 1 tài liệu 05).
 - `history` là N lượt gần nhất do Go cắt sẵn (số N chốt lúc code — `05` mục 6); AI Gateway không tự đọc DB.
 - **JSON một lần, không streaming** — kết quả là một câu ngắn, dùng ngay cho bước Retrieve ở Go, người dùng không nhìn thấy trực tiếp.
-- ⚠ Nằm **trên đường tương tác** của người dùng (trước Retrieve/Generate), nên độ trễ endpoint này cộng thẳng vào NFR token đầu ≤3s (§3.2.2) — xem rủi ro đã ghi ở `05` mục 6; cân nhắc model nhỏ/nhanh hơn riêng cho endpoint này khi benchmark.
+- ⚠ Nằm **trên đường tương tác** của người dùng (trước Retrieve/Generate), nên độ trễ endpoint này cộng thẳng vào NFR token đầu ≤3s (R-NFR-011 (§3.2.2)) — xem rủi ro đã ghi ở `05` mục 6; cân nhắc model nhỏ/nhanh hơn riêng cho endpoint này khi benchmark.
 - Dùng chung LLM với `/v1/generate`, prompt khác (mục 5).
 
 ### 3.4. `POST /v1/self-audit`
@@ -187,7 +187,7 @@ Response:
 ```
 
 - `image_storage_key`: với hình ảnh, trỏ thẳng tới `source_file`/`knowledge_object_file`; với khung hình phim, Go/`worker` phải **tự trích frame** tại `start_time` bằng `ffmpeg` (ghi tạm vào Object storage hoặc truyền qua `image_bytes` base64 — ⚠ xem mục 8) rồi mới gọi endpoint này — AI Gateway không tự trích frame từ file video.
-- `bbox` optional — bỏ qua thì VLM đọc toàn bộ ảnh/khung hình (áp dụng khi phim không khai báo khung ảnh, §2.2.4.2.4 "khung ảnh không bắt buộc").
+- `bbox` optional — bỏ qua thì VLM đọc toàn bộ ảnh/khung hình (áp dụng khi phim không khai báo khung ảnh, R-KB-062 (§2.2.4.2.4) "khung ảnh không bắt buộc").
 - **⚠ Model đề xuất (ứng viên, chưa benchmark — xem mục 8)**: **Qwen3-VL** (đề xuất bản 32B làm điểm khởi đầu) — thế hệ mới hơn ví dụ Qwen2-VL/InternVL đã nêu ở `01` mục 6, được vLLM hỗ trợ đầy đủ, đạt chất lượng gần ngang GPT-4o ở bản 72B trên benchmark MMBench-EN; bản 32B được chọn làm điểm khởi đầu vì cân bằng chất lượng/VRAM tốt hơn (không cần multi-GPU) so với việc phải lên thẳng 72B như họ Qwen2-VL.
 
 ## 4. Model & pipeline theo từng chế độ backend (`AI_GATEWAY_MODE`, `01` mục 6)
@@ -218,7 +218,7 @@ Chọn backend qua factory pattern trong code Python — 1 interface chung (`AIB
 - Response lỗi chuẩn hoá, nhất quán với quy ước chung `01` mục 3: `{ "error_code": "...", "message": "...", "trace_id": "..." }`.
 - **Job nền** (`/v1/embed`, `/v1/transcribe`, `/v1/verify/*`, gọi từ `/cmd/worker`): lỗi/timeout để job tự thất bại và dựa vào cơ chế retry/dead-letter sẵn có của river (`01` mục 1, 4) — không tự implement retry riêng trong AI Gateway hay trong code gọi.
 - **Request đồng bộ từ người dùng** (`/v1/generate`, `/v1/rewrite-query`, `/v1/self-audit`, gọi từ `/cmd/api` khi chat): lỗi/timeout trả thẳng lỗi cho người dùng qua endpoint `/assistant/chat` (không retry ở tầng này vì người dùng đang chờ trực tiếp) — Go trả mã lỗi rõ ràng ("AI Văn Minh Việt tạm thời không phản hồi được, thử lại sau") thay vì để timeout im lặng. Ngoại lệ: lỗi/timeout của `/v1/self-audit` không trả lỗi cho người dùng, vì câu trả lời đã được stream xong trước đó — xem mục 3.4.
-- Timeout cụ thể theo từng endpoint (đề xuất, điều chỉnh khi có số liệu thực tế): `/v1/embed` 5s, `/v1/rewrite-query` 5s (nằm trên đường tương tác, phải rất nhanh — xem rủi ro độ trễ ở `05` mục 6), `/v1/generate` không đặt timeout cứng (stream tới khi xong, nhưng có timeout tổng ứng với NFR ≤15s p95 — `01` mục 8/§3.2.2), `/v1/self-audit` 10s, `/v1/transcribe` theo độ dài file (ví dụ 2× độ dài audio, vì không cần real-time — `01` mục 8), `/v1/verify/*` 15s.
+- Timeout cụ thể theo từng endpoint (đề xuất, điều chỉnh khi có số liệu thực tế): `/v1/embed` 5s, `/v1/rewrite-query` 5s (nằm trên đường tương tác, phải rất nhanh — xem rủi ro độ trễ ở `05` mục 6), `/v1/generate` không đặt timeout cứng (stream tới khi xong, nhưng có timeout tổng ứng với NFR ≤15s p95 — `01` mục 8/R-NFR-011 (§3.2.2)), `/v1/self-audit` 10s, `/v1/transcribe` theo độ dài file (ví dụ 2× độ dài audio, vì không cần real-time — `01` mục 8), `/v1/verify/*` 15s.
 - **Tải chồng lấn giữa chat (tương tác) và job nền (AI Verification)** trên cùng GPU on-prem — ⚠ vấn đề mở, xem mục 7.
 
 ## 7. Cấu hình & vận hành
@@ -229,7 +229,7 @@ Chọn backend qua factory pattern trong code Python — 1 interface chung (`AIB
 
 ## 8. Vấn đề mở / giả định
 
-- **Ưu tiên tải GPU giữa chat tương tác và AI Verification nền** — ⚠ đặc tả chỉ cho biết 2 NFR khác nhau (chat ≤3s/≤15s, Verification "vài phút chấp nhận được" — `01` mục 8/§3.2.2) nhưng không có cơ chế admission-control/priority queue cụ thể ở tầng AI Gateway khi cả hai cùng tranh chấp GPU. Đề xuất: request queue riêng ưu tiên `/v1/generate`/`/v1/rewrite-query`/`/v1/self-audit` (đường chat) hơn `/v1/embed`/`/v1/transcribe`/`/v1/verify/*` (đường nền) — cần benchmark thực tế trước khi chốt cơ chế cụ thể (cùng tinh thần "chốt sau khi có số liệu" — `01` mục 9).
+- **Ưu tiên tải GPU giữa chat tương tác và AI Verification nền** — ⚠ đặc tả chỉ cho biết 2 NFR khác nhau (chat ≤3s/≤15s, Verification "vài phút chấp nhận được" — `01` mục 8/R-NFR-011 (§3.2.2)) nhưng không có cơ chế admission-control/priority queue cụ thể ở tầng AI Gateway khi cả hai cùng tranh chấp GPU. Đề xuất: request queue riêng ưu tiên `/v1/generate`/`/v1/rewrite-query`/`/v1/self-audit` (đường chat) hơn `/v1/embed`/`/v1/transcribe`/`/v1/verify/*` (đường nền) — cần benchmark thực tế trước khi chốt cơ chế cụ thể (cùng tinh thần "chốt sau khi có số liệu" — `01` mục 9).
 - **`cpu-small` không hỗ trợ đầy đủ VLM** (`/v1/verify/image-region`, mục 4) — môi trường dev local không GPU sẽ luôn trả `dat` cho tiêu chí hình ảnh, nghĩa là **không test được đường "khong_dat" của tiêu chí này** khi phát triển local. Chấp nhận được cho giai đoạn dev (mục đích `cpu-small` chỉ để test luồng nghiệp vụ, không cần chất lượng AI thật — `01` mục 6), nhưng cần lưu ý khi viết test tự động.
 - **Cách truyền frame video đã trích xuất tới `/v1/verify/image-region`** (mục 3.7) — 2 phương án: (a) Go/`worker` tự trích frame bằng `ffmpeg`, ghi tạm vào Object storage rồi truyền `image_storage_key`; (b) Go/`worker` trích frame rồi truyền thẳng `image_bytes` (base64) trong request, không ghi Object storage. Tài liệu này tạm chọn phương án (a) cho nhất quán với cách các endpoint khác đều truyền `storage_key` thay vì bytes — nhưng đây là chi tiết kỹ thuật có thể đổi khi implement, không ảnh hưởng ai_verdict/nghiệp vụ.
 - **Cần cấu hình khả năng "trả lời giả để test đường không đạt" cho `mock` mode** (mục 4, dòng `/v1/verify/text-match`/`image-region`) — ví dụ qua query param hoặc theo nội dung `claim_text` chứa từ khoá đặc biệt (`"__mock_fail__"`) — chi tiết cụ thể để lại cho lúc viết test, chỉ ghi nhận nhu cầu ở đây.

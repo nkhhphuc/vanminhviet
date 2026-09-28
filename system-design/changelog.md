@@ -32,3 +32,8 @@
   - **04-encyclopedia.md**: xoá Cương vực (`DELETE /encyclopedia/cultural-domains/{id}`, `DeleteCulturalDomain`, `ON DELETE RESTRICT`, lỗi `cultural_domain_in_use`); `review_note` bắt buộc khi `reject` (lỗi `review_note_required`); §2.3.8 chuyển từ "treo" sang "cần thiết kế"; thay ghi chú ⚠ bằng tham chiếu § (mục 2.5, 2.6, 3.2, 4.4, 5.2, 5.3, 6).
   - **05-ai-assistant.md**: dọn nhật ký hỏi đáp quá hạn theo hội thoại (mục 3.3, job `assistant.query_log_cleanup`, `ON DELETE CASCADE`); thay ghi chú ⚠ bằng tham chiếu § (mục 2.3, 4.4, 6).
   - **03-cultural-knowledge-base.md**: `dang_xet_duyet_ai` và phạm vi kích hoạt lại trỏ về §2.2.6.5.1–2; `employee-search` trỏ về §2.2.5.5 (mục 3.3, 5.1, 6).
+
+## 2026-09-28
+
+- CR-20260928-01: đổi toàn bộ trích dẫn mục đặc tả `§...` sang dạng chuẩn `R-XXX-NNN (§...)`; khoảng mục ghi ID cho hai đầu mút `R-A (§X)–R-B (§Y)`. Không đổi nội dung thiết kế. File: **01-architecture-and-tech-stack.md** (103), **02-identity.md** (110), **03-cultural-knowledge-base.md** (293), **04-encyclopedia.md** (110), **05-ai-assistant.md** (29), **06-ai-gateway.md** (11), **07-system-settings.md** (22), **00-claude-instructions.md** (2).
+- **06-ai-gateway.md**: dòng trạng thái — trích dẫn mục nội bộ của `03` ghi dạng "mục 4.2–4.4" thay cho `§`; bỏ câu kể lịch sử cập nhật.

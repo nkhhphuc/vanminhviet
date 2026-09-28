@@ -3,7 +3,7 @@
 ## 1. Tổng quan
 
 - Cho phép Nhân viên giữ role `quan_tri_he_thong` điều chỉnh các tham số vận hành và nghiệp vụ của hệ thống qua Admin nội bộ, không cần lập trình viên sửa code hay deploy lại.
-- Cơ sở đặc tả: §2.8 (Cấu hình hệ thống — chỉ Quản trị hệ thống, sửa và khôi phục mặc định từng tham số, có hiệu lực không cần triển khai lại, mọi thay đổi ghi audit log); §2.2.6.5 (kích hoạt AI Verification tự động/thủ công theo cấu hình); §2.1.5.5, §2.1.5.8, §2.1.5.9 (thời hạn đường dẫn, chính sách mật khẩu, tạm khoá đăng nhập); §2.4.6–2.4.9 (tham số AI Văn Minh Việt, thời hạn lưu nhật ký hỏi đáp); §3.1.2 (thời hạn lưu audit log); §3.1.6 (rate limit Trợ lý AI công khai). Danh sách tham số cụ thể, giá trị mặc định và giới hạn là quyết định của thiết kế (§2.8.5).
+- Cơ sở đặc tả: R-CFG-001 (§2.8) (Cấu hình hệ thống — chỉ Quản trị hệ thống, sửa và khôi phục mặc định từng tham số, có hiệu lực không cần triển khai lại, mọi thay đổi ghi audit log); R-KB-077 (§2.2.6.5) (kích hoạt AI Verification tự động/thủ công theo cấu hình); R-ID-022 (§2.1.5.5), R-ID-029 (§2.1.5.8), R-ID-030 (§2.1.5.9) (thời hạn đường dẫn, chính sách mật khẩu, tạm khoá đăng nhập); R-AI-007 (§2.4.6)–R-AI-010 (§2.4.9) (tham số AI Văn Minh Việt, thời hạn lưu nhật ký hỏi đáp); R-NFR-004 (§3.1.2) (thời hạn lưu audit log); R-NFR-008 (§3.1.6) (rate limit Trợ lý AI công khai). Danh sách tham số cụ thể, giá trị mặc định và giới hạn là quyết định của thiết kế (R-CFG-011 (§2.8.5)).
 - Thuộc package `/shared` (cùng nhóm với `audit_log`, `usage_event`, API job nền — `01` mục 2): cấu hình dùng chung cho mọi module, không thuộc riêng module nghiệp vụ nào. Các package khác chỉ **đọc** qua hàm nội bộ của `/shared`, không chạm bảng.
 - **Ngoài phạm vi** — không đưa lên giao diện, giữ ở biến môi trường/secret lúc triển khai: `AI_GATEWAY_MODE`, đường dẫn model, mọi shared secret (AI Gateway, webhook MinIO/S3), thông tin truy cập MinIO/S3 và SMTP/SES, allowlist CORS, thông tin tài khoản Quản trị hệ thống đầu tiên (`02` mục 3.0), prompt hệ thống của AI Gateway (quản lý theo phiên bản trong code, `06` mục 5), tham số chunking (`05` mục 6). Nội dung hiển thị trang chủ Web công khai (banner, mục nổi bật...) là nội dung của web, không thuộc cấu hình hệ thống.
 
@@ -34,7 +34,7 @@ Mỗi tham số được **khai báo trong code Go** (registry trong `/shared`),
 
 Ký hiệu cột **Áp dụng**: *Ngay* = có hiệu lực cho thao tác tiếp theo sau khi lưu (mục 4.2); ghi chú riêng nếu chỉ áp dụng cho bản ghi phát sinh sau đó.
 
-**Nhóm `ai_verification` — AI Verification (§2.2.6.5)**
+**Nhóm `ai_verification` — AI Verification (R-KB-077 (§2.2.6.5))**
 
 | Key | Kiểu | Mặc định | Ràng buộc | Áp dụng |
 |---|---|---|---|---|
@@ -45,8 +45,8 @@ Ký hiệu cột **Áp dụng**: *Ngay* = có hiệu lực cho thao tác tiếp 
 
 | Key | Kiểu | Mặc định | Ràng buộc | Áp dụng |
 |---|---|---|---|---|
-| `identity.invite_token_ttl_hours` | int | 72 | 1–720 | Token mời sinh sau khi lưu (§2.1.5.5) |
-| `identity.password_reset_token_ttl_minutes` | int | 60 | 10–1440 | Token đặt lại sinh sau khi lưu (§2.1.5.5) |
+| `identity.invite_token_ttl_hours` | int | 72 | 1–720 | Token mời sinh sau khi lưu (R-ID-022 (§2.1.5.5)) |
+| `identity.password_reset_token_ttl_minutes` | int | 60 | 10–1440 | Token đặt lại sinh sau khi lưu (R-ID-022 (§2.1.5.5)) |
 | `identity.access_token_ttl_minutes` | int | 15 | 5–120 | Access token cấp sau khi lưu |
 | `identity.refresh_token_ttl_days` | int | 7 | 1–90 | Refresh token cấp sau khi lưu |
 | `identity.password_min_length` | int | 8 | 8–64 | Mật khẩu đặt mới sau khi lưu — không buộc đổi mật khẩu hiện có |
@@ -87,13 +87,13 @@ Ký hiệu cột **Áp dụng**: *Ngay* = có hiệu lực cho thao tác tiếp 
 | `operations.job_retention_completed_hours` | int | 24 | 1–2160 | Lần dọn dẹp kế tiếp (mục 4.3) | server |
 | `operations.job_retention_cancelled_hours` | int | 24 | 1–2160 | như trên | server |
 | `operations.job_retention_discarded_hours` | int | 168 | 1–2160 | như trên | server |
-| `operations.audit_log_retention_months` | int | 24 | 12–120 (§3.1.2: không dưới 12 tháng) | Lần dọn kế tiếp (mục 4.3) | server |
+| `operations.audit_log_retention_months` | int | 24 | 12–120 (R-NFR-004 (§3.1.2): không dưới 12 tháng) | Lần dọn kế tiếp (mục 4.3) | server |
 | `operations.source_cold_storage_after_days` | int, nullable | `null` | `null` (không chuyển) hoặc 30–3650 | Khi lưu, enqueue job áp quy tắc lifecycle lên bucket (mục 4.3) | server |
 | `operations.admin_polling_interval_seconds` | int | 30 | 10–300 | Client đọc khi tải trang — màn hình Nhật ký hoạt động, Theo dõi job nền | admin_client |
 
 ## 3. Luồng nghiệp vụ
 
-### 3.1. Kích hoạt AI Verification theo cấu hình (§2.2.6.5)
+### 3.1. Kích hoạt AI Verification theo cấu hình (R-KB-077 (§2.2.6.5))
 
 - `trigger_mode = auto`: `submit-for-review` chuyển `dang_nghien_cuu → cho_xet_duyet` rồi kích hoạt AI Verification ngay trong cùng transaction (`cho_xet_duyet → dang_xet_duyet_ai`, enqueue `verification.run`) — `03` mục 4.3.
 - `trigger_mode = manual`: `submit-for-review` chỉ chuyển sang `cho_xet_duyet` và dừng ở đó. Hạng mục chờ tới khi một Nhân viên được phép gọi `trigger-ai-verification`.
@@ -130,9 +130,9 @@ Ký hiệu cột **Áp dụng**: *Ngay* = có hiệu lực cho thao tác tiếp 
 ### 4.3. Tham số cần cơ chế áp dụng riêng
 
 - **Thời gian giữ job (`operations.job_retention_*`)**: river cấu hình thời gian giữ job lúc khởi tạo client, không đổi được khi đang chạy. Vì vậy khởi tạo river client với thời gian giữ rất lớn (vô hiệu hoá thực tế bộ dọn dẹp mặc định), và dọn bằng periodic job riêng `shared.job_cleanup` (river periodic job, chạy mỗi giờ): xoá dòng `river_job` ở trạng thái `completed`/`cancelled`/`discarded` có `finalized_at` quá thời gian giữ tương ứng đọc từ cấu hình.
-- **Thời hạn lưu audit log (`operations.audit_log_retention_months`)** (§3.1.2): periodic job `shared.audit_log_cleanup` (river periodic job, chạy mỗi ngày) xoá các dòng `audit_log` có `created_at < now() - N tháng`, xoá theo lô để không khoá bảng lâu. Đây là thao tác DELETE duy nhất trên `audit_log` (`01` mục 7). Job không tự ghi audit log.
-- **Thời hạn lưu nhật ký hỏi đáp AI (`assistant.query_log_retention_days`)** (§2.4.9.4): periodic job `assistant.query_log_cleanup` (chạy mỗi ngày, thuộc `/assistant` — package sở hữu bảng) xoá các hội thoại có `last_message_at < now() - N ngày`, cùng toàn bộ lượt hỏi–đáp của hội thoại đó (`05` mục 3.3).
-- **Chuyển tư liệu cũ sang cold storage (`operations.source_cold_storage_after_days`)**: khi lưu key này, enqueue job `shared.apply_storage_lifecycle` cùng transaction. Job gọi API lifecycle của S3/MinIO trên bucket Tư liệu gốc: đặt (hoặc gỡ, khi giá trị là `null`) quy tắc chuyển **các phiên bản không còn là bản hiện hành** (noncurrent versions) sang tầng lưu trữ lạnh sau N ngày. Tên tầng lưu trữ lạnh lấy từ biến môi trường `STORAGE_COLD_TIER` (cấu hình hạ tầng). Không xoá phiên bản nào (§2.2.3.4 — `01` mục 1).
+- **Thời hạn lưu audit log (`operations.audit_log_retention_months`)** (R-NFR-004 (§3.1.2)): periodic job `shared.audit_log_cleanup` (river periodic job, chạy mỗi ngày) xoá các dòng `audit_log` có `created_at < now() - N tháng`, xoá theo lô để không khoá bảng lâu. Đây là thao tác DELETE duy nhất trên `audit_log` (`01` mục 7). Job không tự ghi audit log.
+- **Thời hạn lưu nhật ký hỏi đáp AI (`assistant.query_log_retention_days`)** (R-AI-014 (§2.4.9.4)): periodic job `assistant.query_log_cleanup` (chạy mỗi ngày, thuộc `/assistant` — package sở hữu bảng) xoá các hội thoại có `last_message_at < now() - N ngày`, cùng toàn bộ lượt hỏi–đáp của hội thoại đó (`05` mục 3.3).
+- **Chuyển tư liệu cũ sang cold storage (`operations.source_cold_storage_after_days`)**: khi lưu key này, enqueue job `shared.apply_storage_lifecycle` cùng transaction. Job gọi API lifecycle của S3/MinIO trên bucket Tư liệu gốc: đặt (hoặc gỡ, khi giá trị là `null`) quy tắc chuyển **các phiên bản không còn là bản hiện hành** (noncurrent versions) sang tầng lưu trữ lạnh sau N ngày. Tên tầng lưu trữ lạnh lấy từ biến môi trường `STORAGE_COLD_TIER` (cấu hình hạ tầng). Không xoá phiên bản nào (R-KB-029 (§2.2.3.4) — `01` mục 1).
 - **Rate limit Chat AI công khai (`assistant.public_rate_limit_*`)**: middleware Go gắn trên route `POST /api/v1/public/assistant/chat` (`05` mục 5.1). Đếm theo IP client lấy từ header `X-Forwarded-For` do Traefik gắn (chỉ tin header khi request đến từ Traefik). Thuật toán cửa sổ cố định, lưu bộ đếm trong bộ nhớ tiến trình. ⚠ Nếu chạy nhiều bản `/cmd/api` song song, giới hạn tính riêng cho từng bản — chấp nhận ở quy mô hiện tại (`01` mục 8); cần chuyển bộ đếm sang Postgres hoặc Redis nếu mở rộng ngang. Vượt ngưỡng → HTTP 429 với lỗi `rate_limited` (quy ước lỗi chung `01` mục 3), kèm header `Retry-After`; không ghi `assistant_query_log`.
 
 ### 4.4. Mẫu email
@@ -197,8 +197,8 @@ Mỗi phần tử trong `GET /shared/settings`:
 
 ## 6. Vấn đề mở / giả định
 
-- Các nhóm tham số theo §2.8.4. ⚠ Danh sách key cụ thể, giá trị mặc định và giới hạn là đề xuất của thiết kế (§2.8.5), điều chỉnh khi có số liệu thực tế. Riêng thời hạn access token/refresh token là tham số kỹ thuật, không nêu trong đặc tả.
-- ⚠ **Rate limit bằng middleware Go, bộ đếm trong bộ nhớ** (mục 4.3): chỉ đếm theo IP, mặc định tắt, người dùng chung một mạng dùng chung hạn mức — đúng §3.1.6. Giới hạn tính theo từng bản `/cmd/api` là hệ quả kỹ thuật, cần chuyển bộ đếm sang Postgres hoặc Redis nếu mở rộng ngang.
-- **Cho sửa toàn bộ mẫu email** có xem trước và gửi thử (§2.8.4.3). Rủi ro mẫu hiển thị lỗi trên một số trình đọc email được giảm thiểu bằng xem trước, gửi thử, và danh sách thẻ HTML cho phép (mục 4.4).
-- Không có lịch sử phiên bản cấu hình và không có "quay về giá trị trước" ngoài "Khôi phục mặc định" (§2.8.2); giá trị cũ tra cứu qua `audit_log` (`detail.old_value`).
+- Các nhóm tham số theo R-CFG-005 (§2.8.4). ⚠ Danh sách key cụ thể, giá trị mặc định và giới hạn là đề xuất của thiết kế (R-CFG-011 (§2.8.5)), điều chỉnh khi có số liệu thực tế. Riêng thời hạn access token/refresh token là tham số kỹ thuật, không nêu trong đặc tả.
+- ⚠ **Rate limit bằng middleware Go, bộ đếm trong bộ nhớ** (mục 4.3): chỉ đếm theo IP, mặc định tắt, người dùng chung một mạng dùng chung hạn mức — đúng R-NFR-008 (§3.1.6). Giới hạn tính theo từng bản `/cmd/api` là hệ quả kỹ thuật, cần chuyển bộ đếm sang Postgres hoặc Redis nếu mở rộng ngang.
+- **Cho sửa toàn bộ mẫu email** có xem trước và gửi thử (R-CFG-008 (§2.8.4.3)). Rủi ro mẫu hiển thị lỗi trên một số trình đọc email được giảm thiểu bằng xem trước, gửi thử, và danh sách thẻ HTML cho phép (mục 4.4).
+- Không có lịch sử phiên bản cấu hình và không có "quay về giá trị trước" ngoài "Khôi phục mặc định" (R-CFG-003 (§2.8.2)); giá trị cũ tra cứu qua `audit_log` (`detail.old_value`).
 - Tên tầng lưu trữ lạnh (`STORAGE_COLD_TIER`) và việc bucket Tư liệu gốc bật versioning là điều kiện hạ tầng, cần có trước khi dùng `operations.source_cold_storage_after_days`.

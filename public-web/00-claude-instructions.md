@@ -12,7 +12,7 @@
 - `public-web/public-web-layout.md` là **nguồn chân lý duy nhất** cho đặc tả giao diện web công khai. Không tạo thêm bản sao/bản nháp song song trong project.
 - `requirements/` (đặc tả nghiệp vụ gốc) và `system-design/` (thiết kế kỹ thuật) — **không thuộc phạm vi của luồng biên tập giao diện này**, chỉ đọc để đối chiếu, không ghi vào đó. Việc sửa `business-requirements.md` (nếu cần) thuộc về luồng Requirements riêng.
 - `public-web/changelog.md` là nhật ký các thay đổi đã ghi vào `public-web-layout.md` (xem quy tắc chung ở `common/00-claude-instructions.md` mục 2) — khác với mục 7 bên dưới, vốn là bảng theo dõi trạng thái đối chiếu, không phải nhật ký theo ngày.
-- Mọi file phát sinh từ luồng biên tập giao diện này chỉ lưu trong project, dưới thư mục `public-web/` — không rải rác ở thư mục khác.
+- Mọi file phát sinh từ luồng biên tập giao diện này chỉ lưu trong thư mục `public-web/` — không rải rác ở thư mục khác.
 
 ## 3. Quy ước cấu trúc tài liệu
 
@@ -22,9 +22,8 @@
 
 ## 4. Quy trình chỉnh sửa
 
-- Preview trước khi ghi, và luôn `project_read` bản mới nhất trước khi ghi đè: theo nguyên tắc chung ở `common/00-claude-instructions.md` mục 3 — áp dụng nguyên vẹn cho luồng này.
+- Preview trước khi ghi, và luôn đọc lại bản mới nhất từ máy trước khi ghi: theo nguyên tắc chung ở `common/00-claude-instructions.md` mục 3 — áp dụng nguyên vẹn cho luồng này.
 - Sau khi ghi xong một thay đổi vào `public-web-layout.md`, tóm tắt ngắn gọn cho người dùng xem, đồng thời ghi thêm một mục vào `public-web/changelog.md` theo nguyên tắc ở `common/00-claude-instructions.md` mục 2.
-- Đồng bộ ra máy: theo nguyên tắc chung mục 1 (`public-web/` ↔ `Z:\GoogleDrive\VanMinhViet\public-web`).
 
 ## 5. Đối chiếu với Business Requirements — quy trình xử lý điểm lệch
 
@@ -47,16 +46,16 @@ Khi phát hiện một điểm trong `public-web-layout.md` không có cơ sở 
 
 Danh sách điểm đối chiếu giữa `public-web-layout.md` và `business-requirements.md`, cùng trạng thái xử lý hiện tại (lịch sử xử lý xem `public-web/changelog.md`):
 
-1. ✅ Bảo tàng số 3D — module ngoài phạm vi (BR §2.5.6), đã ghi chú trong `public-web-layout.md`.
-2. ✅ Bản đồ văn hóa — module ngoài phạm vi (BR §2.5.7), đã ghi chú.
-3. ✅ Game lịch sử (mục 4.7) — module ngoài phạm vi (BR §2.5.1), đã ghi chú "thiết kế đi trước".
-4. ✅ Phim & TV (mục 4.8) — module ngoài phạm vi (BR §2.5.2), đã ghi chú "thiết kế đi trước".
+1. ✅ Bảo tàng số 3D — module ngoài phạm vi (BR R-OOS-007 (§2.5.6)), đã ghi chú trong `public-web-layout.md`.
+2. ✅ Bản đồ văn hóa — module ngoài phạm vi (BR R-OOS-008 (§2.5.7)), đã ghi chú.
+3. ✅ Game lịch sử (mục 4.7) — module ngoài phạm vi (BR R-OOS-002 (§2.5.1)), đã ghi chú "thiết kế đi trước".
+4. ✅ Phim & TV (mục 4.8) — module ngoài phạm vi (BR R-OOS-003 (§2.5.2)), đã ghi chú "thiết kế đi trước".
 5. ✅ Giáo dục (lưới chức năng mục 4.1) — module mới, chưa có cơ sở trong BR, đã ghi chú "thiết kế đi trước, chưa có cơ sở".
-6. ✅ Cộng đồng (mục 4.9) — module ngoài phạm vi (BR §2.5.3, §3.5.1), đã ghi chú "thiết kế đi trước"; nội dung chi tiết màn hình tạm gác lại.
-7. ✅ Section "Hôm nay" (mục 4.1) — khớp BR §2.5.5 (ngoài phạm vi), đã ghi chú "thiết kế đi trước".
-8. ✅ "Lễ Hội Truyền Thống" trong carousel "Khám phá nổi bật" (mục 4.1) — không lệch: mỗi card là một Mục từ (BR §2.3.1–2.3.2, §2.3.7), tài liệu đã làm rõ cấu trúc này.
+6. ✅ Cộng đồng (mục 4.9) — module ngoài phạm vi (BR R-OOS-004 (§2.5.3), R-NFR-025 (§3.5.1)), đã ghi chú "thiết kế đi trước"; nội dung chi tiết màn hình tạm gác lại.
+7. ✅ Section "Hôm nay" (mục 4.1) — khớp BR R-OOS-006 (§2.5.5) (ngoài phạm vi), đã ghi chú "thiết kế đi trước".
+8. ✅ "Lễ Hội Truyền Thống" trong carousel "Khám phá nổi bật" (mục 4.1) — không lệch: mỗi card là một Mục từ (BR R-ENC-002 (§2.3.1)–R-ENC-003 (§2.3.2), R-ENC-032 (§2.3.7)), tài liệu đã làm rõ cấu trúc này.
 9. ✅ Icon thông báo ở top bar Trang chủ (mục 4.1) — chưa có đặc tả nghiệp vụ, đã ghi chú "thiết kế đi trước".
-10. ⏳ Màn hình Chat AI (mục 4.2): (a) ✅ chỉ hỗ trợ tiếng Việt, không có UI chọn Cương vực/ngôn ngữ; (b) ✅ trích dẫn Mục từ nguồn dạng chip, bấm mở Trang chi tiết Mục từ (khớp BR §2.6.3, §2.6.5.4); (c) ⏳ quick-reply chips + nhập giọng nói — chưa có cơ sở trong BR, để xử lý sau.
+10. ⏳ Màn hình Chat AI (mục 4.2): (a) ✅ chỉ hỗ trợ tiếng Việt, không có UI chọn Cương vực/ngôn ngữ; (b) ✅ trích dẫn Mục từ nguồn dạng chip, bấm mở Trang chi tiết Mục từ (khớp BR R-PUB-007 (§2.6.3), R-PUB-010 (§2.6.4.2)); (c) ⏳ quick-reply chips + nhập giọng nói — chưa có cơ sở trong BR, để xử lý sau.
 
 ## 8. Đồng bộ với session khác
 
