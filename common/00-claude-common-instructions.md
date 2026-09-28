@@ -37,3 +37,4 @@
 
 - Nguyên tắc chung: mọi thao tác liên quan đến Git/GitHub (commit, push, pull, checkout, tạo branch, clone, tạo pull request/issue qua `gh`, v.v.) — dù thực hiện trên máy người dùng hay trong session cloud — luôn dùng tài khoản GitHub của chính người dùng (git identity/credentials, hoặc phiên đăng nhập `gh`/token đã cấu hình sẵn cho người dùng), không dùng tài khoản, identity hay token mặc định nào khác (kể cả tài khoản/identity gắn với Claude).
 - Dùng đúng git identity/credentials đã cấu hình sẵn trên máy. Không tự thêm, sửa hay ghi đè cấu hình git (`user.name`, `user.email`, credential helper, remote, v.v.) trừ khi được yêu cầu rõ ràng.
+- Commit message và mô tả pull request **không bao giờ** được chứa dòng ghi công cho Claude/AI (ví dụ `Co-Authored-By: Claude...`, link phiên Claude, "Generated with Claude Code"). Chỉ ghi nội dung thay đổi.
