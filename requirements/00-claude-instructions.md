@@ -1,6 +1,6 @@
 # Đặc Tả Yêu Cầu Văn Minh Việt — Khung & Nguyên Tắc
 
-> Tài liệu điều phối cho quá trình biên tập, hoàn thiện đặc tả yêu cầu phần mềm. Đọc `common/00-claude-common-instructions.md` trước (nguyên tắc dùng chung cho mọi luồng), rồi đọc file này trước khi chỉnh sửa `requirements/business-requirements.md`, kể cả ở một session khác.
+> Tài liệu điều phối cho quá trình biên tập, hoàn thiện đặc tả yêu cầu phần mềm. Đọc `common/00-claude-instructions.md` trước (nguyên tắc dùng chung cho mọi luồng), rồi đọc file này trước khi chỉnh sửa `requirements/business-requirements.md`, kể cả ở một session khác.
 
 ## 1. Mục tiêu
 
@@ -13,7 +13,7 @@
 - `requirements/business-requirements.md` là **nguồn chân lý duy nhất** cho đặc tả yêu cầu. Không tạo thêm bản sao/bản nháp song song trong project.
 - Tài liệu thiết kế kỹ thuật (`system-design/`) tham chiếu ngược lại tài liệu này theo ID (kèm số mục), xem `common/requirements-design-sync.md` mục 2.3 — không tự ý suy diễn khi đặc tả gốc chưa có.
 - Các bản xuất khác (Word, PDF...) là bản phái sinh phục vụ mục đích cụ thể (đọc offline, gửi máy tính người dùng...), không phải nguồn chân lý — khi có thay đổi, `business-requirements.md` trong project luôn được cập nhật trước.
-- `requirements/changelog.md` là nhật ký các thay đổi đã ghi vào `business-requirements.md` (xem quy tắc chung ở `common/00-claude-common-instructions.md` mục 2).
+- `requirements/changelog.md` là nhật ký các thay đổi đã ghi vào `business-requirements.md` (xem quy tắc chung ở `common/00-claude-instructions.md` mục 2).
 - Mọi file là kết quả làm việc của giai đoạn đặc tả này (đặc tả, khung nguyên tắc, và các tài liệu liên quan khác nếu phát sinh) **chỉ lưu trong project, dưới thư mục `requirements/`** — không tạo rải rác ở các đường dẫn khác trong project.
 
 ## 3. Quy ước đánh số & cấu trúc
@@ -35,13 +35,13 @@
 
 ## 4. Quy trình chỉnh sửa
 
-- Preview trước khi ghi, và luôn `project_read` bản mới nhất trước khi ghi đè: theo nguyên tắc chung ở `common/00-claude-common-instructions.md` mục 3 — áp dụng nguyên vẹn cho luồng này.
-- Sau khi ghi xong một thay đổi vào `business-requirements.md`, tóm tắt ngắn gọn đã thay đổi những gì cho người dùng xem (không dán lại toàn bộ nội dung file), đồng thời ghi thêm một mục vào `requirements/changelog.md` theo nguyên tắc ở `common/00-claude-common-instructions.md` mục 2.
+- Preview trước khi ghi, và luôn `project_read` bản mới nhất trước khi ghi đè: theo nguyên tắc chung ở `common/00-claude-instructions.md` mục 3 — áp dụng nguyên vẹn cho luồng này.
+- Sau khi ghi xong một thay đổi vào `business-requirements.md`, tóm tắt ngắn gọn đã thay đổi những gì cho người dùng xem (không dán lại toàn bộ nội dung file), đồng thời ghi thêm một mục vào `requirements/changelog.md` theo nguyên tắc ở `common/00-claude-instructions.md` mục 2.
 - Đồng bộ ra máy: theo nguyên tắc chung mục 1 (`requirements/` ↔ `Z:\GoogleDrive\VanMinhViet\requirements`).
 
 ## 5. Đồng bộ với các session khác
 
-- Xem `common/00-claude-common-instructions.md` mục 4. Lưu ý riêng cho luồng này: session thiết kế hệ thống ở `system-design/` cũng cần được báo khi `business-requirements.md` đổi, vì system-design tham chiếu ngược lại tài liệu này.
+- Xem `common/00-claude-instructions.md` mục 4. Lưu ý riêng cho luồng này: session thiết kế hệ thống ở `system-design/` cũng cần được báo khi `business-requirements.md` đổi, vì system-design tham chiếu ngược lại tài liệu này.
 
 ## 6. Trạng thái hiện tại (cập nhật lần cuối: xem ngày sửa file business-requirements.md)
 

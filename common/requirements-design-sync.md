@@ -65,7 +65,7 @@ requirements → system-design → admin-web / partner-web / public-web → code
 - Khi tạo CR, mọi cột luồng dưới mặc định ⏳. Chỉ luồng tương ứng mới đổi trạng thái của cột mình, sau khi đã đối chiếu.
 - Một luồng chỉ xử lý CR khi luồng ngay trên nó đã ✅ hoặc — (ví dụ admin-web chờ system-design).
 - Khi luồng thiết kế sửa file nguồn do một CR, mục changelog của luồng đó ghi kèm mã CR.
-- **Cột Code**: team Code ghi mã CR vào task tương ứng trong `VanMinhViet_Execution_Plan.md` (repo code). Người phụ trách project cập nhật cột Code trong sổ theo dõi khi task hoàn thành.
+- **Cột Code**: khi code đã cập nhật xong theo một CR, người phụ trách project cập nhật cột Code trong sổ theo dõi.
 - **Mốc đồng bộ** của một luồng = CR mới nhất mà mọi CR trước đó ở cột luồng đó đều là ✅ hoặc —. Mốc này ghi ở đầu sổ theo dõi.
 - **Đóng CR**: khi mọi cột luồng của một CR là ✅ hoặc —, cập nhật mốc đồng bộ nếu cần, rồi xoá dòng CR đó khỏi sổ. Commit git với message ghi mã CR (ví dụ `CR-20260928-01: đóng`) để CR vẫn tra được trong git history.
 
@@ -86,4 +86,4 @@ requirements → system-design → admin-web / partner-web / public-web → code
 
 - Xem sổ theo dõi để biết CR nào đã xong ở thiết kế (✅ ở cột system-design và web tương ứng) nhưng cột Code còn ⏳ — đó là phần cần cập nhật code.
 - Trong code/test, khi cần trích yêu cầu, dùng ID (`R-KB-014`), không dùng số mục.
-- Nếu `requirements/`, `system-design/` mâu thuẫn với code hoặc Execution Plan, tài liệu thiết kế luôn thắng (theo `common/execution-tracking.md` mục 3).
+- Nếu `requirements/`, `system-design/` mâu thuẫn với code, tài liệu thiết kế luôn thắng.

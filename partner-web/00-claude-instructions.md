@@ -1,6 +1,6 @@
 # Đặc Tả Giao Diện Cổng Nhân Viên Tổ Chức Khác — Khung & Nguyên Tắc
 
-> Tài liệu điều phối cho quá trình thiết kế giao diện Cổng Nhân viên Tổ chức khác (Quasar SPA, app/deploy riêng khỏi Admin nội bộ — dành cho Nhân viên thuộc Tổ chức khác, §1.2.3.2/module 2.7 đặc tả gốc). Đọc `common/00-claude-common-instructions.md` trước, rồi đọc file này trước khi chỉnh sửa `partner-web-design.md`, kể cả ở một session khác.
+> Tài liệu điều phối cho quá trình thiết kế giao diện Cổng Nhân viên Tổ chức khác (Quasar SPA, app/deploy riêng khỏi Admin nội bộ — dành cho Nhân viên thuộc Tổ chức khác, §1.2.3.2/module 2.7 đặc tả gốc). Đọc `common/00-claude-instructions.md` trước, rồi đọc file này trước khi chỉnh sửa `partner-web-design.md`, kể cả ở một session khác.
 
 ## 1. Mục tiêu
 
@@ -51,4 +51,4 @@ Khi phát hiện một điểm trong `partner-web-design.md` không có cơ sở
 
 ## 8. Đồng bộ với session khác
 
-- Xem `common/00-claude-common-instructions.md` mục 4.
+- Xem `common/00-claude-instructions.md` mục 4.

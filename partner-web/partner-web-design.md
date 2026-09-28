@@ -254,4 +254,4 @@
 
 ## 8. Đồng bộ với session khác
 
-- Xem `common/00-claude-common-instructions.md` mục 4.
+- Xem `common/00-claude-instructions.md` mục 4.

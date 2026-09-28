@@ -1,6 +1,6 @@
 # Đặc Tả Giao Diện Web Admin Nội Bộ — Khung & Nguyên Tắc
 
-> Tài liệu điều phối cho quá trình thiết kế giao diện Admin nội bộ (Quasar SPA, dành cho Nhân viên thuộc Tổ chức Văn Minh Việt — §1.2.3.1 đặc tả gốc). Đọc `common/00-claude-common-instructions.md` trước, rồi đọc file này trước khi chỉnh sửa `admin-web-design.md`, kể cả ở một session khác.
+> Tài liệu điều phối cho quá trình thiết kế giao diện Admin nội bộ (Quasar SPA, dành cho Nhân viên thuộc Tổ chức Văn Minh Việt — §1.2.3.1 đặc tả gốc). Đọc `common/00-claude-instructions.md` trước, rồi đọc file này trước khi chỉnh sửa `admin-web-design.md`, kể cả ở một session khác.
 
 ## 1. Mục tiêu
 
@@ -12,7 +12,7 @@
 
 - `admin-web/admin-web-design.md` là **nguồn chân lý duy nhất** cho đặc tả giao diện Admin nội bộ. Không tạo thêm bản sao/bản nháp song song trong project.
 - `requirements/` (đặc tả nghiệp vụ gốc) và `system-design/` (thiết kế kỹ thuật, gồm mô hình dữ liệu/API mà giao diện này gọi vào) — **không thuộc phạm vi của luồng này**, chỉ đọc để đối chiếu, không ghi vào đó.
-- `admin-web/changelog.md` là nhật ký các thay đổi đã ghi vào `admin-web-design.md` (xem quy tắc chung ở `common/00-claude-common-instructions.md` mục 2).
+- `admin-web/changelog.md` là nhật ký các thay đổi đã ghi vào `admin-web-design.md` (xem quy tắc chung ở `common/00-claude-instructions.md` mục 2).
 - Mọi file phát sinh từ luồng này chỉ lưu trong thư mục `admin-web/` — không rải rác sang thư mục khác.
 
 ## 3. Quy ước cấu trúc tài liệu
@@ -23,7 +23,7 @@
 
 ## 4. Quy trình chỉnh sửa
 
-- Preview trước khi ghi, và luôn `project_read` bản mới nhất trước khi ghi đè: theo nguyên tắc chung ở `common/00-claude-common-instructions.md` mục 3.
+- Preview trước khi ghi, và luôn `project_read` bản mới nhất trước khi ghi đè: theo nguyên tắc chung ở `common/00-claude-instructions.md` mục 3.
 - Sau khi ghi xong một thay đổi vào `admin-web-design.md`, tóm tắt ngắn gọn cho người dùng xem, đồng thời ghi thêm một mục vào `admin-web/changelog.md`.
 - Đồng bộ ra máy: theo nguyên tắc chung mục 1 (`admin-web/` ↔ `Z:\GoogleDrive\VanMinhViet\admin-web`).
 
@@ -59,4 +59,4 @@ Khi phát hiện một điểm trong `admin-web-design.md` không có cơ sở (
 
 ## 8. Đồng bộ với session khác
 
-- Xem `common/00-claude-common-instructions.md` mục 4.
+- Xem `common/00-claude-instructions.md` mục 4.

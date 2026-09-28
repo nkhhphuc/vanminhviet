@@ -1,6 +1,6 @@
 # Thiết Kế Hệ Thống Văn Minh Việt — Khung & Nguyên Tắc
 
-> Tài liệu điều phối cho toàn bộ quá trình thiết kế kỹ thuật. Đọc `common/00-claude-common-instructions.md` trước (nguyên tắc dùng chung cho mọi luồng), rồi đọc file này trước khi làm việc trên bất kỳ tài liệu module nào trong thư mục `system-design/`.
+> Tài liệu điều phối cho toàn bộ quá trình thiết kế kỹ thuật. Đọc `common/00-claude-instructions.md` trước (nguyên tắc dùng chung cho mọi luồng), rồi đọc file này trước khi làm việc trên bất kỳ tài liệu module nào trong thư mục `system-design/`.
 
 ## 1. Mục tiêu
 
@@ -55,8 +55,8 @@ Mỗi file `system-design/0X-<tên module tiếng Anh>.md` nên theo cấu trúc
 ## 7. Nơi lưu trữ & quy ước đặt tên
 
 - Quy ước đặt tên file: `system-design/0X-<tên phần theo thứ tự build ở mục 4, tiếng Anh, gạch ngang>.md`. File này là `00-claude-instructions.md`; lịch sử thay đổi chung của cả thư mục nằm ở `system-design/changelog.md`.
-- Nguyên tắc lưu trữ trong Project và preview trước khi ghi: xem `common/00-claude-common-instructions.md` mục 1 và 3.
+- Nguyên tắc lưu trữ trong Project và preview trước khi ghi: xem `common/00-claude-instructions.md` mục 1 và 3.
 
 ## 8. Đồng bộ ra máy người dùng
 
-- Theo nguyên tắc chung ở `common/00-claude-common-instructions.md` mục 1 (`system-design/` ↔ `Z:\GoogleDrive\VanMinhViet\system-design`).
+- Theo nguyên tắc chung ở `common/00-claude-instructions.md` mục 1 (`system-design/` ↔ `Z:\GoogleDrive\VanMinhViet\system-design`).

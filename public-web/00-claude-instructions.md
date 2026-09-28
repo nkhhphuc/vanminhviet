@@ -1,6 +1,6 @@
 # Đặc Tả Giao Diện Web Công Khai — Khung & Nguyên Tắc
 
-> Tài liệu điều phối cho quá trình biên tập, hoàn thiện đặc tả giao diện web công khai. Đọc `common/00-claude-common-instructions.md` trước (nguyên tắc dùng chung cho mọi luồng), rồi đọc file này trước khi chỉnh sửa `public-web/public-web-layout.md`, kể cả ở một session khác.
+> Tài liệu điều phối cho quá trình biên tập, hoàn thiện đặc tả giao diện web công khai. Đọc `common/00-claude-instructions.md` trước (nguyên tắc dùng chung cho mọi luồng), rồi đọc file này trước khi chỉnh sửa `public-web/public-web-layout.md`, kể cả ở một session khác.
 
 ## 1. Mục tiêu
 
@@ -11,7 +11,7 @@
 
 - `public-web/public-web-layout.md` là **nguồn chân lý duy nhất** cho đặc tả giao diện web công khai. Không tạo thêm bản sao/bản nháp song song trong project.
 - `requirements/` (đặc tả nghiệp vụ gốc) và `system-design/` (thiết kế kỹ thuật) — **không thuộc phạm vi của luồng biên tập giao diện này**, chỉ đọc để đối chiếu, không ghi vào đó. Việc sửa `business-requirements.md` (nếu cần) thuộc về luồng Requirements riêng.
-- `public-web/changelog.md` là nhật ký các thay đổi đã ghi vào `public-web-layout.md` (xem quy tắc chung ở `common/00-claude-common-instructions.md` mục 2) — khác với mục 7 bên dưới, vốn là bảng theo dõi trạng thái đối chiếu, không phải nhật ký theo ngày.
+- `public-web/changelog.md` là nhật ký các thay đổi đã ghi vào `public-web-layout.md` (xem quy tắc chung ở `common/00-claude-instructions.md` mục 2) — khác với mục 7 bên dưới, vốn là bảng theo dõi trạng thái đối chiếu, không phải nhật ký theo ngày.
 - Mọi file phát sinh từ luồng biên tập giao diện này chỉ lưu trong project, dưới thư mục `public-web/` — không rải rác ở thư mục khác.
 
 ## 3. Quy ước cấu trúc tài liệu
@@ -22,8 +22,8 @@
 
 ## 4. Quy trình chỉnh sửa
 
-- Preview trước khi ghi, và luôn `project_read` bản mới nhất trước khi ghi đè: theo nguyên tắc chung ở `common/00-claude-common-instructions.md` mục 3 — áp dụng nguyên vẹn cho luồng này.
-- Sau khi ghi xong một thay đổi vào `public-web-layout.md`, tóm tắt ngắn gọn cho người dùng xem, đồng thời ghi thêm một mục vào `public-web/changelog.md` theo nguyên tắc ở `common/00-claude-common-instructions.md` mục 2.
+- Preview trước khi ghi, và luôn `project_read` bản mới nhất trước khi ghi đè: theo nguyên tắc chung ở `common/00-claude-instructions.md` mục 3 — áp dụng nguyên vẹn cho luồng này.
+- Sau khi ghi xong một thay đổi vào `public-web-layout.md`, tóm tắt ngắn gọn cho người dùng xem, đồng thời ghi thêm một mục vào `public-web/changelog.md` theo nguyên tắc ở `common/00-claude-instructions.md` mục 2.
 - Đồng bộ ra máy: theo nguyên tắc chung mục 1 (`public-web/` ↔ `Z:\GoogleDrive\VanMinhViet\public-web`).
 
 ## 5. Đối chiếu với Business Requirements — quy trình xử lý điểm lệch
@@ -60,4 +60,4 @@ Danh sách điểm đối chiếu giữa `public-web-layout.md` và `business-re
 
 ## 8. Đồng bộ với session khác
 
-- Xem `common/00-claude-common-instructions.md` mục 4.
+- Xem `common/00-claude-instructions.md` mục 4.
