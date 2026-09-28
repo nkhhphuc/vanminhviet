@@ -41,8 +41,9 @@ requirements → system-design → admin-web / partner-web / public-web → code
 - **Gộp nhiều mục**: giữ ID của một mục; các ID còn lại ghi `bỏ — gộp vào R-...` trong CR.
 - ID mới lớn nhất đang dùng của từng mã module ghi ở đầu sổ theo dõi, để cấp ID tiếp theo không trùng.
 
-### 2.3. Cách trích dẫn ở các luồng khác
+### 2.3. Cách trích dẫn trong tài liệu các luồng thiết kế
 
+- Phạm vi: các file trong `system-design/`, `admin-web/`, `partner-web/`, `public-web/`. Trích dẫn trong code/test theo mục 7.
 - Dạng chuẩn: `R-KB-014 (§2.2.3.12)` — ID là bắt buộc, số mục đi kèm để dễ đọc.
 - Khi số mục thay đổi mà ID không đổi, trích dẫn vẫn đúng; số mục đi kèm được cập nhật ở lần rà soát kế tiếp (mục 5).
 - Ký hiệu `§` chỉ dùng cho mục của đặc tả. Mục nội bộ trong tài liệu thiết kế ghi dạng "`03` mục 4.2".
@@ -85,5 +86,5 @@ requirements → system-design → admin-web / partner-web / public-web → code
 ## 7. Dành cho team Code
 
 - Xem sổ theo dõi để biết CR nào đã xong ở thiết kế (✅ ở cột system-design và web tương ứng) nhưng cột Code còn ⏳ — đó là phần cần cập nhật code.
-- Trong code/test, khi cần trích yêu cầu, dùng ID (`R-KB-014`), không dùng số mục.
+- Trong code/test (comment, tên/mô tả test), khi cần trích yêu cầu, chỉ ghi ID (`R-KB-014`), không kèm số mục — code nằm ngoài phạm vi kiểm tra của mục 5 nên số mục đi kèm không được cập nhật.
 - Nếu `requirements/`, `system-design/` mâu thuẫn với code, tài liệu thiết kế luôn thắng.
