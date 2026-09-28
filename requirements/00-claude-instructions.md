@@ -18,7 +18,7 @@
 
 ## 3. Quy ước đánh số & cấu trúc
 
-- Đánh số nhiều cấp thủ công ngay trong text (`**1.1.1.**`, `**2.2.3.7.**`...) — không dùng danh sách tự đánh số của Markdown — để người dùng có thể tham chiếu chính xác một mục/câu khi trao đổi. Về mặt cú pháp, mỗi mục vẫn là một list item Markdown (`- **1.1.1.** ...`) để có thụt lề phân cấp; đây là quy ước cố ý giữ nguyên (xem mục 7 về cách xử lý khi xuất Word).
+- Đánh số nhiều cấp thủ công ngay trong text (`**1.1.1.**`, `**2.2.3.7.**`...) — không dùng danh sách tự đánh số của Markdown — để người dùng có thể tham chiếu chính xác một mục/câu khi trao đổi. Về mặt cú pháp, mỗi mục vẫn là một list item Markdown (`- **1.1.1.** ...`) để có thụt lề phân cấp; đây là quy ước cố ý giữ nguyên.
 - Khi thêm/xoá/tách một mục làm lệch số các mục con phía sau, phải đánh số lại toàn bộ và rà soát mọi tham chiếu chéo tới số mục đó ở nơi khác trong tài liệu (ví dụ "xem mục 2.2.5.11") để tránh trỏ sai sau khi đánh số lại. Đánh số lại chỉ đổi số mục, không đổi ID (xem bên dưới).
 - **ID yêu cầu ổn định**: mỗi mục đánh số (kể cả tiêu đề mục) mang một ID `R-<mã module>-<3 chữ số>` theo `common/requirements-design-sync.md` mục 2. Vị trí đặt ID:
   - Mục thường: `- **2.2.3.5.** [R-KB-031] Nội dung...`
@@ -51,5 +51,4 @@
 
 ## 7. Skill hỗ trợ đã lưu
 
-- **`xuat-ra-docx`** (đã lưu, đang dùng được): xuất toàn bộ, đầy đủ chi tiết một tài liệu trong project này (mặc định `business-requirements.md`) ra file Word (.docx). Vì tài liệu nguồn dùng cú pháp list Markdown cho số mục thủ công (xem mục 3), khi convert bằng pandoc sẽ phát sinh dấu đầu dòng dư — skill này tự động sửa (xoá glyph bullet trong `word/numbering.xml`, giữ nguyên thụt lề) trước khi giao file.
 - **`van-minh-viet-bao-cao-cong-viec`** (đã lưu, đang dùng được): tạo báo cáo công việc ngắn gọn (file Word) tóm tắt các thay đổi đã ghi vào `business-requirements.md` trong một phiên hoặc khoảng thời gian làm việc — mỗi mục nêu đã đổi gì kèm lý do ngắn gọn. Với phiên hiện tại, dựa vào chính hội thoại; với khoảng thời gian khác/nhiều session trước đó, đọc `requirements/changelog.md` (xem mục 2) để lấy đúng phạm vi thay vì phải hỏi người dùng kể lại thủ công.

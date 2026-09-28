@@ -1,6 +1,6 @@
 # Quy Trình Đồng Bộ Requirements ↔ Thiết Kế ↔ Code
 
-> Mô tả cách theo dõi thay đổi của đặc tả (`requirements/business-requirements.md`) lan xuống các luồng thiết kế (`system-design/`, `admin-web/`, `partner-web/`, `public-web/`) và code. Dùng chung cho mọi luồng và team Code. Sổ theo dõi thực tế nằm ở `common/requirements-change-tracker.md`.
+> Mô tả cách theo dõi thay đổi — của đặc tả (`requirements/business-requirements.md`) và của riêng tài liệu thiết kế — lan xuống các luồng thiết kế (`system-design/`, `admin-web/`, `partner-web/`, `public-web/`) và code. Dùng chung cho mọi luồng và team Code. Sổ theo dõi thực tế nằm ở `common/requirements-change-tracker.md`.
 
 ## 1. Chuỗi phụ thuộc
 
@@ -49,11 +49,14 @@ requirements → system-design → admin-web / partner-web / public-web → code
 - Khi số mục thay đổi mà ID không đổi, trích dẫn vẫn đúng; số mục đi kèm được cập nhật ở lần rà soát kế tiếp (mục 5).
 - Ký hiệu `§` chỉ dùng cho mục của đặc tả. Mục nội bộ trong tài liệu thiết kế ghi dạng "`03` mục 4.2".
 
-## 3. Change Request (CR)
+## 3. Change Request (CR) và Design Change (DC)
 
-- Mỗi lần ghi thay đổi vào `business-requirements.md` (một lượt preview được duyệt) tạo **một CR**, mã `CR-YYYYMMDD-NN` (NN đánh từ 01 trong ngày).
-- Luồng requirements ghi CR vào sổ theo dõi ngay sau khi ghi đặc tả, cùng lúc với `requirements/changelog.md`. Mục changelog ghi kèm mã CR.
-- Nội dung một CR trong sổ: mã, ngày, tóm tắt, danh sách ID bị ảnh hưởng kèm hành động (`thêm` / `sửa` / `bỏ` / `di chuyển`), và trạng thái xử lý ở từng luồng thiết kế. Trạng thái xử lý ở Code nằm ở file riêng (mục 4.1).
+- **CR**: mỗi lần ghi thay đổi vào `business-requirements.md` (một lượt preview được duyệt) tạo một CR, mã `CR-YYYYMMDD-NN`. Luồng requirements ghi CR vào sổ theo dõi ngay sau khi ghi đặc tả, cùng lúc với `requirements/changelog.md`. Mục changelog ghi kèm mã CR.
+- **DC**: mỗi lần một luồng thiết kế ghi thay đổi vào file nguồn của mình mà không xuất phát từ một CR (ví dụ quyết định kỹ thuật ⚠, sửa sai sót thiết kế) tạo một DC, mã `DC-YYYYMMDD-NN`. Luồng đó ghi DC vào sổ theo dõi ngay sau khi ghi file nguồn, cùng lúc với changelog của luồng. Mục changelog ghi kèm mã DC. Sửa thuần câu chữ hoặc định dạng, không đổi nội dung cần hiện thực, thì không tạo DC.
+- **Bộ đếm chung**: CR và DC dùng chung bộ đếm NN trong ngày (đánh từ 01). Mỗi cặp ngày + NN là duy nhất và xác định thứ tự các dòng trong sổ; tiền tố chỉ cho biết nguồn gốc thay đổi. Ví dụ: `CR-20261002-01`, `DC-20261002-02`, `CR-20261002-03`.
+- Nội dung một dòng trong sổ: mã, ngày, tóm tắt, ID ảnh hưởng, và trạng thái xử lý ở từng luồng thiết kế kèm các mục đã sửa (mục 4). Trạng thái xử lý ở Code nằm ở file riêng (mục 4.1).
+  - **CR**: cột "ID ảnh hưởng" liệt kê các ID kèm hành động (`thêm` / `sửa` / `bỏ` / `di chuyển`). Mọi cột luồng thiết kế mặc định ⏳.
+  - **DC**: cột "ID ảnh hưởng" ghi `—`. Cột của luồng tạo DC ghi ✅ kèm các mục đã sửa ngay khi tạo. Cột của các luồng phía dưới luồng đó (mục 1) mặc định ⏳. Các cột còn lại ghi `—`.
 
 ## 4. Trạng thái xử lý ở từng luồng
 
@@ -64,25 +67,29 @@ requirements → system-design → admin-web / partner-web / public-web → code
 | ✅ | Đã xử lý xong |
 | — | Không ảnh hưởng luồng này (đã đối chiếu) |
 
-- Khi tạo CR, mọi cột luồng dưới mặc định ⏳. Chỉ luồng tương ứng mới đổi trạng thái của cột mình, sau khi đã đối chiếu.
-- Một luồng chỉ xử lý CR khi luồng ngay trên nó đã ✅ hoặc — (ví dụ admin-web chờ system-design).
-- Khi luồng thiết kế sửa file nguồn do một CR, mục changelog của luồng đó ghi kèm mã CR.
-- **Mốc đồng bộ** của một luồng = CR mới nhất mà mọi CR trước đó ở cột luồng đó đều là ✅ hoặc —. Mốc này ghi ở đầu sổ theo dõi.
-- **Đóng CR**: khi mọi cột luồng của một CR là ✅ hoặc — **và** CR đó có trạng thái ✅ hoặc — trong `planning/cr-status.md` (mục 4.1), cập nhật mốc đồng bộ nếu cần, rồi xoá dòng CR đó khỏi sổ. Commit git với message ghi mã CR (ví dụ `CR-20260928-01: đóng`) để CR vẫn tra được trong git history.
-  - Trước khi đóng, luôn tự đọc `planning/cr-status.md` trong repo `vanminhviet` và đối chiếu các commit ghi ở đó trong git log của repo — không đóng CR chỉ dựa trên thông báo trạng thái từ bên ngoài.
+- Ngoài lúc tạo dòng (mục 3), chỉ luồng tương ứng mới đổi trạng thái của cột mình, sau khi đã đối chiếu.
+- Một luồng chỉ xử lý một dòng khi luồng ngay trên nó đã ✅ hoặc — (ví dụ admin-web chờ system-design).
+- **Ghi mục đã sửa**: khi đổi cột của mình sang ✅, luồng ghi kèm các mục trong file nguồn đã sửa do dòng đó:
+  - system-design ghi theo file, dạng `` ✅ `04`: 2.2, 3.1 · `05`: 3.1 ``.
+  - Luồng web ghi số mục, dạng `✅ 4.19, 4.29`.
+  - Mục mới thêm ghi `(mới)`, mục bị bỏ ghi `(bỏ)`. Mục bị đánh số lại ghi cả số cũ và số mới, dạng `3.3 → 3.4`, để team Code cập nhật tham chiếu trong kế hoạch.
+- Khi luồng thiết kế sửa file nguồn do một CR hoặc DC, mục changelog của luồng đó ghi kèm mã CR/DC.
+- **Mốc đồng bộ** của một luồng là mã (CR hoặc DC) mới nhất mà mọi dòng trước đó ở cột luồng đó đều là ✅ hoặc —. Mốc này ghi ở đầu sổ theo dõi.
+- **Đóng dòng**: khi mọi cột luồng của một dòng là ✅ hoặc — **và** mã đó có trạng thái ✅ hoặc — trong `planning/cr-status.md` (mục 4.1), thì cập nhật mốc đồng bộ nếu cần rồi xoá dòng khỏi sổ. Commit git với message ghi mã (ví dụ `CR-20260928-01: đóng`, `DC-20261002-02: đóng`) để còn tra được trong git history.
+  - Trước khi đóng, luôn tự đọc `planning/cr-status.md` trong repo `vanminhviet` và đối chiếu các commit ghi ở đó trong git log của repo — không đóng dòng chỉ dựa trên thông báo trạng thái từ bên ngoài.
 
 ### 4.1. Trạng thái xử lý ở Code
 
-- Trạng thái xử lý CR ở Code ghi trong `planning/cr-status.md` ở gốc repo `vanminhviet` (trên máy: `Z:\VanMinhSo\vanminhviet\planning\cr-status.md`). File này do team Code sở hữu: chỉ team Code ghi/sửa/xoá; các luồng thiết kế chỉ đọc, không bao giờ ghi vào.
-- Định dạng — một bảng, mỗi CR một dòng:
+- Trạng thái xử lý CR/DC ở Code ghi trong `planning/cr-status.md` ở gốc repo `vanminhviet` (trên máy: `Z:\VanMinhSo\vanminhviet\planning\cr-status.md`). File này do team Code sở hữu: chỉ team Code ghi/sửa/xoá; các luồng thiết kế chỉ đọc, không bao giờ ghi vào.
+- Định dạng — một bảng, mỗi mã (CR hoặc DC) một dòng:
 
-| CR | Trạng thái | Commit/PR | Ngày | Ghi chú |
+| Mã | Trạng thái | Commit/PR | Ngày | Ghi chú |
 |---|---|---|---|---|
 | CR-20260928-01 | ✅ | `a1b2c3d` / #12 | 2026-10-02 | |
 
-- Trạng thái dùng ký hiệu 🔄 / ✅ / — như mục 4. CR chưa có dòng trong file được hiểu là ⏳.
-- Code chỉ xử lý một CR khi cột system-design và cột web liên quan trong sổ theo dõi đều là ✅ hoặc —.
-- **Dọn dẹp**: sau mỗi lần đồng bộ sang Code, CR nào không còn trong sổ theo dõi (bản `docs/common/requirements-change-tracker.md` trong repo) là đã đóng — team Code xoá dòng CR đó khỏi `cr-status.md`, commit với message ghi mã CR. Không xoá dòng của CR còn trong sổ theo dõi.
+- Trạng thái dùng ký hiệu 🔄 / ✅ / — như mục 4. Mã chưa có dòng trong file được hiểu là ⏳.
+- Code chỉ xử lý một CR/DC khi cột system-design và cột web liên quan trong sổ theo dõi đều là ✅ hoặc —.
+- **Dọn dẹp**: sau mỗi lần đồng bộ sang Code, mã nào không còn trong sổ theo dõi (bản `docs/common/requirements-change-tracker.md` trong repo) là đã đóng — team Code xoá dòng đó khỏi `cr-status.md`, commit với message ghi mã. Không xoá dòng của mã còn trong sổ theo dõi.
 
 ## 5. Kiểm tra tham chiếu
 
@@ -92,16 +99,17 @@ requirements → system-design → admin-web / partner-web / public-web → code
   - Trích dẫn `§` không kèm ID.
   - ID bị trùng trong đặc tả, hoặc bảng "ID lớn nhất đã cấp" trong sổ theo dõi thấp hơn ID thực có trong đặc tả.
 - Cách chạy: `python common/tools/check-requirement-refs.py` (chạy được từ bất kỳ thư mục nào). Mỗi lỗi in kèm `file:dòng`; mã thoát 0 = không có lỗi, 1 = có lỗi.
-- Chạy: sau mỗi CR, và bắt buộc trước khi chạy "Đồng bộ sang Code".
+- Chạy: sau mỗi CR/DC, và bắt buộc trước khi chạy "Đồng bộ sang Code".
 
 ## 6. Changelog và Git
 
 - Changelog của mỗi luồng vẫn được xoá trắng sau khi đồng bộ sang Code, nhưng **bắt buộc commit git trước khi xoá**, để lịch sử còn trong repo.
-- Sổ theo dõi (`requirements-change-tracker.md`) chỉ giữ các CR đang mở; CR đã đóng tra lại qua changelog của từng luồng và `git log --grep <mã CR>`. Vì vậy mọi commit liên quan tới một CR đều ghi mã CR trong message.
+- Sổ theo dõi (`requirements-change-tracker.md`) chỉ giữ các dòng CR/DC đang mở. Dòng đã đóng tra lại qua changelog của từng luồng và `git log --grep <mã>`. Vì vậy mọi commit liên quan tới một CR/DC đều ghi mã đó trong message.
 
 ## 7. Dành cho team Code
 
 - Sổ theo dõi trong repo (`docs/common/requirements-change-tracker.md`) là bản chỉ đọc, bị ghi đè mỗi lần đồng bộ — không sửa file này.
-- CR đã xong ở thiết kế (✅ hoặc — ở cột system-design và web liên quan) mà chưa có ✅ hoặc — trong `planning/cr-status.md` là phần cần cập nhật code. Ghi trạng thái và dọn dẹp theo mục 4.1.
+- CR/DC đã xong ở thiết kế (✅ hoặc — ở cột system-design và web liên quan) mà chưa có ✅ hoặc — trong `planning/cr-status.md` là phần cần cập nhật code. Ghi trạng thái và dọn dẹp theo mục 4.1.
+- Khi lập kế hoạch (milestone, sprint, task), trích tài liệu thiết kế theo dạng tên file + số mục (`04-encyclopedia` mục 2.2; `admin-web` 4.19), kèm R-ID liên quan nếu có. Ô trạng thái của các luồng trong sổ theo dõi cho biết mỗi CR/DC đã sửa mục thiết kế nào, kể cả mục bị đánh số lại. Dùng thông tin này để xác định task nào cần cập nhật.
 - Trong code/test (comment, tên/mô tả test), khi cần trích yêu cầu, chỉ ghi ID (`R-KB-014`), không kèm số mục — code nằm ngoài phạm vi kiểm tra của mục 5 nên số mục đi kèm không được cập nhật.
 - Nếu `requirements/`, `system-design/` mâu thuẫn với code, tài liệu thiết kế luôn thắng.

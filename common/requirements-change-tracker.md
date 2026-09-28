@@ -1,10 +1,10 @@
-# Sổ Theo Dõi Thay Đổi Yêu Cầu
+# Sổ Theo Dõi Thay Đổi (CR/DC)
 
-> Quy trình: xem `common/requirements-design-sync.md`. File này không xoá khi đồng bộ sang Code. Trạng thái xử lý ở Code nằm ở `planning/cr-status.md` trong repo `vanminhviet` (mục 4.1 của quy trình).
+> Chứa các dòng CR (thay đổi đặc tả) và DC (thay đổi chỉ ở tài liệu thiết kế) đang mở. Quy trình: xem `common/requirements-design-sync.md`. File này không xoá khi đồng bộ sang Code. Trạng thái xử lý ở Code nằm ở `planning/cr-status.md` trong repo `vanminhviet` (mục 4.1 của quy trình).
 
 ## Mốc đồng bộ
 
-| Luồng | Đã đồng bộ đến CR |
+| Luồng | Đã đồng bộ đến |
 |---|---|
 | system-design | CR-20260928-01 |
 | admin-web | CR-20260928-01 |
@@ -26,7 +26,7 @@
 | CFG | R-CFG-011 |
 | NFR | R-NFR-025 |
 
-## Danh sách CR
+## Danh sách thay đổi
 
-| CR | Ngày | Tóm tắt | ID ảnh hưởng | system-design | admin-web | partner-web | public-web |
+| Mã | Ngày | Tóm tắt | ID ảnh hưởng | system-design | admin-web | partner-web | public-web |
 |---|---|---|---|---|---|---|---|

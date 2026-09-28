@@ -27,10 +27,14 @@
 3. **Cơ sở dữ liệu văn hóa** (`03`) — lõi nghiệp vụ (Đề tài nghiên cứu, Tư liệu gốc, Hạng mục tri thức).
 4. **Bách khoa toàn thư** (`04`).
 5. **AI Văn Minh Việt** (`05`).
+6. **AI Gateway** (`06`) — service Python riêng phục vụ RAG (module 05) và AI Verification (module 03), hiện thực quyết định kiến trúc ở `01` mục 6.
+7. **Cấu hình hệ thống** (`07`) — tham số vận hành/nghiệp vụ dùng chung (package `/shared`), do Quản trị hệ thống điều chỉnh qua Admin nội bộ.
 
 *Lịch & Sự Kiện hiện đang ngoài phạm vi đặc tả giai đoạn này (đặc tả gốc mục R-OOS-006 (§2.5.5)) — sẽ bổ sung khi được đặc tả chi tiết.*
 
-## 5. Cấu trúc chuẩn cho tài liệu mỗi module nghiệp vụ (02–05)
+## 5. Cấu trúc chuẩn cho tài liệu module (02–05, 07)
+
+Áp dụng cho các module nghiệp vụ 02–05 và tài liệu 07. Tài liệu `01` và `06` không phải module nghiệp vụ ánh xạ 1-1 với đặc tả gốc nên có cấu trúc riêng phù hợp nội dung.
 
 Mỗi file `system-design/0X-<tên module tiếng Anh>.md` nên theo cấu trúc (lịch sử thay đổi không nhúng ở đây nữa — ghi chung vào `system-design/changelog.md`, xem mục 3):
 
@@ -55,4 +59,5 @@ Mỗi file `system-design/0X-<tên module tiếng Anh>.md` nên theo cấu trúc
 ## 7. Nơi lưu trữ & quy ước đặt tên
 
 - Quy ước đặt tên file: `system-design/0X-<tên phần theo thứ tự build ở mục 4, tiếng Anh, gạch ngang>.md`. File này là `00-claude-instructions.md`; lịch sử thay đổi chung của cả thư mục nằm ở `system-design/changelog.md`.
+- `system-design/index.md` — mục lục bộ tài liệu thiết kế (file ↔ package/route ↔ phụ thuộc ↔ trạng thái), dành cho người đọc và Team Code. Khi thêm file mới, đổi tên file, hoặc trạng thái/phụ thuộc của một tài liệu thay đổi: cập nhật `index.md` trong cùng lần ghi.
 - Nguyên tắc lưu trữ và preview trước khi ghi: xem `common/00-claude-instructions.md` mục 1 và 3.
