@@ -30,4 +30,3 @@
 
 | CR | Ngày | Tóm tắt | ID ảnh hưởng | system-design | admin-web | partner-web | public-web |
 |---|---|---|---|---|---|---|---|
-| CR-20260928-01 | 2026-09-28 | Gắn ID ổn định cho toàn bộ đặc tả; nội dung không đổi. Các luồng dưới đổi trích dẫn `§` sang dạng `R-... (§...)`. | Toàn bộ R-GEN-001…R-NFR-025 (274 ID): thêm ID | ✅ | ✅ | ✅ | ✅ |
