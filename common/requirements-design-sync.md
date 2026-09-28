@@ -69,6 +69,7 @@ requirements → system-design → admin-web / partner-web / public-web → code
 - Khi luồng thiết kế sửa file nguồn do một CR, mục changelog của luồng đó ghi kèm mã CR.
 - **Mốc đồng bộ** của một luồng = CR mới nhất mà mọi CR trước đó ở cột luồng đó đều là ✅ hoặc —. Mốc này ghi ở đầu sổ theo dõi.
 - **Đóng CR**: khi mọi cột luồng của một CR là ✅ hoặc — **và** CR đó có trạng thái ✅ hoặc — trong `planning/cr-status.md` (mục 4.1), cập nhật mốc đồng bộ nếu cần, rồi xoá dòng CR đó khỏi sổ. Commit git với message ghi mã CR (ví dụ `CR-20260928-01: đóng`) để CR vẫn tra được trong git history.
+  - Trước khi đóng, luôn tự đọc `planning/cr-status.md` trong repo `vanminhviet` và đối chiếu các commit ghi ở đó trong git log của repo — không đóng CR chỉ dựa trên thông báo trạng thái từ bên ngoài.
 
 ### 4.1. Trạng thái xử lý ở Code
 
