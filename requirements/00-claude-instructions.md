@@ -11,7 +11,7 @@
 ## 2. File nguồn duy nhất
 
 - `requirements/business-requirements.md` là **nguồn chân lý duy nhất** cho đặc tả yêu cầu. Không tạo thêm bản sao/bản nháp song song trong project.
-- Tài liệu thiết kế kỹ thuật (`system-design/`) tham chiếu ngược lại tài liệu này theo số mục — không tự ý suy diễn khi đặc tả gốc chưa có.
+- Tài liệu thiết kế kỹ thuật (`system-design/`) tham chiếu ngược lại tài liệu này theo ID (kèm số mục), xem `common/requirements-design-sync.md` mục 2.3 — không tự ý suy diễn khi đặc tả gốc chưa có.
 - Các bản xuất khác (Word, PDF...) là bản phái sinh phục vụ mục đích cụ thể (đọc offline, gửi máy tính người dùng...), không phải nguồn chân lý — khi có thay đổi, `business-requirements.md` trong project luôn được cập nhật trước.
 - `requirements/changelog.md` là nhật ký các thay đổi đã ghi vào `business-requirements.md` (xem quy tắc chung ở `common/00-claude-common-instructions.md` mục 2).
 - Mọi file là kết quả làm việc của giai đoạn đặc tả này (đặc tả, khung nguyên tắc, và các tài liệu liên quan khác nếu phát sinh) **chỉ lưu trong project, dưới thư mục `requirements/`** — không tạo rải rác ở các đường dẫn khác trong project.
@@ -19,7 +19,18 @@
 ## 3. Quy ước đánh số & cấu trúc
 
 - Đánh số nhiều cấp thủ công ngay trong text (`**1.1.1.**`, `**2.2.3.7.**`...) — không dùng danh sách tự đánh số của Markdown — để người dùng có thể tham chiếu chính xác một mục/câu khi trao đổi. Về mặt cú pháp, mỗi mục vẫn là một list item Markdown (`- **1.1.1.** ...`) để có thụt lề phân cấp; đây là quy ước cố ý giữ nguyên (xem mục 7 về cách xử lý khi xuất Word).
-- Khi thêm/xoá/tách một mục làm lệch số các mục con phía sau, phải đánh số lại toàn bộ và rà soát mọi tham chiếu chéo tới số mục đó ở nơi khác trong tài liệu (ví dụ "xem mục 2.2.5.11") để tránh trỏ sai sau khi đánh số lại.
+- Khi thêm/xoá/tách một mục làm lệch số các mục con phía sau, phải đánh số lại toàn bộ và rà soát mọi tham chiếu chéo tới số mục đó ở nơi khác trong tài liệu (ví dụ "xem mục 2.2.5.11") để tránh trỏ sai sau khi đánh số lại. Đánh số lại chỉ đổi số mục, không đổi ID (xem bên dưới).
+- **ID yêu cầu ổn định**: mỗi mục đánh số (kể cả tiêu đề mục) mang một ID `R-<mã module>-<3 chữ số>` theo `common/requirements-design-sync.md` mục 2. Vị trí đặt ID:
+  - Mục thường: `- **2.2.3.5.** [R-KB-031] Nội dung...`
+  - Mục có tiêu đề in đậm: `- **2.1.5.7.** [R-ID-024] **Vô hiệu hoá tài khoản**: nội dung...`
+  - Tiêu đề Markdown: `### 2.2. [R-KB-001] Cơ Sở Dữ Liệu Văn Hóa`
+  - Không mang ID: tiêu đề khung `## 2. Modules`; các dòng không đánh số (gạch đầu dòng con, đoạn văn, ghi chú, khối code) — thuộc về ID của mục đánh số gần nhất phía trên. Khi cần trích dẫn riêng một dòng như vậy, nâng nó thành mục đánh số và cấp ID mới.
+- **ID bất biến**: ID không đổi khi mục được đánh số lại, di chuyển sang vị trí khác hay sang phần của module khác (tiền tố giữ nguyên), và không bao giờ được cấp lại cho mục khác.
+- **Mục mới**: ID = số lớn nhất đã cấp của mã module đó (bảng "ID lớn nhất đã cấp" trong `common/requirements-change-tracker.md`) + 1, bất kể vị trí chèn. Cập nhật bảng đó cùng lúc với ghi CR.
+- **Tách mục**: phần giữ ý chính giữ ID cũ (CR ghi `sửa`); phần tách ra nhận ID mới (CR ghi `thêm`).
+- **Gộp mục**: giữ ID của mục giữ ý chính; các ID còn lại biến mất khỏi đặc tả, CR ghi `bỏ — gộp vào R-...`.
+- **Bỏ mục**: xoá mục cùng ID khỏi đặc tả; CR ghi `bỏ`. ID đó không được cấp lại.
+- **Module mới** (một phần cấp 2 mới): cần bổ sung mã module vào bảng ở `common/requirements-design-sync.md` mục 2.1 trước khi cấp ID.
 - Module/nội dung ngoài phạm vi giai đoạn hiện tại được liệt kê gọn trong một mục riêng (hiện tại: mục 2.5 "Module ngoài phạm vi giai đoạn này"), không mô tả chi tiết.
 
 ## 4. Quy trình chỉnh sửa
