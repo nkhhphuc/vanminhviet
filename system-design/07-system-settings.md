@@ -83,7 +83,7 @@ Ký hiệu cột **Áp dụng**: *Ngay* = có hiệu lực cho thao tác tiếp 
 
 | Key | Kiểu | Mặc định | Ràng buộc | Áp dụng | Exposure |
 |---|---|---|---|---|---|
-| `operations.source_sync_debounce_seconds` | int | 45 | 10–600 | Sự kiện webhook nhận sau khi lưu | server |
+| `operations.source_sync_debounce_seconds` | int | 45 | 10–600 | Sự kiện webhook nhận và job hoãn sau khi lưu | server |
 | `operations.job_retention_completed_hours` | int | 24 | 1–2160 | Lần dọn dẹp kế tiếp (D-SD07-009 (¶4.3)) | server |
 | `operations.job_retention_cancelled_hours` | int | 24 | 1–2160 | như trên | server |
 | `operations.job_retention_discarded_hours` | int | 168 | 1–2160 | như trên | server |

@@ -50,3 +50,7 @@
   - **01** ¶8: trích dẫn đặc tả "(mục 3.2)" → R-NFR-009 (§3.2).
   - Trích dẫn "mục N của `00-claude-instructions.md`" viết lại thành "`00-claude-instructions.md` mục N" (01, 02, 05).
 - DC-20260929-02, DC-20260929-03: thêm ID vào trích dẫn màn hình luồng web — `admin-web ¶4.x` → `D-ADM-0xx (¶4.x)`, `partner-web ¶4.x` → `D-PRT-0xx (¶4.x)`; sửa tên file cũ `admin-web-layout.md`/`partner-web-layout.md` ở `03` ¶6 thành D-ADM-008 (¶4.8)/D-PRT-004 (¶4.4). Không đổi nội dung thiết kế. File: **01** (¶2, ¶9), **02** (¶4, ¶6), **03** (¶4.2, ¶5.1, ¶5.2, ¶6), **04** (¶6), **05** (¶5.2).
+- DC-20260929-05: job nối tiếp cho `ingestion.sync_source` (theo báo cáo của Code: river luôn tính job `running` là trùng).
+  - **03-cultural-knowledge-base.md** ¶4.2 (D-SD03-017): `HandleSourceReadyWebhook` — tính trùng theo payload, `ByState` gồm `available`, `pending`, `scheduled`, `running`, `retryable`; trùng với job đang `running` thì enqueue job nối tiếp `{source_id, follows_job_id}` với `id` lấy từ kết quả `InsertTx`, sự kiện sau gộp vào job nối tiếp; gặp advisory lock thì hoãn bằng `JobSnooze` trong `operations.source_sync_debounce_seconds`, áp dụng cho cả job thường và job nối tiếp. ¶6: bullet debounce/coalesce ghi thêm thời gian hoãn và job nối tiếp.
+  - **01-architecture-and-tech-stack.md** ¶4 (D-SD01-004): payload `ingestion.sync_source` là `{source_id}` hoặc `{source_id, follows_job_id}`. ¶1 (D-SD01-001): river có thêm hoãn job (snooze).
+  - **07-system-settings.md** ¶2.3 (D-SD07-003): `operations.source_sync_debounce_seconds` áp dụng cả cho job hoãn.
