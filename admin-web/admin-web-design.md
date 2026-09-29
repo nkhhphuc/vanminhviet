@@ -447,6 +447,7 @@
 - Filter: Loại job, Trạng thái, khoảng thời gian.
 - Tự động tải lại định kỳ (cùng chu kỳ cấu hình và toggle như D-ADM-021 (¶4.21)) + nút "Tải lại".
 - Click dòng → panel chi tiết (`GET /shared/jobs/{id}`): payload (key-value), lỗi gần nhất, lịch sử các lần thử (thời điểm + lỗi từng lần).
+  - Job `ingestion.sync_source` có `follows_job_id` trong payload (job nối tiếp, D-SD03-017 (¶4.2)): hiện dòng "Nối tiếp job #{follows_job_id}", click mở panel chi tiết của job đó; nếu job đó đã bị dọn (API trả 404) → thông báo "Job #{follows_job_id} không còn trong thời gian lưu giữ".
 - Hành động (trên dòng và trong panel chi tiết):
   - "Chạy lại" — chỉ khi `status = failed` (cả `exhausted` true/false); xác nhận ngắn "Chạy lại job #{id} ngay?" (`retry`).
   - "Huỷ" — chỉ khi `status = pending` (không huỷ job đang chạy); hộp thoại xác nhận (quy ước (b) D-ADM-029 (¶3)) nêu hệ quả theo loại job:
@@ -567,6 +568,7 @@
 | `operations.source_cold_storage_after_days` | Chuyển phiên bản Tư liệu gốc cũ sang lưu trữ lạnh | toggle + ngày (tắt = không chuyển) |
 | `operations.admin_polling_interval_seconds` | Chu kỳ tự tải lại (Nhật ký hoạt động, Job nền) | giây |
 
+- `operations.source_sync_debounce_seconds` — mô tả: "Khi thư mục Tư liệu gốc có thay đổi, hệ thống chờ số giây này để gom các thay đổi liên tiếp rồi đồng bộ một lần. Nếu lúc đó đang có lượt đồng bộ khác chạy, hệ thống chờ thêm đúng khoảng này rồi thử lại." (D-SD03-017 (¶4.2), D-SD07-003 (¶2.3)).
 - `operations.audit_log_retention_months` — mô tả: "Không được đặt dưới 12 tháng (R-NFR-004 (§3.1.2)). Bản ghi quá thời hạn được xoá mỗi ngày." (D-SD07-009 (¶4.3)).
 - `operations.source_cold_storage_after_days` — sau khi lưu, toast kèm link "Xem job nền" mở D-ADM-026 (¶4.26) lọc theo loại `shared.apply_storage_lifecycle`.
 - API: `GET /shared/settings`, `PATCH /shared/settings`, `DELETE /shared/settings/{key}`, `POST /shared/settings/email-templates/{template}/preview`, `POST /shared/settings/email-templates/{template}/test`.
