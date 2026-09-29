@@ -12,13 +12,14 @@
 | `04-encyclopedia.md` | Bách khoa toàn thư: Mục từ, phiên bản, Cương vực, workflow xét duyệt Mục từ | `/encyclopedia`; route `public` | 01, 02, 03 | Đã chốt mục 1–6, trừ R-ENC-038 (§2.3.8) |
 | `05-ai-assistant.md` | AI Văn Minh Việt: RAG, hội thoại nhiều lượt, log chất lượng | `/assistant` (route `admin`, `public`) | 01, 04, 06, 07 | Đã chốt mục 1–6 |
 | `06-ai-gateway.md` | AI Gateway: endpoint embed/generate/rewrite/self-audit/transcribe/verify, model, prompt, vận hành | Service Python riêng (mạng nội bộ) | 01 | Đã chốt |
-| `07-system-settings.md` | Cấu hình hệ thống: registry tham số, giá trị đã chỉnh, API cấu hình | `/shared` (system settings) | 01, 02 | Đã chốt |
+| `07-system-settings.md` | Cấu hình hệ thống: registry tham số, giá trị đã chỉnh, API cấu hình | `/shared` (system settings) | 01 | Đã chốt |
 
 ## 2. Chiều phụ thuộc giữa các module
 
-`02 identity` ← `03 knowledge…` ← `04 encyclopedia` ← `05 assistant`
+`07 settings` ← `02 identity` ← `03 knowledge…` ← `04 encyclopedia` ← `05 assistant`
 
-- `01` là nền cho mọi tài liệu; `07` (cấu hình) được 02, 03, 05 đọc qua hàm nội bộ của `/shared`.
+- `01` là nền cho mọi tài liệu. `07` (cấu hình, thuộc package `/shared`) chỉ phụ thuộc `01`; 02, 03, 05 đọc cấu hình qua getter `shared.Settings` (`07` mục 4.1).
+- API `/shared/settings` dùng xác thực và role `quan_tri_he_thong` của 02, và ghép `updated_by` bằng `identity.GetEmployeeSummaries` ở tầng handler `/cmd/api` — cùng cách `GET /shared/audit-logs` (`01` mục 2). Đây là ghép nối ở tầng entrypoint, không phải phụ thuộc giữa package: `/shared` không import `/identity`.
 - `06` (AI Gateway) được gọi bởi 03 (`/verification`, transcript) và 05 (`/assistant`).
 - Không có phụ thuộc ngược chiều mũi tên; giao tiếp giữa module qua interface nội bộ, không JOIN chéo bảng (`01` mục 2).
 

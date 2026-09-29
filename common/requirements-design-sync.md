@@ -103,7 +103,6 @@ requirements → system-design → admin-web / partner-web / public-web → code
 
 ## 6. Changelog và Git
 
-- Changelog của mỗi luồng vẫn được xoá trắng sau khi đồng bộ sang Code, nhưng **bắt buộc commit git trước khi xoá**, để lịch sử còn trong repo.
 - Sổ theo dõi (`requirements-change-tracker.md`) chỉ giữ các dòng CR/DC đang mở. Dòng đã đóng tra lại qua changelog của từng luồng và `git log --grep <mã>`. Vì vậy mọi commit liên quan tới một CR/DC đều ghi mã đó trong message.
 
 ## 7. Dành cho team Code
