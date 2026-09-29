@@ -47,12 +47,42 @@ requirements → system-design → admin-web / partner-web / public-web → code
 - Dạng chuẩn: `R-KB-014 (§2.2.3.12)` — ID là bắt buộc, số mục đi kèm để dễ đọc.
 - Khoảng mục: ghi ID cho cả hai đầu mút, dạng `R-ID-002 (§2.1.1)–R-ID-005 (§2.1.3.1)`.
 - Khi số mục thay đổi mà ID không đổi, trích dẫn vẫn đúng; số mục đi kèm được cập nhật ở lần rà soát kế tiếp (mục 5).
-- Ký hiệu `§` chỉ dùng cho mục của đặc tả. Mục nội bộ trong tài liệu thiết kế ghi dạng "`03` mục 4.2".
+- Ký hiệu `§` chỉ dùng cho số mục của đặc tả. Số mục của tài liệu thiết kế dùng ký hiệu `¶`, trích theo mục 2.4.
+
+### 2.4. ID và cách trích dẫn mục thiết kế
+
+- **Tài liệu thiết kế** gồm: `system-design/01`–`07`, `admin-web/admin-web-design.md`, `partner-web/partner-web-design.md`, `public-web/public-web-layout.md`. Các file `00-claude-instructions.md`, `changelog.md` và file trong `common/` không thuộc nhóm này. Khi trích mục của các file đó, vẫn ghi "mục N".
+- **Định dạng ID**: `D-<mã file>-<số thứ tự 3 chữ số>`. Mã file:
+
+| Mã | File |
+|---|---|
+| SD01 … SD07 | `system-design/01-…` … `07-…` (theo số file) |
+| ADM | `admin-web/admin-web-design.md` |
+| PRT | `partner-web/partner-web-design.md` |
+| PUB | `public-web/public-web-layout.md` |
+
+- Khi thêm một tài liệu thiết kế mới, phải bổ sung mã file của nó vào bảng này trước khi cấp ID.
+- **Mục được gắn ID** là các mục mà luồng khác hoặc team Code trỏ tới:
+  - system-design: từng bảng dữ liệu (2.x), từng luồng nghiệp vụ (3.x), từng thành phần kiến trúc (4.x), từng nhóm API (5.x). Riêng `01` và `06`: mọi mục `##`/`###` có nội dung kỹ thuật, trừ các mục "Mục đích" và "Vấn đề mở".
+  - Các luồng web: mục "Quy ước chung" (3), từng màn hình (4.x), và từng thành phần dùng chung có tiêu đề riêng.
+  - Mọi mục khác: gắn ID vào lần đầu tiên mục đó được trích từ một file khác.
+  - Không mang ID: mục tổng quan, mục đích, vấn đề mở, và các tiêu đề chỉ dùng để nhóm mục.
+- **Vị trí đặt ID**: ngay sau số mục trong tiêu đề. Ví dụ ``### 2.1. [D-SD03-001] `research_topic` …``, `## 4.19. [D-ADM-019] Biên tập Mục từ`.
+- **Cấp số**: số thứ tự tăng dần trong từng mã file, theo thứ tự thêm vào, không phản ánh vị trí trong file. ID lớn nhất đã cấp của từng mã được ghi ở đầu sổ theo dõi.
+- **Quy tắc bất biến**: như mục 2.2 — ID không đổi, không dùng lại; khi tách mục, phần giữ ý chính giữ ID cũ; khi gộp, giữ một ID; khi bỏ mục, không cấp lại ID đó. Số mục vẫn được đánh lại khi cần.
+- **Cách trích dẫn**:
+  - Mục có ID: `D-ADM-019 (¶4.19)`, `D-SD03-001 (¶2.1)`. Không cần ghi tên file vì mã file đã nằm trong ID. Viết giống nhau dù trích từ file khác hay trong cùng file.
+  - Khoảng mục: ghi ID cho cả hai đầu, `D-ADM-023 (¶4.23)–D-ADM-025 (¶4.25)`.
+  - Mục không mang ID: `` `03` ¶6 ``, `admin-web ¶1`. Trong cùng file, chỉ ghi `¶6`.
+  - Nếu cần trích từ file khác một mục chưa có ID: gắn ID cho mục đó trong cùng lần sửa. Nếu mục đó thuộc luồng khác thì ghi ⚠, chờ luồng sở hữu cấp ID.
+  - Không dùng "mục N" để trích số mục của tài liệu thiết kế.
+- **Cách gõ `¶`** (U+00B6): trên Windows dùng Alt+0182, tương tự Alt+0167 cho `§`.
 
 ## 3. Change Request (CR) và Design Change (DC)
 
 - **CR**: mỗi lần ghi thay đổi vào `business-requirements.md` (một lượt preview được duyệt) tạo một CR, mã `CR-YYYYMMDD-NN`. Luồng requirements ghi CR vào sổ theo dõi ngay sau khi ghi đặc tả, cùng lúc với `requirements/changelog.md`. Mục changelog ghi kèm mã CR.
 - **DC**: mỗi lần một luồng thiết kế ghi thay đổi vào file nguồn của mình mà không xuất phát từ một CR (ví dụ quyết định kỹ thuật ⚠, sửa sai sót thiết kế) tạo một DC, mã `DC-YYYYMMDD-NN`. Luồng đó ghi DC vào sổ theo dõi ngay sau khi ghi file nguồn, cùng lúc với changelog của luồng. Mục changelog ghi kèm mã DC. Sửa thuần câu chữ hoặc định dạng, không đổi nội dung cần hiện thực, thì không tạo DC.
+- Việc gắn ID cho mục thiết kế, hoặc đổi trích dẫn sang dạng ở mục 2.4, không đổi nội dung cần hiện thực nhưng vẫn phải tạo DC, để team Code cập nhật tham chiếu trong kế hoạch.
 - **Bộ đếm chung**: CR và DC dùng chung bộ đếm NN trong ngày (đánh từ 01). Mỗi cặp ngày + NN là duy nhất và xác định thứ tự các dòng trong sổ; tiền tố chỉ cho biết nguồn gốc thay đổi. Ví dụ: `CR-20261002-01`, `DC-20261002-02`, `CR-20261002-03`.
 - Nội dung một dòng trong sổ: mã, ngày, tóm tắt, ID ảnh hưởng, và trạng thái xử lý ở từng luồng thiết kế kèm các mục đã sửa (mục 4). Trạng thái xử lý ở Code nằm ở file riêng (mục 4.1).
   - **CR**: cột "ID ảnh hưởng" liệt kê các ID kèm hành động (`thêm` / `sửa` / `bỏ` / `di chuyển`). Mọi cột luồng thiết kế mặc định ⏳.
@@ -98,7 +128,12 @@ requirements → system-design → admin-web / partner-web / public-web → code
   - Số § đi kèm không khớp với số mục hiện tại của ID đó.
   - Trích dẫn `§` không kèm ID.
   - ID bị trùng trong đặc tả, hoặc bảng "ID lớn nhất đã cấp" trong sổ theo dõi thấp hơn ID thực có trong đặc tả.
-- Cách chạy: `python common/tools/check-requirement-refs.py` (chạy được từ bất kỳ thư mục nào). Mỗi lỗi in kèm `file:dòng`; mã thoát 0 = không có lỗi, 1 = có lỗi.
+  - ID thiết kế được trích nhưng không có trong file tương ứng, hoặc số `¶` đi kèm không khớp với số mục hiện tại.
+  - ID thiết kế bị trùng, hoặc bảng "ID thiết kế lớn nhất đã cấp" thấp hơn ID thực có.
+  - Trích dẫn `¶` tới một mục đang mang ID nhưng không ghi ID.
+  - Trích số mục thiết kế theo dạng cũ: "`0X` mục N", "`0X-….md` mục N", "admin-web N"/"admin-web mục N" (và tương tự cho partner-web, public-web), hoặc "mục N" trong chính tài liệu thiết kế.
+  - Trích đặc tả bằng "mục X.Y" (không có `§`, không có ID) khi đứng cạnh "đặc tả", "BR", `business-requirements`.
+- Cách chạy: `python common/tools/check-requirement-refs.py` (chạy được từ bất kỳ thư mục nào); thêm `--luong <tên luồng>` để chỉ báo lỗi trong file của một luồng. Mỗi lỗi in kèm `file:dòng`; mã thoát 0 = không có lỗi, 1 = có lỗi.
 - Chạy: sau mỗi CR/DC, và bắt buộc trước khi chạy "Đồng bộ sang Code".
 
 ## 6. Changelog và Git
@@ -109,6 +144,6 @@ requirements → system-design → admin-web / partner-web / public-web → code
 
 - Sổ theo dõi trong repo (`docs/common/requirements-change-tracker.md`) là bản chỉ đọc, bị ghi đè mỗi lần đồng bộ — không sửa file này.
 - CR/DC đã xong ở thiết kế (✅ hoặc — ở cột system-design và web liên quan) mà chưa có ✅ hoặc — trong `planning/cr-status.md` là phần cần cập nhật code. Ghi trạng thái và dọn dẹp theo mục 4.1.
-- Khi lập kế hoạch (milestone, sprint, task), trích tài liệu thiết kế theo dạng tên file + số mục (`04-encyclopedia` mục 2.2; `admin-web` 4.19), kèm R-ID liên quan nếu có. Ô trạng thái của các luồng trong sổ theo dõi cho biết mỗi CR/DC đã sửa mục thiết kế nào, kể cả mục bị đánh số lại. Dùng thông tin này để xác định task nào cần cập nhật.
-- Trong code/test (comment, tên/mô tả test), khi cần trích yêu cầu, chỉ ghi ID (`R-KB-014`), không kèm số mục — code nằm ngoài phạm vi kiểm tra của mục 5 nên số mục đi kèm không được cập nhật.
+- Khi lập kế hoạch (milestone, sprint, task), trích tài liệu thiết kế bằng ID kèm `¶` (`D-SD04-012 (¶2.2)`, `D-ADM-019 (¶4.19)`), kèm R-ID liên quan nếu có. Ô trạng thái của các luồng trong sổ theo dõi cho biết mỗi CR/DC đã sửa mục thiết kế nào, kể cả mục bị đánh số lại. Dùng thông tin này để xác định task nào cần cập nhật.
+- Trong code/test (comment, tên/mô tả test), chỉ ghi ID (`R-KB-014`, `D-SD03-001`), không kèm `§`/`¶`, vì code nằm ngoài phạm vi kiểm tra của mục 5 nên số mục đi kèm sẽ không được cập nhật.
 - Nếu `requirements/`, `system-design/` mâu thuẫn với code, tài liệu thiết kế luôn thắng.

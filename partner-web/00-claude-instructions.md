@@ -5,7 +5,7 @@
 ## 1. Mục tiêu
 
 - Thiết kế/biên tập `partner-web-design.md` thành một đặc tả giao diện đủ chi tiết để đội dev dùng làm đầu vào build giao diện Cổng Nhân viên Tổ chức khác.
-- Đối tượng dùng: Nhân viên Tổ chức khác — 3 vai trò theo phạm vi Đề tài được gán: Nghiên cứu, Xét duyệt (R-PTN-003 (§2.7.2)–R-PTN-004 (§2.7.3) đặc tả gốc) và Chủ nhiệm đề tài (R-KB-073 (§2.2.5.5)) — **không có** màn hình quản lý người dùng/Tổ chức (ranh giới route `/api/v1/partner/...` đã chốt ở `system-design/01-architecture-and-tech-stack.md` mục 2 — chỉ mount `knowledge` và `gate`, không mount `identity`, `ingestion`, `encyclopedia`).
+- Đối tượng dùng: Nhân viên Tổ chức khác — 3 vai trò theo phạm vi Đề tài được gán: Nghiên cứu, Xét duyệt (R-PTN-003 (§2.7.2)–R-PTN-004 (§2.7.3) đặc tả gốc) và Chủ nhiệm đề tài (R-KB-073 (§2.2.5.5)) — **không có** màn hình quản lý người dùng/Tổ chức (ranh giới route `/api/v1/partner/...` đã chốt ở D-SD01-002 (¶2) — chỉ mount `knowledge` và `gate`, không mount `identity`, `ingestion`, `encyclopedia`).
 - Ưu tiên rõ ràng chức năng, phạm vi thao tác hẹp và đúng theo Đề tài được gán — không cần mockup chi tiết như `public-web/`.
 
 ## 2. File nguồn & ranh giới thư mục
@@ -18,6 +18,7 @@
 ## 3. Quy ước cấu trúc tài liệu
 
 - Đánh số màn hình theo mục `4.x`, giữ nguyên cách đánh số hiện có khi thêm màn hình mới.
+- ID thiết kế: mục 3 (Quy ước chung) và từng màn hình 4.x mang ID `D-PRT-NNN` đặt ngay sau số mục trong tiêu đề, theo `common/requirements-design-sync.md` mục 2.4. Màn hình mới nhận ID kế tiếp theo bảng "ID thiết kế lớn nhất đã cấp" trong `common/requirements-change-tracker.md`; ID không đổi khi đánh số lại mục. Trong `partner-web-design.md`, trích mục có ID dùng dạng `D-PRT-010 (¶4.10)` (kể cả khi nhắc số màn hình), mục không có ID dùng `¶N`; trích system-design dùng `D-SD0X-NNN (¶N)`, trích admin-web dùng `D-ADM-NNN (¶N)`.
 - Mỗi màn hình cần ghi rõ ranh giới quyền theo Đề tài được gán (không được vượt phạm vi R-PTN-010 (§2.7.4) đặc tả gốc — "không có chức năng quản lý người dùng/Tổ chức dù giữ vai trò gì").
 - Phần nào là thiết kế UI đi trước đặc tả nghiệp vụ cần đánh dấu rõ ràng.
 

@@ -40,3 +40,13 @@
 - `00-claude-instructions.md`: bổ sung 06 (AI Gateway) và 07 (Cấu hình hệ thống) vào thứ tự build (mục 4); cấu trúc chuẩn mục 5 áp dụng cho 02–05 và 07, còn 01 và 06 có cấu trúc riêng; mục 7 thêm quy định về `index.md`.
 - `index.md` (mới): mục lục bộ tài liệu thiết kế — file ↔ package/route ↔ phụ thuộc ↔ trạng thái, và bảng "đọc gì khi làm gì" cho Team Code.
 - `index.md`: sửa phụ thuộc vòng 02 ↔ 07 — 07 chỉ phụ thuộc 01 (dùng xác thực/role của 02 và `GetEmployeeSummaries` ở tầng `/cmd/api`, không phải phụ thuộc package); thêm 07 vào sơ đồ chiều phụ thuộc ở mục 2.
+
+## 2026-09-29
+
+- DC-20260929-01: chuyển sang quy ước ID và trích dẫn mục thiết kế (`common/requirements-design-sync.md` mục 2.4). Không đổi nội dung thiết kế, không đánh số lại mục.
+  - Gắn ID cho 102 mục: **01** D-SD01-001–008 (¶1–8), **02** D-SD02-001–010 (¶2, 3.0–3.5, 4, 5.1, 5.2), **03** D-SD03-001–026 (¶2.1–2.9, 3.1–3.6, 4.1–4.5, 5.1–5.6), **04** D-SD04-001–018, **05** D-SD05-001–013, **06** D-SD06-001–013 (¶1, 2, 3.1–3.7, 4–7), **07** D-SD07-001–014.
+  - Đổi trích dẫn "mục N", "`0X` mục N", "`0X-….md` mục N", "mục N tài liệu 0X" sang `D-… (¶…)`, `` `0X` ¶N `` hoặc `¶N`; trích dẫn luồng web sang `admin-web ¶N` / `partner-web ¶N` (kể cả tên file cũ `admin-web-layout.md`, `partner-web-layout.md`). File: **01** (93 dòng), **02** (89), **03** (170), **04** (69), **05** (76), **06** (74), **07** (44), `00-claude-instructions.md` (1), `index.md` (7).
+  - Sửa trích dẫn trỏ sai: `04` dòng comment "mục 4.2 tài liệu 01" → D-SD05-008 (¶4.2); `06` dòng trạng thái "`03` … mục 8" → D-SD05-011 (¶4.5); `06` ¶3.6 "mục 2.8" → D-SD03-008 (¶2.8); `03` ¶4.1 "tài liệu 01 mục 5, mục 4.5" → D-SD01-005 (¶5), D-SD03-020 (¶4.5).
+  - **01** ¶8: trích dẫn đặc tả "(mục 3.2)" → R-NFR-009 (§3.2).
+  - Trích dẫn "mục N của `00-claude-instructions.md`" viết lại thành "`00-claude-instructions.md` mục N" (01, 02, 05).
+- DC-20260929-02, DC-20260929-03: thêm ID vào trích dẫn màn hình luồng web — `admin-web ¶4.x` → `D-ADM-0xx (¶4.x)`, `partner-web ¶4.x` → `D-PRT-0xx (¶4.x)`; sửa tên file cũ `admin-web-layout.md`/`partner-web-layout.md` ở `03` ¶6 thành D-ADM-008 (¶4.8)/D-PRT-004 (¶4.4). Không đổi nội dung thiết kế. File: **01** (¶2, ¶9), **02** (¶4, ¶6), **03** (¶4.2, ¶5.1, ¶5.2, ¶6), **04** (¶6), **05** (¶5.2).

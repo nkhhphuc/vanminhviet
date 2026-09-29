@@ -17,3 +17,9 @@
 
 - CR-20260928-01: đổi toàn bộ trích dẫn mục đặc tả `§...` sang dạng chuẩn `R-XXX-NNN (§...)`; khoảng mục ghi ID cho hai đầu mút. Không đổi nội dung thiết kế. File: **admin-web-design.md** (68), **00-claude-instructions.md** (1).
 - **admin-web-design.md**: trích dẫn mục nội bộ của `03` (mục 5.2, 3.4b) ghi dạng "`03` mục X" thay cho `§`.
+
+## 2026-09-29
+
+- DC-20260929-01: đổi trích dẫn mục system-design sang dạng `D-SD0X-NNN (¶N)`; trích public-web ghi `public-web ¶N` kèm ⚠ chờ public-web cấp ID. Không đổi nội dung thiết kế. File: **admin-web-design.md**, **00-claude-instructions.md**.
+- DC-20260929-02: gắn ID `D-ADM-001`–`D-ADM-028` cho màn hình 4.1–4.28 và `D-ADM-029` cho mục 3 (Quy ước chung); đổi trích dẫn mục trong cùng file (kể cả số màn hình viết trần) sang `D-ADM-… (¶…)` / `¶N`. Không đổi nội dung thiết kế. File: **admin-web-design.md**, **00-claude-instructions.md** (mục 3 thêm quy ước ID).
+- DC-20260929-04: trích public-web thêm ID — bảng màu `D-PUB-011 (¶2.1)` (mục 3), Trang chi tiết Mục từ `D-PUB-004 (¶4.4)` (4.23); gỡ 2 ghi chú ⚠ chờ public-web cấp ID. Không đổi nội dung thiết kế. File: **admin-web-design.md**.

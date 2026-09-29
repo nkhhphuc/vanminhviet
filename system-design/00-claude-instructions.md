@@ -27,7 +27,7 @@
 3. **Cơ sở dữ liệu văn hóa** (`03`) — lõi nghiệp vụ (Đề tài nghiên cứu, Tư liệu gốc, Hạng mục tri thức).
 4. **Bách khoa toàn thư** (`04`).
 5. **AI Văn Minh Việt** (`05`).
-6. **AI Gateway** (`06`) — service Python riêng phục vụ RAG (module 05) và AI Verification (module 03), hiện thực quyết định kiến trúc ở `01` mục 6.
+6. **AI Gateway** (`06`) — service Python riêng phục vụ RAG (module 05) và AI Verification (module 03), hiện thực quyết định kiến trúc ở D-SD01-006 (¶6).
 7. **Cấu hình hệ thống** (`07`) — tham số vận hành/nghiệp vụ dùng chung (package `/shared`), do Quản trị hệ thống điều chỉnh qua Admin nội bộ.
 
 *Lịch & Sự Kiện hiện đang ngoài phạm vi đặc tả giai đoạn này (đặc tả gốc mục R-OOS-006 (§2.5.5)) — sẽ bổ sung khi được đặc tả chi tiết.*

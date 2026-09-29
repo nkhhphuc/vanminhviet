@@ -15,3 +15,10 @@
 ## 2026-09-28
 
 - CR-20260928-01: đổi toàn bộ trích dẫn mục đặc tả `§...` sang dạng chuẩn `R-XXX-NNN (§...)`; khoảng mục ghi ID cho hai đầu mút; "module 2.7" ghi thành `R-PTN-001 (§2.7)`. Không đổi nội dung thiết kế. File: **partner-web-design.md** (47), **00-claude-instructions.md** (16).
+
+## 2026-09-29
+
+- DC-20260929-01: đổi trích dẫn mục system-design sang dạng `D-SD0X-NNN (¶N)` (mục không có ID ghi `` `03` ¶5 ``); trích public-web ghi `public-web ¶2.1` kèm ⚠ chờ public-web cấp ID. Không đổi nội dung thiết kế. File: **partner-web-design.md** (mục 1, 3, 4.1, 4.2, 4.4, 4.6, 4.7, 4.12), **00-claude-instructions.md** (mục 1).
+- DC-20260929-02: đổi trích dẫn admin-web sang `D-ADM-029 (¶3)`, `D-ADM-022 (¶4.22)`. Không đổi nội dung thiết kế. File: **partner-web-design.md** (mục 3, 4.11).
+- DC-20260929-03: gắn ID `D-PRT-001`–`D-PRT-012` cho màn hình 4.1–4.12 và `D-PRT-013` cho mục 3 (Quy ước chung); đổi trích dẫn mục trong cùng file (kể cả số màn hình viết trần) sang `D-PRT-… (¶…)` / `¶N`. Không đổi nội dung thiết kế. File: **partner-web-design.md**, **00-claude-instructions.md** (mục 3 thêm quy ước ID).
+- DC-20260929-04: đổi trích dẫn bảng màu public-web sang D-PUB-011 (¶2.1), gỡ ⚠ chờ public-web cấp ID. Không đổi nội dung thiết kế. File: **partner-web-design.md** (mục 3).

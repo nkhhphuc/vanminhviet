@@ -15,7 +15,7 @@
 
 ## 2. Design System
 
-### 2.1 Bảng màu (Color Palette)
+### 2.1 [D-PUB-011] Bảng màu (Color Palette)
 
 | Vai trò | Mô tả | Gợi ý mã màu |
 |---|---|---|
@@ -36,11 +36,11 @@
 - **Body text:** Sans-serif thường, cỡ trung bình, màu xám nhạt cho mô tả phụ.
 - **Nút bấm/label tab:** Sans-serif nhỏ, đều, dễ đọc ở kích thước icon 20–24px.
 
-### 2.3 Thành phần dùng chung (Shared Components)
+### 2.3 [D-PUB-012] Thành phần dùng chung (Shared Components)
 
 - **Status bar** giả lập iOS (giờ, sóng, wifi, pin) — không cần dựng thật nếu build web, chỉ dựng cho app.
 - **Top App Bar:** gồm nút back/menu (trái), tiêu đề màn hình (giữa), icon action (phải: search/notification/share/QR...).
-- **Bottom Tab Bar (5 tab cố định):** Trang chủ · Khám phá · [Nút trung tâm nổi bật, icon trống đồng, dùng để mở nhanh tính năng chính/AI] · Cộng đồng · Cá nhân. Nút trung tâm có style khác biệt: hình tròn, viền đỏ, nổi lên trên thanh tab. *Tab "Khám phá" dẫn tới màn hình Bách Khoa Toàn Thư (mục 4.3) — cùng đích đến với icon "Bách khoa" ở lưới chức năng Trang chủ.*
+- **Bottom Tab Bar (5 tab cố định):** Trang chủ · Khám phá · [Nút trung tâm nổi bật, icon trống đồng, dùng để mở nhanh tính năng chính/AI] · Cộng đồng · Cá nhân. Nút trung tâm có style khác biệt: hình tròn, viền đỏ, nổi lên trên thanh tab. *Tab "Khám phá" dẫn tới màn hình Bách Khoa Toàn Thư (D-PUB-003 (¶4.3)) — cùng đích đến với icon "Bách khoa" ở lưới chức năng Trang chủ.*
 - **Card hình chữ nhật bo góc** (radius ~12–16px) dùng cho danh sách nội dung nổi bật, ảnh nền + gradient tối phía dưới để đè chữ.
 - **Nút CTA chính:** nền đỏ, chữ trắng, bo góc, dùng cho hành động chính (vd: "Chơi ngay", "Tìm hiểu ngay").
 - **Search bar:** bo tròn/bo góc lớn, nền sáng hơn/khác tông nhẹ so với nền chính (viền mảnh xám kem), icon kính lúp bên phải, placeholder dạng câu hỏi gợi ý.
@@ -48,18 +48,18 @@
 
 ---
 
-## 3. Cấu trúc điều hướng (Navigation Map)
+## 3. [D-PUB-010] Cấu trúc điều hướng (Navigation Map)
 
 ```
 Bottom Tab Bar
 ├── Trang chủ (Home)
-├── Khám phá (Explore) ──► Màn hình Bách Khoa Toàn Thư (mục 4.3)
+├── Khám phá (Explore) ──► Màn hình Bách Khoa Toàn Thư (D-PUB-003 (¶4.3))
 ├── [Trung tâm] — truy cập nhanh (AI / mở rộng)
 ├── Cộng đồng (Community)
 └── Cá nhân (Profile)
 
 Từ Trang chủ, lưới 8 chức năng dẫn tới các module con:
-├── Bách khoa (Encyclopedia) ──► Màn hình Bách Khoa Toàn Thư (mục 4.3)
+├── Bách khoa (Encyclopedia) ──► Màn hình Bách Khoa Toàn Thư (D-PUB-003 (¶4.3))
 ├── AI trợ lý (AI Chat) ──► Màn hình Chat AI Văn Minh Việt
 ├── Bảo tàng số (3D Museum) ──► Màn hình Bảo tàng số 3D
 ├── Bản đồ văn hóa (Culture Map) ──► Màn hình Bản đồ
@@ -68,16 +68,16 @@ Từ Trang chủ, lưới 8 chức năng dẫn tới các module con:
 ├── Giáo dục (Education)
 └── Cộng đồng (Community) ──► Màn hình Cộng đồng
 
-Thanh tìm kiếm Hero banner (mục 4.1, gõ câu hỏi rồi nhấn Enter/gửi) ──► Màn hình Chat AI (mục 4.2)
+Thanh tìm kiếm Hero banner (D-PUB-001 (¶4.1), gõ câu hỏi rồi nhấn Enter/gửi) ──► Màn hình Chat AI (D-PUB-002 (¶4.2))
 
-Mục từ Bách Khoa (từ carousel Trang chủ, trích dẫn Chat AI, hoặc mục 4.3) ──► Trang chi tiết Mục từ (mục 4.4)
+Mục từ Bách Khoa (từ carousel Trang chủ, trích dẫn Chat AI, hoặc D-PUB-003 (¶4.3)) ──► Trang chi tiết Mục từ (D-PUB-004 (¶4.4))
 ```
 
 ---
 
 ## 4. Đặc tả chi tiết từng màn hình
 
-### 4.1 Màn hình Trang chủ (Home)
+### 4.1 [D-PUB-001] Màn hình Trang chủ (Home)
 
 **Top bar:** icon menu (trái) — logo/tên "VĂN MINH VIỆT" (giữa, chữ đỏ) — icon tìm kiếm + icon chuông thông báo (phải).
 
@@ -86,7 +86,7 @@ Mục từ Bách Khoa (từ carousel Trang chủ, trích dẫn Chat AI, hoặc m
 **Hero banner:** Ảnh nền phong cảnh văn hóa (đình làng, hoàng hôn) full-width, phía trên có gradient tối để nổi chữ. Nội dung overlay:
 - Tiêu đề lớn 2 dòng: "Khám phá / Văn Minh Việt"
 - Mô tả phụ 1 dòng: "Hành trình xuyên suốt lịch sử, văn hóa và con người Việt Nam"
-- Thanh tìm kiếm: placeholder "Bạn muốn tìm gì?" — gõ câu hỏi và nhấn Enter/gửi sẽ mở màn hình Chat AI (mục 4.2) kèm câu hỏi vừa nhập, là lối vào chính cho Trợ lý AI Văn Minh Việt ngay từ Trang chủ. Khác với thanh tìm kiếm riêng ở màn hình Bách Khoa Toàn Thư (mục 4.3) — nơi tìm kiếm Mục từ theo từ khoá (Business Requirements R-PUB-004 (§2.6.2.1)).
+- Thanh tìm kiếm: placeholder "Bạn muốn tìm gì?" — gõ câu hỏi và nhấn Enter/gửi sẽ mở màn hình Chat AI (D-PUB-002 (¶4.2)) kèm câu hỏi vừa nhập, là lối vào chính cho Trợ lý AI Văn Minh Việt ngay từ Trang chủ. Khác với thanh tìm kiếm riêng ở màn hình Bách Khoa Toàn Thư (D-PUB-003 (¶4.3)) — nơi tìm kiếm Mục từ theo từ khoá (Business Requirements R-PUB-004 (§2.6.2.1)).
 
 **Lưới chức năng chính (Grid 4x2, 8 icon):**
 1. Bách khoa
@@ -115,7 +115,7 @@ Mỗi item: icon minh hoạ màu, nền sáng, bo góc vuông + nhãn text bên 
 
 ---
 
-### 4.2 Màn hình Chat AI (AI Văn Minh Việt)
+### 4.2 [D-PUB-002] Màn hình Chat AI (AI Văn Minh Việt)
 
 > ⚠️ **Thiết kế đi trước / đơn giản hoá so với đặc tả nghiệp vụ**: Business Requirements R-PUB-008 (§2.6.4) quy định Trợ lý AI cho phép chọn Cương vực để giới hạn phạm vi trả lời (R-PUB-009 (§2.6.4.1)); hệ thống chỉ hỗ trợ tiếng Việt (R-NFR-020 (§3.3.5)). Ở giai đoạn thiết kế này, màn hình tạm **không có UI chọn Cương vực, chỉ hỗ trợ tiếng Việt** — đây là lựa chọn đơn giản hoá cho UI ở giai đoạn này, không phải đề xuất thay đổi Business Requirements. Riêng **quick-reply chips + nhập giọng nói** bên dưới (hai chi tiết chưa có cơ sở trong BR) tạm để xử lý sau.
 
@@ -133,7 +133,7 @@ Mỗi item: icon minh hoạ màu, nền sáng, bo góc vuông + nhãn text bên 
 
 ---
 
-### 4.3 Màn hình Bách Khoa Toàn Thư (Danh sách Mục từ)
+### 4.3 [D-PUB-003] Màn hình Bách Khoa Toàn Thư (Danh sách Mục từ)
 
 **Top bar:** back/menu (trái) — tiêu đề "BÁCH KHOA TOÀN THƯ" (giữa).
 
@@ -145,35 +145,35 @@ Mỗi item: icon minh hoạ màu, nền sáng, bo góc vuông + nhãn text bên 
 - Ảnh minh hoạ tỉ lệ vuông (1:1), bo góc, lấy từ file đính kèm của Mục từ.
 - Nhãn Cương vực đầu tiên (nếu có), dạng chip nhỏ đặt đè góc trên-trái của ảnh.
 - Tiêu đề Mục từ bên dưới ảnh, đậm, tối đa 2 dòng (không hiện mô tả phụ do khổ card hẹp).
-- Gap ngang/dọc giữa các card ~12–16px, container padding 16–20px hai bên (nhất quán mục 5).
+- Gap ngang/dọc giữa các card ~12–16px, container padding 16–20px hai bên (nhất quán ¶5).
 
 Empty state khi tìm kiếm/lọc không có kết quả: minh hoạ + text "Không tìm thấy mục từ phù hợp".
 
 > Ghi chú: chỉ hiển thị Mục từ đang có phiên bản công khai (R-PUB-006 (§2.6.2.3)) — quy tắc dữ liệu, không cần UI riêng.
 
-**Bottom tab bar:** Khám phá (active) · các tab còn lại như mục 2.3.
+**Bottom tab bar:** Khám phá (active) · các tab còn lại như D-PUB-012 (¶2.3).
 
 ---
 
-### 4.4 Trang chi tiết Mục từ
+### 4.4 [D-PUB-004] Trang chi tiết Mục từ
 
 **Top bar:** back — icon share (phải).
 
 **Header:** Tiêu đề Mục từ (lớn, đậm), chip Cương vực ngay dưới tiêu đề (có thể nhiều).
 
 **Nội dung:** render tuần tự theo danh sách block đã đặc tả (R-ENC-007 (§2.3.2.3.1)) — kiểu trang wiki:
-- Block đoạn văn/tiêu đề phụ/chú thích: typography Body/H2-H3 (mục 2.2).
+- Block đoạn văn/tiêu đề phụ/chú thích: typography Body/H2-H3 (¶2.2).
 - Block nhúng ảnh: full-width, bo góc.
 - Block nhúng âm thanh: thanh audio player ngang.
 - Block nhúng phim: video player/thumbnail có nút play.
 
 > ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: section "Mục từ liên quan" (gợi ý các Mục từ khác cùng Cương vực) bên dưới nội dung — chưa có cơ sở trong Business Requirements, là đề xuất UI thêm để tăng khả năng khám phá nội dung.
 
-Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (mục 4.1), bấm trích dẫn Mục từ nguồn ở Chat AI (mục 4.2, R-PUB-007 (§2.6.3)), hoặc bấm một Mục từ ở màn hình Bách Khoa (mục 4.3).
+Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (D-PUB-001 (¶4.1)), bấm trích dẫn Mục từ nguồn ở Chat AI (D-PUB-002 (¶4.2), R-PUB-007 (§2.6.3)), hoặc bấm một Mục từ ở màn hình Bách Khoa (D-PUB-003 (¶4.3)).
 
 ---
 
-### 4.5 Màn hình Bản đồ văn hóa (Culture Map)
+### 4.5 [D-PUB-005] Màn hình Bản đồ văn hóa (Culture Map)
 
 **Top bar:** back — tiêu đề "BẢN ĐỒ VĂN HÓA" — icon share/export.
 
@@ -185,7 +185,7 @@ Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (mục 4.1), 
 
 ---
 
-### 4.6 Màn hình Bảo tàng số 3D
+### 4.6 [D-PUB-006] Màn hình Bảo tàng số 3D
 
 **Top bar:** back — tiêu đề "BẢO TÀNG SỐ 3D" — icon share.
 
@@ -202,7 +202,7 @@ Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (mục 4.1), 
 
 ---
 
-### 4.7 Màn hình Game lịch sử
+### 4.7 [D-PUB-007] Màn hình Game lịch sử
 
 > ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: module Game lịch sử hiện nằm trong danh sách module ngoài phạm vi giai đoạn này (Business Requirements R-OOS-002 (§2.5.1)) — chưa có đặc tả chi tiết về luồng chơi, cách tính điểm, lưu tiến độ, v.v. Màn hình dưới đây là thiết kế UI tham khảo, cần đối chiếu lại khi module được đặc tả chính thức.
 
@@ -217,7 +217,7 @@ Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (mục 4.1), 
 
 ---
 
-### 4.8 Màn hình Phim & Truyền hình
+### 4.8 [D-PUB-008] Màn hình Phim & Truyền hình
 
 > ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: module Phim & Truyền hình hiện nằm trong danh sách module ngoài phạm vi giai đoạn này (Business Requirements R-OOS-003 (§2.5.2), "Phim Lịch Sử") — chưa có đặc tả chi tiết về bản quyền nội dung, nguồn phim, cơ chế lưu tiến độ xem, v.v. Màn hình dưới đây là thiết kế UI tham khảo, cần đối chiếu lại khi module được đặc tả chính thức.
 
@@ -233,7 +233,7 @@ Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (mục 4.1), 
 
 ---
 
-### 4.9 Màn hình Cộng đồng (Community)
+### 4.9 [D-PUB-009] Màn hình Cộng đồng (Community)
 
 > ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: module Cộng Đồng Văn Hóa hiện nằm trong danh sách module ngoài phạm vi giai đoạn này (Business Requirements R-OOS-004 (§2.5.3)) — chưa có đặc tả chi tiết về entity, quy trình kiểm duyệt nội dung (xem thêm BR R-NFR-025 (§3.5.1)), v.v. Nội dung chi tiết màn hình dưới đây tạm để nguyên như hiện tại, chưa biên tập sâu thêm — sẽ quay lại sau.
 
