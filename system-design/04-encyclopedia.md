@@ -38,7 +38,7 @@ Quy ước chung theo `00-claude-instructions.md` mục 6 (UUID, `snake_case`, t
 | `content_plain_text` | text (nullable) | ⚠ Đề xuất bổ sung — bản trích xuất text thuần từ `content_blocks` (đoạn văn, chú thích...), do tầng ứng dụng đồng bộ mỗi khi `content_blocks` đổi; dùng làm nguồn cho chỉ mục full-text (R-PUB-004 (§2.6.2.1) đặc tả gốc: tìm theo tiêu đề + nội dung) — JSONB không tự đánh index full-text tốt. Cũng là nguồn dữ liệu để `/assistant` (module 05) cắt đoạn/sinh embedding cho RAG |
 | `status` | text (nullable) | R-ENC-006 (§2.3.2.3) — chỉ bản soạn thảo mang giá trị, dòng đã chốt `status = NULL`, cùng cơ chế đã chốt ở module 03 (D-SD03-006 (¶2.6)). 7 mã, xem D-SD04-007 (¶3.1) |
 | `assignee_id` | UUID (nullable) | R-ENC-011 (§2.3.2.5) "Người phụ trách" — ⚠ Bổ sung. FK → `employee.id`. Ghi nhận đúng một Nhân viên đang chịu trách nhiệm chính tại thời điểm hiện tại, **xuyên suốt vòng đời** bản soạn thảo (mọi trạng thái ở D-SD04-007 (¶3.1)). Đối xứng hoàn toàn với `knowledge_object_version.assignee_id` ở module 03 (D-SD03-006 (¶2.6)) — đặt trực tiếp trên bản soạn thảo vì đây là **cùng một dòng ổn định** suốt vòng đời. **Không tự động bị xoá khi chuyển trạng thái** — ở các trạng thái chờ thuần tuý (`cho_xet_duyet`, `dat_xet_duyet`, `da_xuat_ban`, `khong_xuat_ban`) giữ nguyên giá trị của lần nhận gần nhất, chỉ mang tính hiển thị (R-ENC-015 (§2.3.2.5.4)). Chỉ bị xoá qua 2 thao tác tường minh `Release`/`ForceRelease` (D-SD04-014 (¶4.4)) |
-| `review_note` | text (nullable) | ⚠ Đề xuất bổ sung — nhận định tổng thể của vai trò Xét duyệt Mục từ khi chuyển `dat_xet_duyet` hoặc `khong_dat_xet_duyet` (module này không có cấu trúc claim để gắn ghi chú như module 03, nên cần 1 trường ghi chú tự do cấp Mục từ). Trả về ở `GET /encyclopedia/entries/{id}` (D-SD04-015 (¶5.1)) để vai trò Biên tập đọc khi Mục từ đang `khong_dat_xet_duyet` |
+| `review_note` | text (nullable) | ⚠ Đề xuất bổ sung — nhận định tổng thể của vai trò Xét duyệt Mục từ khi chuyển `dat_xet_duyet` hoặc `khong_dat_xet_duyet` (module này không có cấu trúc claim để gắn ghi chú như module 03, nên cần 1 trường ghi chú tự do cấp Mục từ). Trả về ở `encyclopedia.getEntry` (D-SD04-015) để vai trò Biên tập đọc khi Mục từ đang `khong_dat_xet_duyet` |
 | `frozen_at` | timestamptz (nullable) | Thời điểm chốt (= thời điểm vai trò Xuất bản Mục từ chọn "Xuất bản", R-ENC-029 (§2.3.5.7)); `NULL` với bản soạn thảo |
 | `frozen_by` | UUID (nullable) | FK → `employee.id`, giữ vai trò Xuất bản Mục từ |
 | `created_at` | timestamptz | |
@@ -75,7 +75,7 @@ Quy ước chung theo `00-claude-instructions.md` mục 6 (UUID, `snake_case`, t
 
 - Khoá chính composite `(entry_id, knowledge_object_id)`.
 - Vai trò Biên tập gộp nhiều Hạng mục tri thức thành 1 Mục từ, hoặc tách 1 Hạng mục tri thức thành nhiều Mục từ (R-ENC-017 (§2.3.3)) — chính là thêm/bớt dòng ở bảng này.
-- Cờ `is_outdated` được **tính ở tầng ứng dụng** khi trả `GET /encyclopedia/entries/{id}` (D-SD04-015 (¶5.1)) — so `last_synced_version_id` với `used_version_id` hiện tại của Hạng mục tri thức, lấy qua `knowledge.GetUsedVersionIDs` (D-SD03-017 (¶4.2)); không lưu thành cột riêng.
+- Cờ `is_outdated` được **tính ở tầng ứng dụng** khi trả `encyclopedia.getEntry` (D-SD04-015) — `GET /encyclopedia/entries/{id}` — so `last_synced_version_id` với `used_version_id` hiện tại của Hạng mục tri thức, lấy qua `knowledge.GetUsedVersionIDs` (D-SD03-017 (¶4.2)); không lưu thành cột riêng.
 - ⚠ Khoá ngoại `knowledge_object_id` dùng **`ON DELETE RESTRICT`**: một Hạng mục tri thức đang được Mục từ tham chiếu thì **không xoá được** ở module 03 (D-SD03-005 (¶2.5), D-SD03-017 (¶4.2)) — ràng buộc thực thi ở tầng CSDL để `/knowledge` không phải gọi ngược sang `/encyclopedia`, giữ đúng hướng phụ thuộc một chiều 04 → 03.
 
 ### 2.5. [D-SD04-005] `cultural_domain` (Cương vực — taxonomy, R-ENC-031 (§2.3.6)–R-ENC-032 (§2.3.7))
@@ -149,7 +149,7 @@ Không có bước AI Verification (khác module 03) — chỉ **7** mã trạng
 
 **(3) `dang_xet_duyet`** — R-ENC-025 (§2.3.5.3). Vai trò Xét duyệt Mục từ (nhóm chuyên gia riêng, khác vai trò Xét duyệt Hạng mục tri thức ở module 03) `Claim` một Mục từ đang ở `cho_xet_duyet` để chuyển sang trạng thái này — thao tác **khoá độc quyền**: tại một thời điểm, mỗi Mục từ chỉ có đúng một chuyên gia đang xử lý; chuyên gia khác không nhận được cho tới khi được `Release`. Chuyên gia đã nhận có thể **tự `Release`** bất kỳ lúc nào, đưa Mục từ quay lại `cho_xet_duyet`; nếu không tự nhả, Quản trị hệ thống có thể `ForceRelease` (R-ENC-016 (§2.3.2.5.5)). Xét duyệt thủ công toàn bộ nội dung — không có cấu trúc phát biểu/tham chiếu như module 03, nên xét duyệt ở cấp tổng thể (`review_note`).
 
-**(4) `khong_dat_xet_duyet`** — R-ENC-026 (§2.3.5.4). Bị từ chối bởi vai trò Xét duyệt Mục từ (`RejectReview`, ghi `review_note` — bắt buộc khi không đạt, R-ENC-025 (§2.3.5.3)). Vai trò Biên tập xem `review_note` (trả về ở `GET /encyclopedia/entries/{id}`, D-SD04-015 (¶5.1)), quay lại `soan_thao` trên cùng bản soạn thảo qua endpoint `resume-editing` (⚠ bổ sung, D-SD04-016 (¶5.2)) — bất kỳ Nhân viên nào giữ vai trò Biên tập đều gọi được (không giới hạn riêng theo `assignee_id`, nhất quán với `submit-for-review`); `assignee_id` giữ nguyên giá trị cũ (không tự xoá).
+**(4) `khong_dat_xet_duyet`** — R-ENC-026 (§2.3.5.4). Bị từ chối bởi vai trò Xét duyệt Mục từ (`RejectReview`, ghi `review_note` — bắt buộc khi không đạt, R-ENC-025 (§2.3.5.3)). Vai trò Biên tập xem `review_note` (trả về ở `encyclopedia.getEntry` (D-SD04-015) — `GET /encyclopedia/entries/{id}`), quay lại `soan_thao` trên cùng bản soạn thảo qua endpoint `resume-editing` (⚠ bổ sung, D-SD04-016 (¶5.2)) — bất kỳ Nhân viên nào giữ vai trò Biên tập đều gọi được (không giới hạn riêng theo `assignee_id`, nhất quán với `submit-for-review`); `assignee_id` giữ nguyên giá trị cũ (không tự xoá).
 
 **(5) `dat_xet_duyet`** — R-ENC-027 (§2.3.5.5). Vai trò Xét duyệt Mục từ xác nhận đạt. **Chỉ vai trò Xuất bản Mục từ** đưa Mục từ rời khỏi đây, bằng đúng 1 trong 2 quyết định (D-SD04-002 (¶2.2)).
 
@@ -164,7 +164,7 @@ Giống hệt cấu trúc D-SD03-013 (¶3.4):
 
 ### 3.4. [D-SD04-010] Đồng bộ khi Hạng mục tri thức nguồn có phiên bản mới (R-ENC-017 (§2.3.3))
 
-- **Không tự động** — vai trò Biên tập chủ động vào Mục từ, xem nội dung `used_version` hiện tại của (các) Hạng mục tri thức liên quan (đọc qua interface `/knowledge`, D-SD04-012 (¶4.2)), tự cập nhật `content_blocks` nếu cần, rồi cập nhật `last_synced_version_id` (D-SD04-004 (¶2.4)) để tắt cảnh báo "đã lỗi thời" (cờ `is_outdated` ở `GET /encyclopedia/entries/{id}`, D-SD04-015 (¶5.1)).
+- **Không tự động** — vai trò Biên tập chủ động vào Mục từ, xem nội dung `used_version` hiện tại của (các) Hạng mục tri thức liên quan (đọc qua interface `/knowledge`, D-SD04-012 (¶4.2)), tự cập nhật `content_blocks` nếu cần, rồi cập nhật `last_synced_version_id` (D-SD04-004 (¶2.4)) để tắt cảnh báo "đã lỗi thời" (cờ `is_outdated` ở `encyclopedia.getEntry` (D-SD04-015) — `GET /encyclopedia/entries/{id}`).
 - Việc đồng bộ này **không đổi `status`** của Mục từ — vẫn phải qua lại toàn bộ luồng xét duyệt (R-ENC-022 (§2.3.5)) nếu Mục từ đã `da_xuat_ban`/`khong_xuat_ban` và cần sửa nội dung (phải được vai trò Xét duyệt Mục từ mở lại trước).
 
 ## 4. Kiến trúc riêng của module
@@ -255,57 +255,57 @@ Nhóm `encyclopedia/*` chỉ mount ở `/api/v1/admin/encyclopedia/...` (đã ch
 
 ### 5.1. [D-SD04-015] Mục từ (`entries`)
 
-| Method | Path | Mô tả |
-|---|---|---|
-| GET | `/encyclopedia/entries` | Danh sách (filter `status`, `cultural_domain_id`, từ khoá) — cursor pagination; mỗi dòng trả `assignee: {id, display_name} \| null` (Người phụ trách bản soạn thảo) và `created_by: {id, display_name} \| null` — ⚠ bổ sung |
-| POST | `/encyclopedia/entries` | Tạo mới — body `{title, knowledge_object_ids[]}` |
-| GET | `/encyclopedia/entries/{id}` | Chi tiết bản soạn thảo (`status`, `title`, **`assignee: {id, display_name} \| null`**, **`created_by: {id, display_name} \| null`** — ⚠ bổ sung, **`review_note`** — ghi chú xét duyệt gần nhất, Biên tập cần đọc khi ở `khong_dat_xet_duyet`, D-SD04-008 (¶3.2) bước (4)) + danh sách phiên bản đã chốt + **danh sách Hạng mục tri thức đã gán, mỗi dòng kèm `last_synced_version_id` và cờ `is_outdated`** (⚠ bổ sung — so `last_synced_version_id` với `used_version_id` hiện tại lấy qua `knowledge.GetUsedVersionIDs`, D-SD04-004 (¶2.4)/D-SD04-010 (¶3.4)) |
-| PATCH | `/encyclopedia/entries/{id}/content` | Cập nhật `content_blocks` (chặn nếu đang khoá, hoặc nếu người gọi không phải `assignee_id` hiện tại khi `status = soan_thao`) |
-| POST | `/encyclopedia/entries/{id}/knowledge-objects` | Thêm ánh xạ tới 1 Hạng mục tri thức |
-| DELETE | `/encyclopedia/entries/{id}/knowledge-objects/{knowledge_object_id}` | Gỡ ánh xạ |
-| GET | `/encyclopedia/entries/{id}/knowledge-objects/{knowledge_object_id}/source` | Đọc nội dung `used_version` của Hạng mục tri thức nguồn (qua `GetUsedVersionContent`) để tham khảo/đồng bộ |
-| POST | `/encyclopedia/entries/{id}/knowledge-objects/{knowledge_object_id}/mark-synced` | Đánh dấu đã đồng bộ xong |
-| POST | `/encyclopedia/entries/{id}/files/upload-url` | ⚠ Bổ sung — bước 1 quy ước presigned upload (D-SD01-003 (¶3)): xin `{upload_url, storage_key, expires_at}` cho 1 `entry_file` mới, body tối thiểu `{file_type, file_name}` |
-| POST | `/encyclopedia/entries/{id}/files` | Xác nhận file đã upload qua presigned URL (bước 3, body gồm `storage_key`) — cùng điều kiện khoá/`assignee_id` |
-| GET | `/encyclopedia/entries/{id}/files/{file_id}/download-url` | ⚠ Bổ sung — URL tải/xem 1 `entry_file` đã có, ký presigned GET URL ngắn hạn, gọi theo yêu cầu |
-| DELETE | `/encyclopedia/entries/{id}/files/{file_id}` | Gỡ file đính kèm |
-| POST | `/encyclopedia/entries/{id}/cultural-domains` | Gán Cương vực — body `{cultural_domain_id}` |
-| DELETE | `/encyclopedia/entries/{id}/cultural-domains/{cultural_domain_id}` | Gỡ Cương vực |
+| Method | Path | operationId | Mô tả |
+|---|---|---|---|
+| GET | `/encyclopedia/entries` | `encyclopedia.listEntries` | Danh sách (filter `status`, `cultural_domain_id`, từ khoá) — cursor pagination; mỗi dòng trả `assignee: {id, display_name} \| null` (Người phụ trách bản soạn thảo) và `created_by: {id, display_name} \| null` — ⚠ bổ sung |
+| POST | `/encyclopedia/entries` | `encyclopedia.createEntry` | Tạo mới — body `{title, knowledge_object_ids[]}` |
+| GET | `/encyclopedia/entries/{id}` | `encyclopedia.getEntry` | Chi tiết bản soạn thảo (`status`, `title`, **`assignee: {id, display_name} \| null`**, **`created_by: {id, display_name} \| null`** — ⚠ bổ sung, **`review_note`** — ghi chú xét duyệt gần nhất, Biên tập cần đọc khi ở `khong_dat_xet_duyet`, D-SD04-008 (¶3.2) bước (4)) + danh sách phiên bản đã chốt + **danh sách Hạng mục tri thức đã gán, mỗi dòng kèm `last_synced_version_id` và cờ `is_outdated`** (⚠ bổ sung — so `last_synced_version_id` với `used_version_id` hiện tại lấy qua `knowledge.GetUsedVersionIDs`, D-SD04-004 (¶2.4)/D-SD04-010 (¶3.4)) |
+| PATCH | `/encyclopedia/entries/{id}/content` | `encyclopedia.updateEntryContent` | Cập nhật `content_blocks` (chặn nếu đang khoá, hoặc nếu người gọi không phải `assignee_id` hiện tại khi `status = soan_thao`) |
+| POST | `/encyclopedia/entries/{id}/knowledge-objects` | `encyclopedia.addEntryKnowledgeObject` | Thêm ánh xạ tới 1 Hạng mục tri thức |
+| DELETE | `/encyclopedia/entries/{id}/knowledge-objects/{knowledge_object_id}` | `encyclopedia.removeEntryKnowledgeObject` | Gỡ ánh xạ |
+| GET | `/encyclopedia/entries/{id}/knowledge-objects/{knowledge_object_id}/source` | `encyclopedia.getEntryKnowledgeObjectSource` | Đọc nội dung `used_version` của Hạng mục tri thức nguồn (qua `GetUsedVersionContent`) để tham khảo/đồng bộ |
+| POST | `/encyclopedia/entries/{id}/knowledge-objects/{knowledge_object_id}/mark-synced` | `encyclopedia.markEntryKnowledgeObjectSynced` | Đánh dấu đã đồng bộ xong |
+| POST | `/encyclopedia/entries/{id}/files/upload-url` | `encyclopedia.createEntryFileUploadUrl` | ⚠ Bổ sung — bước 1 quy ước presigned upload (D-SD01-003 (¶3)): xin `{upload_url, storage_key, expires_at}` cho 1 `entry_file` mới, body tối thiểu `{file_type, file_name}` |
+| POST | `/encyclopedia/entries/{id}/files` | `encyclopedia.createEntryFile` | Xác nhận file đã upload qua presigned URL (bước 3, body gồm `storage_key`) — cùng điều kiện khoá/`assignee_id` |
+| GET | `/encyclopedia/entries/{id}/files/{file_id}/download-url` | `encyclopedia.getEntryFileDownloadUrl` | ⚠ Bổ sung — URL tải/xem 1 `entry_file` đã có, ký presigned GET URL ngắn hạn, gọi theo yêu cầu |
+| DELETE | `/encyclopedia/entries/{id}/files/{file_id}` | `encyclopedia.deleteEntryFile` | Gỡ file đính kèm |
+| POST | `/encyclopedia/entries/{id}/cultural-domains` | `encyclopedia.addEntryCulturalDomain` | Gán Cương vực — body `{cultural_domain_id}` |
+| DELETE | `/encyclopedia/entries/{id}/cultural-domains/{cultural_domain_id}` | `encyclopedia.removeEntryCulturalDomain` | Gỡ Cương vực |
 
 ### 5.2. [D-SD04-016] Luồng xét duyệt & Người phụ trách
 
-| Method | Path | Mô tả |
-|---|---|---|
-| POST | `/encyclopedia/entries/{id}/submit-for-review` | `soan_thao → cho_xet_duyet` |
-| POST | `/encyclopedia/entries/{id}/claim` | Người phụ trách "nhận xử lý" (R-ENC-011 (§2.3.2.5)) — hợp lệ tại `soan_thao` (chỉ gán `assignee_id`) hoặc `cho_xet_duyet` (gán `assignee_id` **và** chuyển `status → dang_xet_duyet`, D-SD04-008 (¶3.2) bước (3)) |
-| POST | `/encyclopedia/entries/{id}/release` | Người phụ trách hiện tại tự "nhả" — hợp lệ tại `soan_thao` (chỉ xoá `assignee_id`) hoặc `dang_xet_duyet` (xoá `assignee_id` **và** lùi `status → cho_xet_duyet`) |
-| POST | `/encyclopedia/entries/{id}/force-release` | Quản trị hệ thống cưỡng chế nhả (R-ENC-016 (§2.3.2.5.5)) — hợp lệ ở bất kỳ trạng thái nào đang có `assignee_id`, không cần khớp người gọi |
-| POST | `/encyclopedia/entries/{id}/reject` | `dang_xet_duyet → khong_dat_xet_duyet` — body `{note}`, `note` bắt buộc (R-ENC-025 (§2.3.5.3)); thiếu thì HTTP 422 `review_note_required` |
-| POST | `/encyclopedia/entries/{id}/resume-editing` | ⚠ Bổ sung — `khong_dat_xet_duyet → soan_thao` — vai trò Biên tập xem `review_note` rồi soạn thảo lại; không giới hạn theo `assignee_id`, nhất quán với `submit-for-review` |
-| POST | `/encyclopedia/entries/{id}/approve` | `dang_xet_duyet → dat_xet_duyet` — body `{note?}` |
-| POST | `/encyclopedia/entries/{id}/publish` | Quyết định "Xuất bản" |
-| POST | `/encyclopedia/entries/{id}/skip-publish` | Quyết định "Không xuất bản" — body `{confirmed}` |
-| POST | `/encyclopedia/entries/{id}/reopen` | Mở lại từ `da_xuat_ban`/`khong_xuat_ban` — body `{target_status}` |
-| POST | `/encyclopedia/entries/{id}/set-public-version` | Chọn phiên bản công khai — body `{version_id}` |
+| Method | Path | operationId | Mô tả |
+|---|---|---|---|
+| POST | `/encyclopedia/entries/{id}/submit-for-review` | `encyclopedia.submitEntryForReview` | `soan_thao → cho_xet_duyet` |
+| POST | `/encyclopedia/entries/{id}/claim` | `encyclopedia.claimEntry` | Người phụ trách "nhận xử lý" (R-ENC-011 (§2.3.2.5)) — hợp lệ tại `soan_thao` (chỉ gán `assignee_id`) hoặc `cho_xet_duyet` (gán `assignee_id` **và** chuyển `status → dang_xet_duyet`, D-SD04-008 (¶3.2) bước (3)) |
+| POST | `/encyclopedia/entries/{id}/release` | `encyclopedia.releaseEntry` | Người phụ trách hiện tại tự "nhả" — hợp lệ tại `soan_thao` (chỉ xoá `assignee_id`) hoặc `dang_xet_duyet` (xoá `assignee_id` **và** lùi `status → cho_xet_duyet`) |
+| POST | `/encyclopedia/entries/{id}/force-release` | `encyclopedia.forceReleaseEntry` | Quản trị hệ thống cưỡng chế nhả (R-ENC-016 (§2.3.2.5.5)) — hợp lệ ở bất kỳ trạng thái nào đang có `assignee_id`, không cần khớp người gọi |
+| POST | `/encyclopedia/entries/{id}/reject` | `encyclopedia.rejectEntry` | `dang_xet_duyet → khong_dat_xet_duyet` — body `{note}`, `note` bắt buộc (R-ENC-025 (§2.3.5.3)); thiếu thì HTTP 422 `review_note_required` |
+| POST | `/encyclopedia/entries/{id}/resume-editing` | `encyclopedia.resumeEntryEditing` | ⚠ Bổ sung — `khong_dat_xet_duyet → soan_thao` — vai trò Biên tập xem `review_note` rồi soạn thảo lại; không giới hạn theo `assignee_id`, nhất quán với `submit-for-review` |
+| POST | `/encyclopedia/entries/{id}/approve` | `encyclopedia.approveEntry` | `dang_xet_duyet → dat_xet_duyet` — body `{note?}` |
+| POST | `/encyclopedia/entries/{id}/publish` | `encyclopedia.publishEntry` | Quyết định "Xuất bản" |
+| POST | `/encyclopedia/entries/{id}/skip-publish` | `encyclopedia.skipEntryPublish` | Quyết định "Không xuất bản" — body `{confirmed}` |
+| POST | `/encyclopedia/entries/{id}/reopen` | `encyclopedia.reopenEntry` | Mở lại từ `da_xuat_ban`/`khong_xuat_ban` — body `{target_status}` |
+| POST | `/encyclopedia/entries/{id}/set-public-version` | `encyclopedia.setEntryPublicVersion` | Chọn phiên bản công khai — body `{version_id}` |
 
 ### 5.3. [D-SD04-017] Cương vực (`cultural-domains`)
 
-| Method | Path | Mô tả |
-|---|---|---|
-| GET | `/encyclopedia/cultural-domains` | Danh sách — mỗi dòng trả kèm `entry_count` (int, đếm mọi dòng `entry_cultural_domain` gắn Cương vực này, không phân biệt `status` bản soạn thảo) — ⚠ bổ sung |
-| POST | `/encyclopedia/cultural-domains` | Tạo mới (mở rộng danh sách "dự kiến", R-ENC-032 (§2.3.7)) |
-| PATCH | `/encyclopedia/cultural-domains/{id}` | Sửa tên/mã |
-| DELETE | `/encyclopedia/cultural-domains/{id}` | Xoá Cương vực (R-ENC-037 (§2.3.7.5)) — chỉ khi chưa gán Mục từ nào; còn Mục từ đang gán thì HTTP 409 `cultural_domain_in_use` kèm `entry_count`. Giao diện cảnh báo và yêu cầu xác nhận trước khi gọi |
+| Method | Path | operationId | Mô tả |
+|---|---|---|---|
+| GET | `/encyclopedia/cultural-domains` | `encyclopedia.listCulturalDomains` | Danh sách — mỗi dòng trả kèm `entry_count` (int, đếm mọi dòng `entry_cultural_domain` gắn Cương vực này, không phân biệt `status` bản soạn thảo) — ⚠ bổ sung |
+| POST | `/encyclopedia/cultural-domains` | `encyclopedia.createCulturalDomain` | Tạo mới (mở rộng danh sách "dự kiến", R-ENC-032 (§2.3.7)) |
+| PATCH | `/encyclopedia/cultural-domains/{id}` | `encyclopedia.updateCulturalDomain` | Sửa tên/mã |
+| DELETE | `/encyclopedia/cultural-domains/{id}` | `encyclopedia.deleteCulturalDomain` | Xoá Cương vực (R-ENC-037 (§2.3.7.5)) — chỉ khi chưa gán Mục từ nào; còn Mục từ đang gán thì HTTP 409 `cultural_domain_in_use` kèm `entry_count`. Giao diện cảnh báo và yêu cầu xác nhận trước khi gọi |
 
-**Quyền** (R-ENC-037 (§2.3.7.5)): xem (`GET`) — mọi Nhân viên đã đăng nhập ở kênh `admin` (dùng cho bộ lọc Cương vực khi chat AI — R-AI-004 (§2.4.3), D-SD05-012 (¶5.1) — và màn hình rà soát nhật ký hỏi đáp); Người dùng công khai xem qua `GET /public/cultural-domains` (D-SD04-018 (¶5.4)). Tạo/sửa/xoá (`POST`/`PATCH`/`DELETE`) — chỉ role `bien_tap`.
+**Quyền** (R-ENC-037 (§2.3.7.5)): xem (`GET`) — mọi Nhân viên đã đăng nhập ở kênh `admin` (dùng cho bộ lọc Cương vực khi chat AI — R-AI-004 (§2.4.3), D-SD05-012 (¶5.1) — và màn hình rà soát nhật ký hỏi đáp); Người dùng công khai xem qua `public.listCulturalDomains` (D-SD04-018) — `GET /public/cultural-domains`. Tạo/sửa/xoá (`POST`/`PATCH`/`DELETE`) — chỉ role `bien_tap`.
 
 ### 5.4. [D-SD04-018] Nhóm `public/*` — `/api/v1/public/...`, không xác thực (R-PUB-002 (§2.6.1))
 
-| Method | Path | Mô tả |
-|---|---|---|
-| GET | `/public/entries` | Tìm kiếm/lọc — chỉ Mục từ có `current_public_version_id` khác NULL (R-PUB-006 (§2.6.2.3)); filter `cultural_domain_id`, `q` (từ khoá) |
-| GET | `/public/entries/{id}` | Nội dung phiên bản công khai (R-PUB-007 (§2.6.3)) |
-| GET | `/public/cultural-domains` | Danh sách Cương vực, cho bộ lọc |
+| Method | Path | operationId | Mô tả |
+|---|---|---|---|
+| GET | `/public/entries` | `public.listEntries` | Tìm kiếm/lọc — chỉ Mục từ có `current_public_version_id` khác NULL (R-PUB-006 (§2.6.2.3)); filter `cultural_domain_id`, `q` (từ khoá) |
+| GET | `/public/entries/{id}` | `public.getEntry` | Nội dung phiên bản công khai (R-PUB-007 (§2.6.3)) |
+| GET | `/public/cultural-domains` | `public.listCulturalDomains` | Danh sách Cương vực, cho bộ lọc |
 
 Mọi endpoint ghi ở 5.1–5.3 có audit log — `action_type` và `detail` theo danh mục sự kiện audit ở D-SD01-002 (¶2).
 
@@ -313,8 +313,8 @@ Mọi endpoint ghi ở 5.1–5.3 có audit log — `action_type` và `detail` th
 
 - **R-ENC-038 (§2.3.8) "Khởi tạo nội dung Mục từ bằng AI" — chưa thiết kế.** Đặc tả giữ nguyên R-ENC-038 (§2.3.8) và đây là phạm vi phải thiết kế. Dự kiến ảnh hưởng: D-SD04-002 (¶2.2) (cờ tiến trình), ¶3 (luồng kích hoạt + quy tắc ghi đè), D-SD04-014 (¶4.4) (hàm ghi), D-SD04-015 (¶5.1) (endpoint), kéo theo `06-ai-gateway.md` (hợp đồng gọi AI) và D-SD01-004 (¶4)/D-SD01-006 (¶6) (job nền, điểm gọi AI). Sẽ thiết kế ở một đợt riêng.
 - **`content_plain_text`** (D-SD04-002 (¶2.2)) — ⚠ cột mirror phục vụ full-text search, đồng bộ ở tầng ứng dụng mỗi khi `content_blocks` đổi — chi tiết kỹ thuật, không ảnh hưởng nghiệp vụ. Nay cũng là nguồn dữ liệu cho `/assistant` (module 05) đánh chỉ mục RAG.
-- **`last_synced_version_id`** (D-SD04-004 (¶2.4)) và cờ **`is_outdated`** ở `GET /encyclopedia/entries/{id}` (D-SD04-015 (¶5.1)) hiện thực cảnh báo nguồn lỗi thời R-ENC-018 (§2.3.3.1) — so với phiên bản đang được sử dụng của Hạng mục tri thức nguồn. Cờ tính tại chỗ qua `knowledge.GetUsedVersionIDs` (D-SD03-017 (¶4.2)), không thêm cột lưu trữ.
-- **`review_note`** (D-SD04-002 (¶2.2), D-SD04-014 (¶4.4), D-SD04-015 (¶5.1), D-SD04-016 (¶5.2)) hiện thực nhận xét tổng thể của vai trò Xét duyệt Mục từ (R-ENC-025 (§2.3.5.3)–R-ENC-026 (§2.3.5.4)): bắt buộc khi không đạt, tuỳ chọn khi đạt; trả về ở `GET /encyclopedia/entries/{id}` để vai trò Biên tập đọc.
+- **`last_synced_version_id`** (D-SD04-004 (¶2.4)) và cờ **`is_outdated`** ở `encyclopedia.getEntry` (D-SD04-015) — `GET /encyclopedia/entries/{id}` hiện thực cảnh báo nguồn lỗi thời R-ENC-018 (§2.3.3.1) — so với phiên bản đang được sử dụng của Hạng mục tri thức nguồn. Cờ tính tại chỗ qua `knowledge.GetUsedVersionIDs` (D-SD03-017 (¶4.2)), không thêm cột lưu trữ.
+- **`review_note`** (D-SD04-002 (¶2.2), D-SD04-014 (¶4.4), D-SD04-015 (¶5.1), D-SD04-016 (¶5.2)) hiện thực nhận xét tổng thể của vai trò Xét duyệt Mục từ (R-ENC-025 (§2.3.5.3)–R-ENC-026 (§2.3.5.4)): bắt buộc khi không đạt, tuỳ chọn khi đạt; trả về ở `encyclopedia.getEntry` (D-SD04-015) — `GET /encyclopedia/entries/{id}` để vai trò Biên tập đọc.
 - **`ListCulturalDomainsByEntry` (D-SD04-013 (¶4.3))** — ⚠ bổ sung 2026-09-23: D-SD05-004 (¶3.1) bước 4 đã mô tả job `assistant.refresh_domain_tags` "đọc lại danh sách Cương vực hiện tại của Mục từ qua interface đọc của `/encyclopedia`", nhưng D-SD04-013 (¶4.3) trước đó chỉ expose `GetPublicVersion`/`ListPublicByScope` — không hàm nào trả Cương vực. Thêm hàm này để job có đúng thứ cần gọi; không đổi hành vi nghiệp vụ.
 - **`entry_knowledge_object.knowledge_object_id` dùng `ON DELETE RESTRICT`** (D-SD04-004 (¶2.4)) — ⚠ bổ sung 2026-09-23, hệ quả của cơ chế xoá Hạng mục tri thức mới ở module 03 (D-SD03-005 (¶2.5), D-SD03-017 (¶4.2)): một Hạng mục tri thức đang được Mục từ tham chiếu thì không xoá được, ràng buộc chặn ở tầng CSDL để `/knowledge` không phải gọi ngược sang `/encyclopedia` (giữ hướng phụ thuộc một chiều 04 → 03). Không đổi hành vi nào của module 04.
 - **Quản lý Cương vực** (D-SD04-005 (¶2.5), D-SD04-006 (¶2.6), D-SD04-014 (¶4.4), D-SD04-017 (¶5.3)) hiện thực R-ENC-037 (§2.3.7.5): vai trò Biên tập thêm/sửa/xoá, chỉ xoá được khi chưa gán Mục từ nào (`ON DELETE RESTRICT` + kiểm tra ở tầng service).
@@ -324,5 +324,5 @@ Mọi endpoint ghi ở 5.1–5.3 có audit log — `action_type` và `detail` th
 - **Enqueue job cho `/assistant` ở `AssignCulturalDomain`/`UnassignCulturalDomain`/`SetPublicVersion` (D-SD04-014 (¶4.4))** — để module 05 biết khi nào cần re-index mà không phải phụ thuộc ngược vào `/encyclopedia`. Chi tiết cơ chế job (`assistant.reindex_entry`, `assistant.refresh_domain_tags`) xem D-SD05-004 (¶3.1) và D-SD05-009 (¶4.3).
 - **Endpoint `resume-editing` cho transition `khong_dat_xet_duyet → soan_thao`** (D-SD04-008 (¶3.2) bước (4), D-SD04-014 (¶4.4), D-SD04-016 (¶5.2)) — ⚠ bổ sung: hành vi nghiệp vụ có sẵn trong đặc tả gốc (R-ENC-026 (§2.3.5.4)), thực thi nhất quán với cách xử lý điểm tương tự ở module 03 (`resume-research`) — hàm không giới hạn quyền gọi theo `assignee_id`, bất kỳ Nhân viên nào giữ vai trò Biên tập đều gọi được, nhất quán với `submit-for-review`.
 - **Upload/download file qua presigned URL cho `entry_file`, tên hiển thị (`display_name`) kèm `assignee`/`created_by` trong response** (D-SD04-014 (¶4.4), D-SD04-015 (¶5.1)) — ⚠ bổ sung 2026-09-23: hoàn thiện kỹ thuật cho quy ước presigned URL đã chốt ở D-SD01-003 (¶3) (áp dụng cụ thể cho `entry_file`, song song `knowledge_object_file`/`source_file` ở module 03), và cho việc hiển thị tên người phụ trách/người tạo ở giao diện Admin nội bộ thay vì chỉ có UUID thô — không đổi hành vi nghiệp vụ nào.
-- **`entry_count` ở `GET /encyclopedia/cultural-domains`** (D-SD04-017 (¶5.3)) — ⚠ bổ sung 2026-09-23: hoàn thiện kỹ thuật cho màn hình Quản lý Cương vực (D-ADM-020 (¶4.20)) cần hiển thị số Mục từ đang gán mỗi Cương vực; trước đó endpoint danh sách chưa trả trường này. Đếm mọi dòng `entry_cultural_domain`, không phân biệt `status` (màn hình quản trị nội bộ, khác `GET /public/entries` chỉ lọc Mục từ đã có phiên bản công khai, D-SD04-018 (¶5.4)).
+- **`entry_count` ở `encyclopedia.listCulturalDomains` (D-SD04-017) — `GET /encyclopedia/cultural-domains`** (D-SD04-017 (¶5.3)) — ⚠ bổ sung 2026-09-23: hoàn thiện kỹ thuật cho màn hình Quản lý Cương vực (D-ADM-020 (¶4.20)) cần hiển thị số Mục từ đang gán mỗi Cương vực; trước đó endpoint danh sách chưa trả trường này. Đếm mọi dòng `entry_cultural_domain`, không phân biệt `status` (màn hình quản trị nội bộ, khác `public.listEntries` (D-SD04-018) — `GET /public/entries` chỉ lọc Mục từ đã có phiên bản công khai, D-SD04-018 (¶5.4)).
 - **`GetEntryTitles`** (D-SD04-013 (¶4.3)) — ⚠ bổ sung: interface đọc hàng loạt tiêu đề Mục từ cho `/assistant` — D-SD06-004 (¶3.2) yêu cầu `title` trong `context_chunks` nhưng `assistant_chunk` không lưu tiêu đề, và API rà soát log cần tiêu đề cho cả lượt hỏi cũ. Fallback về phiên bản đã chốt mới nhất khi Mục từ không còn công khai, kèm cờ `IsPublic`.

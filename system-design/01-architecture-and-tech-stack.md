@@ -99,13 +99,13 @@ func ListAuditLogs(ctx context.Context, filter AuditLogFilter, cursor string) ([
 
 API mới — chỉ mount ở nhóm `admin`, yêu cầu role `quan_tri_he_thong` (tầng service, D-SD01-007 (¶7)):
 
-| Method | Path | Mô tả |
-|---|---|---|
-| GET | `/shared/audit-logs` | Danh sách audit log — filter `employee_id`, `actor_type`, `action_type`, `entity_type`, `entity_id`, `from`, `to`; cursor pagination (D-SD01-003 (¶3)) |
+| Method | Path | operationId | Mô tả |
+|---|---|---|---|
+| GET | `/shared/audit-logs` | `shared.listAuditLogs` | Danh sách audit log — filter `employee_id`, `actor_type`, `action_type`, `entity_type`, `entity_id`, `from`, `to`; cursor pagination (D-SD01-003 (¶3)) |
 
 Đây là endpoint HTTP đầu tiên do `/shared` tự expose trực tiếp (khác các hàm nội bộ `RecordAudit`/`RecordUsage` vốn chỉ gọi qua function call nội bộ) — vẫn hợp lệ vì `/shared` là package sở hữu đúng bảng `audit_log`, đúng nguyên tắc biên giới package ở trên.
 
-Response `GET /shared/audit-logs` — `shared.ListAuditLogs` (và bảng `audit_log`) chỉ trả nguyên `employee_id`, **không JOIN sang `/identity`** trong package `/shared` (đúng nguyên tắc biên giới package ở trên). Tên/email Nhân viên hiển thị ở màn hình Nhật ký hoạt động (D-ADM-021 (¶4.21)) được ghép ở **tầng handler HTTP** (`/cmd/api`, ngoài cả `/shared` lẫn `/identity`): sau khi gọi `shared.ListAuditLogs` lấy 1 trang audit log, handler gọi tiếp `identity.GetEmployeeSummaries` (D-SD02-008 (¶4)) với danh sách `employee_id` duy nhất trong trang đó, rồi ghép vào response cuối cùng:
+Response `shared.listAuditLogs` (D-SD01-002) — `GET /shared/audit-logs` — `shared.ListAuditLogs` (và bảng `audit_log`) chỉ trả nguyên `employee_id`, **không JOIN sang `/identity`** trong package `/shared` (đúng nguyên tắc biên giới package ở trên). Tên/email Nhân viên hiển thị ở màn hình Nhật ký hoạt động (D-ADM-021 (¶4.21)) được ghép ở **tầng handler HTTP** (`/cmd/api`, ngoài cả `/shared` lẫn `/identity`): sau khi gọi `shared.ListAuditLogs` lấy 1 trang audit log, handler gọi tiếp `identity.GetEmployeeSummaries` (D-SD02-008 (¶4)) với danh sách `employee_id` duy nhất trong trang đó, rồi ghép vào response cuối cùng:
 
 ```json
 {
@@ -132,121 +132,121 @@ Quy ước `detail` chung:
 
 | `action_type` | Nhãn | Actor | Endpoint / nguồn | entity | `detail` |
 |---|---|---|---|---|---|
-| `auth.login` | Đăng nhập | employee | `POST /auth/login` | `employee` | `{channel: admin\|partner}` |
-| `auth.logout` | Đăng xuất | employee | `POST /auth/logout` | `employee` | `{channel}` |
-| `auth.login_locked` | Tạm khoá đăng nhập | system | Đạt ngưỡng sai mật khẩu ở `POST /auth/login` hoặc `POST /auth/change-password` (D-SD02-004 (¶3.2), D-SD02-006 (¶3.4)) | `employee` | `{trigger: login\|change_password, locked_until}` |
-| `auth.accept_invite` | Kích hoạt tài khoản | employee | `POST /auth/accept-invite` | `employee` | `{}` |
-| `auth.password_reset` | Đặt lại mật khẩu qua email | employee | `POST /auth/reset-password` | `employee` | `{}` |
-| `auth.password_change` | Đổi mật khẩu | employee | `POST /auth/change-password` | `employee` | `{}` |
+| `auth.login` | Đăng nhập | employee | `auth.login` (D-SD02-009) | `employee` | `{channel: admin\|partner}` |
+| `auth.logout` | Đăng xuất | employee | `auth.logout` (D-SD02-009) | `employee` | `{channel}` |
+| `auth.login_locked` | Tạm khoá đăng nhập | system | Đạt ngưỡng sai mật khẩu ở `auth.login` (D-SD02-009) hoặc `auth.changePassword` (D-SD02-009) (D-SD02-004 (¶3.2), D-SD02-006 (¶3.4)) | `employee` | `{trigger: login\|change_password, locked_until}` |
+| `auth.accept_invite` | Kích hoạt tài khoản | employee | `auth.acceptInvite` (D-SD02-009) | `employee` | `{}` |
+| `auth.password_reset` | Đặt lại mật khẩu qua email | employee | `auth.resetPassword` (D-SD02-009) | `employee` | `{}` |
+| `auth.password_change` | Đổi mật khẩu | employee | `auth.changePassword` (D-SD02-009) | `employee` | `{}` |
 
 **2. Nhân viên, role, Tổ chức (`/identity`, nhóm `identity/*`)**
 
 | `action_type` | Nhãn | Actor | Endpoint | entity | `detail` |
 |---|---|---|---|---|---|
-| `employee.create` | Tạo Nhân viên | employee | `POST /identity/employees` | `employee` (mới) | `{email, organization_id, role_ids}` |
-| `employee.update` | Sửa thông tin Nhân viên | employee | `PATCH /identity/employees/{id}` | `employee` | `{changes}` |
-| `employee.disable` | Khoá tài khoản | employee | `POST …/disable` | `employee` | `{from_status, to_status}` |
-| `employee.enable` | Mở khoá tài khoản | employee | `POST …/enable` | `employee` | `{from_status, to_status}` |
-| `employee.clear_login_lock` | Gỡ tạm khoá đăng nhập | employee | `POST …/clear-login-lock` | `employee` | `{locked_until}` (giá trị trước khi gỡ) |
-| `employee.resend_invite` | Gửi lại lời mời | employee | `POST …/resend-invite` | `employee` | `{}` |
-| `employee.assign_role` | Gán role | employee | `POST /identity/employees/{id}/roles` | `employee` | `{role_id, role_name, scope_type, scope_id}` |
-| `employee.remove_role` | Gỡ role | employee | `DELETE /identity/employees/{id}/roles/{role_id}` | `employee` | như trên |
-| `organization.create` | Tạo Tổ chức | employee | `POST /identity/organizations` | `organization` (mới) | `{name}` |
-| `organization.update` | Sửa Tổ chức | employee | `PATCH /identity/organizations/{id}` | `organization` | `{changes}` |
+| `employee.create` | Tạo Nhân viên | employee | `identity.createEmployee` (D-SD02-010) | `employee` (mới) | `{email, organization_id, role_ids}` |
+| `employee.update` | Sửa thông tin Nhân viên | employee | `identity.updateEmployee` (D-SD02-010) | `employee` | `{changes}` |
+| `employee.disable` | Khoá tài khoản | employee | `identity.disableEmployee` (D-SD02-010) | `employee` | `{from_status, to_status}` |
+| `employee.enable` | Mở khoá tài khoản | employee | `identity.enableEmployee` (D-SD02-010) | `employee` | `{from_status, to_status}` |
+| `employee.clear_login_lock` | Gỡ tạm khoá đăng nhập | employee | `identity.clearEmployeeLoginLock` (D-SD02-010) | `employee` | `{locked_until}` (giá trị trước khi gỡ) |
+| `employee.resend_invite` | Gửi lại lời mời | employee | `identity.resendEmployeeInvite` (D-SD02-010) | `employee` | `{}` |
+| `employee.assign_role` | Gán role | employee | `identity.addEmployeeRole` (D-SD02-010) | `employee` | `{role_id, role_name, scope_type, scope_id}` |
+| `employee.remove_role` | Gỡ role | employee | `identity.removeEmployeeRole` (D-SD02-010) | `employee` | như trên |
+| `organization.create` | Tạo Tổ chức | employee | `identity.createOrganization` (D-SD02-010) | `organization` (mới) | `{name}` |
+| `organization.update` | Sửa Tổ chức | employee | `identity.updateOrganization` (D-SD02-010) | `organization` | `{changes}` |
 
 **3. Đề tài nghiên cứu, Tư liệu gốc (`/knowledge`)**
 
 | `action_type` | Nhãn | Actor | Endpoint / nguồn | entity | `detail` |
 |---|---|---|---|---|---|
-| `research_topic.create` | Tạo Đề tài nghiên cứu | employee | `POST /knowledge/research-topics` (gồm cả tự sinh 3 role theo phạm vi — không ghi riêng) | `research_topic` (mới) | `{name}` |
-| `research_topic.delete` | Xoá Đề tài nghiên cứu | employee | `DELETE /knowledge/research-topics/{id}` | `research_topic` | `{name, removed_source_ids}` |
-| `research_topic.add_source` | Gán Tư liệu gốc vào đề tài | employee | `POST …/{id}/sources` | `research_topic` | `{source_id}` |
-| `research_topic.remove_source` | Gỡ Tư liệu gốc khỏi đề tài | employee | `DELETE …/{id}/sources/{source_id}` | `research_topic` | `{source_id}` |
-| `research_topic.mark_ready` | Đánh dấu tư liệu sẵn sàng | employee | `POST …/{id}/mark-ready` | `research_topic` | `{from_status, to_status}` |
-| `research_topic.set_chair` | Gán/đổi Chủ nhiệm đề tài | employee | `POST …/{id}/set-chair` | `research_topic` | `{employee_id, previous_employee_id}` |
-| `research_topic.assign_researcher` | Gán vai trò Nghiên cứu | employee | `POST …/{id}/researchers` | `research_topic` | `{employee_id}` |
-| `research_topic.remove_researcher` | Gỡ vai trò Nghiên cứu | employee | `DELETE …/{id}/researchers/{employee_id}` | `research_topic` | `{employee_id}` |
-| `research_topic.assign_reviewer` | Gán vai trò Xét duyệt | employee | `POST …/{id}/reviewers` | `research_topic` | `{employee_id}` |
-| `research_topic.remove_reviewer` | Gỡ vai trò Xét duyệt | employee | `DELETE …/{id}/reviewers/{employee_id}` | `research_topic` | `{employee_id}` |
-| `source.create` | Tạo Tư liệu gốc | employee | `POST /knowledge/sources` | `source` (mới) | `{name, type, storage_prefix}` |
-| `source.sync` | Đồng bộ Tư liệu gốc | employee | `POST /knowledge/sources/{id}/sync` — luôn ghi, kể cả khi không có thay đổi | `source` | `{added_count, missing_count, restored_count, unchanged_count, added_file_ids, missing_file_ids, restored_file_ids}` |
+| `research_topic.create` | Tạo Đề tài nghiên cứu | employee | `knowledge.createResearchTopic` (D-SD03-021) (gồm cả tự sinh 3 role theo phạm vi — không ghi riêng) | `research_topic` (mới) | `{name}` |
+| `research_topic.delete` | Xoá Đề tài nghiên cứu | employee | `knowledge.deleteResearchTopic` (D-SD03-021) | `research_topic` | `{name, removed_source_ids}` |
+| `research_topic.add_source` | Gán Tư liệu gốc vào đề tài | employee | `knowledge.addResearchTopicSource` (D-SD03-021) | `research_topic` | `{source_id}` |
+| `research_topic.remove_source` | Gỡ Tư liệu gốc khỏi đề tài | employee | `knowledge.removeResearchTopicSource` (D-SD03-021) | `research_topic` | `{source_id}` |
+| `research_topic.mark_ready` | Đánh dấu tư liệu sẵn sàng | employee | `knowledge.markResearchTopicReady` (D-SD03-021) | `research_topic` | `{from_status, to_status}` |
+| `research_topic.set_chair` | Gán/đổi Chủ nhiệm đề tài | employee | `knowledge.setResearchTopicChair` (D-SD03-021) | `research_topic` | `{employee_id, previous_employee_id}` |
+| `research_topic.assign_researcher` | Gán vai trò Nghiên cứu | employee | `knowledge.addResearchTopicResearcher` (D-SD03-021) | `research_topic` | `{employee_id}` |
+| `research_topic.remove_researcher` | Gỡ vai trò Nghiên cứu | employee | `knowledge.removeResearchTopicResearcher` (D-SD03-021) | `research_topic` | `{employee_id}` |
+| `research_topic.assign_reviewer` | Gán vai trò Xét duyệt | employee | `knowledge.addResearchTopicReviewer` (D-SD03-021) | `research_topic` | `{employee_id}` |
+| `research_topic.remove_reviewer` | Gỡ vai trò Xét duyệt | employee | `knowledge.removeResearchTopicReviewer` (D-SD03-021) | `research_topic` | `{employee_id}` |
+| `source.create` | Tạo Tư liệu gốc | employee | `knowledge.createSource` (D-SD03-022) | `source` (mới) | `{name, type, storage_prefix}` |
+| `source.sync` | Đồng bộ Tư liệu gốc | employee | `knowledge.syncSource` (D-SD03-022) — luôn ghi, kể cả khi không có thay đổi | `source` | `{added_count, missing_count, restored_count, unchanged_count, added_file_ids, missing_file_ids, restored_file_ids}` |
 | `source.sync` | Đồng bộ Tư liệu gốc | system | Job `ingestion.sync_source` (webhook) — **chỉ ghi khi có file mới/mất/xuất hiện lại** | `source` | như trên + `job_id` |
 
 **4. Hạng mục tri thức (`/knowledge`, `/gate`)**
 
 | `action_type` | Nhãn | Actor | Endpoint / nguồn | entity | `detail` |
 |---|---|---|---|---|---|
-| `knowledge_object.create` | Tạo Hạng mục tri thức | employee | `POST /knowledge/knowledge-objects` | `knowledge_object` (mới) | `{research_topic_id, title}` |
-| `knowledge_object.delete` | Xoá Hạng mục tri thức | employee | `DELETE …/{id}` | `knowledge_object` | `{research_topic_id, title}` |
-| `knowledge_object.file_add` | Thêm file Nội dung | employee | `POST …/{id}/files` | `knowledge_object` | `{file_id, file_name, file_type}` |
-| `knowledge_object.file_remove` | Gỡ file Nội dung | employee | `DELETE …/{id}/files/{file_id}` | `knowledge_object` | `{file_id, file_name}` |
-| `knowledge_object.claim_create` | Thêm Phát biểu | employee | `POST …/{id}/claims` | `knowledge_object` | `{claim_id}` |
-| `knowledge_object.claim_update` | Sửa Phát biểu | employee | `PATCH …/{id}/claims/{claim_id}` | `knowledge_object` | `{claim_id, fields}` |
-| `knowledge_object.claim_delete` | Xoá Phát biểu | employee | `DELETE …/{id}/claims/{claim_id}` | `knowledge_object` | `{claim_id, removed_reference_ids}` |
-| `knowledge_object.reference_add` | Thêm Tham chiếu | employee | `POST …/claims/{claim_id}/references` | `knowledge_object` | `{claim_id, reference_id, source_file_id}` |
-| `knowledge_object.reference_remove` | Gỡ Tham chiếu | employee | `DELETE …/references/{reference_id}` | `knowledge_object` | `{claim_id, reference_id}` |
-| `knowledge_object.submit_for_review` | Gửi xét duyệt | employee | `POST …/{id}/submit-for-review` | `knowledge_object` | `{from_status, to_status, ai_verification_triggered}` |
-| `knowledge_object.trigger_ai_verification` | Kích hoạt AI Verification | employee | `POST …/{id}/trigger-ai-verification` | `knowledge_object` | `{from_status, to_status}` |
+| `knowledge_object.create` | Tạo Hạng mục tri thức | employee | `knowledge.createKnowledgeObject` (D-SD03-023) | `knowledge_object` (mới) | `{research_topic_id, title}` |
+| `knowledge_object.delete` | Xoá Hạng mục tri thức | employee | `knowledge.deleteKnowledgeObject` (D-SD03-023) | `knowledge_object` | `{research_topic_id, title}` |
+| `knowledge_object.file_add` | Thêm file Nội dung | employee | `knowledge.createKnowledgeObjectFile` (D-SD03-023) | `knowledge_object` | `{file_id, file_name, file_type}` |
+| `knowledge_object.file_remove` | Gỡ file Nội dung | employee | `knowledge.deleteKnowledgeObjectFile` (D-SD03-023) | `knowledge_object` | `{file_id, file_name}` |
+| `knowledge_object.claim_create` | Thêm Phát biểu | employee | `knowledge.createClaim` (D-SD03-023) | `knowledge_object` | `{claim_id}` |
+| `knowledge_object.claim_update` | Sửa Phát biểu | employee | `knowledge.updateClaim` (D-SD03-023) | `knowledge_object` | `{claim_id, fields}` |
+| `knowledge_object.claim_delete` | Xoá Phát biểu | employee | `knowledge.deleteClaim` (D-SD03-023) | `knowledge_object` | `{claim_id, removed_reference_ids}` |
+| `knowledge_object.reference_add` | Thêm Tham chiếu | employee | `knowledge.createClaimReference` (D-SD03-023) | `knowledge_object` | `{claim_id, reference_id, source_file_id}` |
+| `knowledge_object.reference_remove` | Gỡ Tham chiếu | employee | `knowledge.deleteClaimReference` (D-SD03-023) | `knowledge_object` | `{claim_id, reference_id}` |
+| `knowledge_object.submit_for_review` | Gửi xét duyệt | employee | `knowledge.submitKnowledgeObjectForReview` (D-SD03-024) | `knowledge_object` | `{from_status, to_status, ai_verification_triggered}` |
+| `knowledge_object.trigger_ai_verification` | Kích hoạt AI Verification | employee | `knowledge.triggerAiVerification` (D-SD03-024) | `knowledge_object` | `{from_status, to_status}` |
 | `knowledge_object.ai_verification_complete` | Hoàn tất AI Verification | system | Job `verification.run`, khi ghi kết quả + chuyển trạng thái (D-SD03-018 (¶4.3)) | `knowledge_object` | `{from_status, to_status, job_id, dat_count, khong_dat_count}` |
-| `knowledge_object.assignment_claim` | Nhận xử lý | employee | `POST …/{id}/claim` | `knowledge_object` | `{from_status, to_status}` (bằng nhau nếu chỉ gán người) |
-| `knowledge_object.assignment_release` | Nhả xử lý | employee | `POST …/{id}/release` | `knowledge_object` | `{from_status, to_status}` |
-| `knowledge_object.assignment_force_release` | Cưỡng chế nhả xử lý | employee | `POST …/{id}/force-release` | `knowledge_object` | `{from_status, to_status, previous_assignee_id}` |
-| `knowledge_object.reference_review` | Chuyên gia đánh giá Tham chiếu | employee | `POST …/references/{reference_id}/review` | `knowledge_object` | `{claim_id, reference_id, verdict}` |
-| `knowledge_object.content_review` | Chuyên gia đánh giá vị trí Nội dung | employee | `POST …/claims/{claim_id}/content-review` | `knowledge_object` | `{claim_id, verdict}` |
-| `knowledge_object.reject` | Không đạt xét duyệt | employee | `POST …/{id}/reject` | `knowledge_object` | `{from_status, to_status}` |
-| `knowledge_object.resume_research` | Nghiên cứu lại | employee | `POST …/{id}/resume-research` | `knowledge_object` | `{from_status, to_status}` |
-| `knowledge_object.approve` | Đạt xét duyệt | employee | `POST …/{id}/approve` | `knowledge_object` | `{from_status, to_status}` |
-| `knowledge_object.publish` | Xuất bản Hạng mục tri thức | employee | `POST …/{id}/publish` | `knowledge_object` | `{from_status, to_status, version_id}` |
-| `knowledge_object.skip_publish` | Không xuất bản Hạng mục tri thức | employee | `POST …/{id}/skip-publish` | `knowledge_object` | `{from_status, to_status}` |
-| `knowledge_object.reopen` | Mở lại Hạng mục tri thức | employee | `POST …/{id}/reopen` | `knowledge_object` | `{from_status, to_status}` |
-| `knowledge_object.set_used_version` | Chọn phiên bản đang dùng | employee | `POST …/{id}/set-used-version` | `knowledge_object` | `{old_version_id, new_version_id}` |
+| `knowledge_object.assignment_claim` | Nhận xử lý | employee | `knowledge.claimKnowledgeObject` (D-SD03-024) | `knowledge_object` | `{from_status, to_status}` (bằng nhau nếu chỉ gán người) |
+| `knowledge_object.assignment_release` | Nhả xử lý | employee | `knowledge.releaseKnowledgeObject` (D-SD03-024) | `knowledge_object` | `{from_status, to_status}` |
+| `knowledge_object.assignment_force_release` | Cưỡng chế nhả xử lý | employee | `knowledge.forceReleaseKnowledgeObject` (D-SD03-024) | `knowledge_object` | `{from_status, to_status, previous_assignee_id}` |
+| `knowledge_object.reference_review` | Chuyên gia đánh giá Tham chiếu | employee | `knowledge.reviewClaimReference` (D-SD03-024) | `knowledge_object` | `{claim_id, reference_id, verdict}` |
+| `knowledge_object.content_review` | Chuyên gia đánh giá vị trí Nội dung | employee | `knowledge.reviewClaimContent` (D-SD03-024) | `knowledge_object` | `{claim_id, verdict}` |
+| `knowledge_object.reject` | Không đạt xét duyệt | employee | `knowledge.rejectKnowledgeObject` (D-SD03-024) | `knowledge_object` | `{from_status, to_status}` |
+| `knowledge_object.resume_research` | Nghiên cứu lại | employee | `knowledge.resumeKnowledgeObjectResearch` (D-SD03-024) | `knowledge_object` | `{from_status, to_status}` |
+| `knowledge_object.approve` | Đạt xét duyệt | employee | `knowledge.approveKnowledgeObject` (D-SD03-024) | `knowledge_object` | `{from_status, to_status}` |
+| `knowledge_object.publish` | Xuất bản Hạng mục tri thức | employee | `knowledge.publishKnowledgeObject` (D-SD03-024) | `knowledge_object` | `{from_status, to_status, version_id}` |
+| `knowledge_object.skip_publish` | Không xuất bản Hạng mục tri thức | employee | `knowledge.skipKnowledgeObjectPublish` (D-SD03-024) | `knowledge_object` | `{from_status, to_status}` |
+| `knowledge_object.reopen` | Mở lại Hạng mục tri thức | employee | `knowledge.reopenKnowledgeObject` (D-SD03-024) | `knowledge_object` | `{from_status, to_status}` |
+| `knowledge_object.set_used_version` | Chọn phiên bản đang dùng | employee | `knowledge.setKnowledgeObjectUsedVersion` (D-SD03-024) | `knowledge_object` | `{old_version_id, new_version_id}` |
 
 **5. Mục từ, Cương vực (`/encyclopedia`)**
 
 | `action_type` | Nhãn | Actor | Endpoint | entity | `detail` |
 |---|---|---|---|---|---|
-| `entry.create` | Tạo Mục từ | employee | `POST /encyclopedia/entries` | `entry` (mới) | `{title, knowledge_object_ids}` |
-| `entry.content_update` | Sửa nội dung Mục từ | employee | `PATCH …/{id}/content` | `entry` | `{fields: ["content_blocks"]}` |
-| `entry.knowledge_object_add` | Thêm ánh xạ Hạng mục tri thức | employee | `POST …/{id}/knowledge-objects` | `entry` | `{knowledge_object_id}` |
-| `entry.knowledge_object_remove` | Gỡ ánh xạ Hạng mục tri thức | employee | `DELETE …/knowledge-objects/{knowledge_object_id}` | `entry` | `{knowledge_object_id}` |
-| `entry.knowledge_object_mark_synced` | Đánh dấu đã đồng bộ Hạng mục tri thức | employee | `POST …/mark-synced` | `entry` | `{knowledge_object_id, used_version_id}` |
-| `entry.file_add` | Thêm file đính kèm | employee | `POST …/{id}/files` | `entry` | `{file_id, file_name, file_type}` |
-| `entry.file_remove` | Gỡ file đính kèm | employee | `DELETE …/{id}/files/{file_id}` | `entry` | `{file_id, file_name}` |
-| `entry.cultural_domain_add` | Gán Cương vực | employee | `POST …/{id}/cultural-domains` | `entry` | `{cultural_domain_id}` |
-| `entry.cultural_domain_remove` | Gỡ Cương vực | employee | `DELETE …/cultural-domains/{cultural_domain_id}` | `entry` | `{cultural_domain_id}` |
-| `entry.submit_for_review` | Gửi xét duyệt Mục từ | employee | `POST …/{id}/submit-for-review` | `entry` | `{from_status, to_status}` |
-| `entry.assignment_claim` | Nhận xử lý Mục từ | employee | `POST …/{id}/claim` | `entry` | `{from_status, to_status}` |
-| `entry.assignment_release` | Nhả xử lý Mục từ | employee | `POST …/{id}/release` | `entry` | `{from_status, to_status}` |
-| `entry.assignment_force_release` | Cưỡng chế nhả xử lý Mục từ | employee | `POST …/{id}/force-release` | `entry` | `{from_status, to_status, previous_assignee_id}` |
-| `entry.reject` | Mục từ không đạt xét duyệt | employee | `POST …/{id}/reject` | `entry` | `{from_status, to_status}` (không chép `note`) |
-| `entry.resume_editing` | Soạn thảo lại Mục từ | employee | `POST …/{id}/resume-editing` | `entry` | `{from_status, to_status}` |
-| `entry.approve` | Mục từ đạt xét duyệt | employee | `POST …/{id}/approve` | `entry` | `{from_status, to_status}` |
-| `entry.publish` | Xuất bản Mục từ | employee | `POST …/{id}/publish` | `entry` | `{from_status, to_status, version_id}` |
-| `entry.skip_publish` | Không xuất bản Mục từ | employee | `POST …/{id}/skip-publish` | `entry` | `{from_status, to_status}` |
-| `entry.reopen` | Mở lại Mục từ | employee | `POST …/{id}/reopen` | `entry` | `{from_status, to_status}` |
-| `entry.set_public_version` | Chọn phiên bản công khai | employee | `POST …/{id}/set-public-version` | `entry` | `{old_version_id, new_version_id}` |
-| `cultural_domain.create` | Tạo Cương vực | employee | `POST /encyclopedia/cultural-domains` | `cultural_domain` (mới) | `{name, code}` |
-| `cultural_domain.update` | Sửa Cương vực | employee | `PATCH /encyclopedia/cultural-domains/{id}` | `cultural_domain` | `{changes}` |
-| `cultural_domain.delete` | Xoá Cương vực | employee | `DELETE /encyclopedia/cultural-domains/{id}` | `cultural_domain` | `{name, code}` |
+| `entry.create` | Tạo Mục từ | employee | `encyclopedia.createEntry` (D-SD04-015) | `entry` (mới) | `{title, knowledge_object_ids}` |
+| `entry.content_update` | Sửa nội dung Mục từ | employee | `encyclopedia.updateEntryContent` (D-SD04-015) | `entry` | `{fields: ["content_blocks"]}` |
+| `entry.knowledge_object_add` | Thêm ánh xạ Hạng mục tri thức | employee | `encyclopedia.addEntryKnowledgeObject` (D-SD04-015) | `entry` | `{knowledge_object_id}` |
+| `entry.knowledge_object_remove` | Gỡ ánh xạ Hạng mục tri thức | employee | `encyclopedia.removeEntryKnowledgeObject` (D-SD04-015) | `entry` | `{knowledge_object_id}` |
+| `entry.knowledge_object_mark_synced` | Đánh dấu đã đồng bộ Hạng mục tri thức | employee | `encyclopedia.markEntryKnowledgeObjectSynced` (D-SD04-015) | `entry` | `{knowledge_object_id, used_version_id}` |
+| `entry.file_add` | Thêm file đính kèm | employee | `encyclopedia.createEntryFile` (D-SD04-015) | `entry` | `{file_id, file_name, file_type}` |
+| `entry.file_remove` | Gỡ file đính kèm | employee | `encyclopedia.deleteEntryFile` (D-SD04-015) | `entry` | `{file_id, file_name}` |
+| `entry.cultural_domain_add` | Gán Cương vực | employee | `encyclopedia.addEntryCulturalDomain` (D-SD04-015) | `entry` | `{cultural_domain_id}` |
+| `entry.cultural_domain_remove` | Gỡ Cương vực | employee | `encyclopedia.removeEntryCulturalDomain` (D-SD04-015) | `entry` | `{cultural_domain_id}` |
+| `entry.submit_for_review` | Gửi xét duyệt Mục từ | employee | `encyclopedia.submitEntryForReview` (D-SD04-016) | `entry` | `{from_status, to_status}` |
+| `entry.assignment_claim` | Nhận xử lý Mục từ | employee | `encyclopedia.claimEntry` (D-SD04-016) | `entry` | `{from_status, to_status}` |
+| `entry.assignment_release` | Nhả xử lý Mục từ | employee | `encyclopedia.releaseEntry` (D-SD04-016) | `entry` | `{from_status, to_status}` |
+| `entry.assignment_force_release` | Cưỡng chế nhả xử lý Mục từ | employee | `encyclopedia.forceReleaseEntry` (D-SD04-016) | `entry` | `{from_status, to_status, previous_assignee_id}` |
+| `entry.reject` | Mục từ không đạt xét duyệt | employee | `encyclopedia.rejectEntry` (D-SD04-016) | `entry` | `{from_status, to_status}` (không chép `note`) |
+| `entry.resume_editing` | Soạn thảo lại Mục từ | employee | `encyclopedia.resumeEntryEditing` (D-SD04-016) | `entry` | `{from_status, to_status}` |
+| `entry.approve` | Mục từ đạt xét duyệt | employee | `encyclopedia.approveEntry` (D-SD04-016) | `entry` | `{from_status, to_status}` |
+| `entry.publish` | Xuất bản Mục từ | employee | `encyclopedia.publishEntry` (D-SD04-016) | `entry` | `{from_status, to_status, version_id}` |
+| `entry.skip_publish` | Không xuất bản Mục từ | employee | `encyclopedia.skipEntryPublish` (D-SD04-016) | `entry` | `{from_status, to_status}` |
+| `entry.reopen` | Mở lại Mục từ | employee | `encyclopedia.reopenEntry` (D-SD04-016) | `entry` | `{from_status, to_status}` |
+| `entry.set_public_version` | Chọn phiên bản công khai | employee | `encyclopedia.setEntryPublicVersion` (D-SD04-016) | `entry` | `{old_version_id, new_version_id}` |
+| `cultural_domain.create` | Tạo Cương vực | employee | `encyclopedia.createCulturalDomain` (D-SD04-017) | `cultural_domain` (mới) | `{name, code}` |
+| `cultural_domain.update` | Sửa Cương vực | employee | `encyclopedia.updateCulturalDomain` (D-SD04-017) | `cultural_domain` | `{changes}` |
+| `cultural_domain.delete` | Xoá Cương vực | employee | `encyclopedia.deleteCulturalDomain` (D-SD04-017) | `cultural_domain` | `{name, code}` |
 
 **6. AI Văn Minh Việt, vận hành, cấu hình (`/assistant`, `/shared`)**
 
 | `action_type` | Nhãn | Actor | Endpoint | entity | `detail` |
 |---|---|---|---|---|---|
-| `assistant.reindex_entry` | Yêu cầu lập chỉ mục lại Mục từ | employee | `POST /assistant/reindex/{entry_id}` | `entry` | `{job_id}` |
-| `job.retry` | Chạy lại job nền | employee | `POST /shared/jobs/{id}/retry` | `job` (`entity_id = NULL`) | `{job_id, job_type, previous_status, related_entity}` |
-| `job.cancel` | Huỷ job nền | employee | `POST /shared/jobs/{id}/cancel` | `job` (`entity_id = NULL`) | như trên |
-| `system_setting.update` | Sửa cấu hình hệ thống | employee | `PATCH /shared/settings` — một dòng cho mỗi key đổi | `system_setting` (`entity_id = NULL`) | `{key, old_value, new_value}` |
-| `system_setting.reset` | Khôi phục cấu hình mặc định | employee | `DELETE /shared/settings/{key}` | `system_setting` (`entity_id = NULL`) | như trên |
+| `assistant.reindex_entry` | Yêu cầu lập chỉ mục lại Mục từ | employee | `assistant.reindexEntry` (D-SD05-013) | `entry` | `{job_id}` |
+| `job.retry` | Chạy lại job nền | employee | `shared.retryJob` (D-SD01-004) | `job` (`entity_id = NULL`) | `{job_id, job_type, previous_status, related_entity}` |
+| `job.cancel` | Huỷ job nền | employee | `shared.cancelJob` (D-SD01-004) | `job` (`entity_id = NULL`) | như trên |
+| `system_setting.update` | Sửa cấu hình hệ thống | employee | `shared.updateSettings` (D-SD07-012) — một dòng cho mỗi key đổi | `system_setting` (`entity_id = NULL`) | `{key, old_value, new_value}` |
+| `system_setting.reset` | Khôi phục cấu hình mặc định | employee | `shared.resetSetting` (D-SD07-012) | `system_setting` (`entity_id = NULL`) | như trên |
 
 **Không ghi audit** (có chủ đích):
 - Mọi request đọc (`GET`), kể cả xin URL tải file (`download-url`).
-- `POST /auth/refresh`, `POST /auth/forgot-password` (không đổi dữ liệu nghiệp vụ; tránh log rác khi bị gọi dồn dập).
+- `auth.refresh` (D-SD02-009) — `POST /auth/refresh`, `auth.forgotPassword` (D-SD02-009) — `POST /auth/forgot-password` (không đổi dữ liệu nghiệp vụ; tránh log rác khi bị gọi dồn dập).
 - Bước 1 upload (`…/files/upload-url`) — chưa tạo dòng DB; audit ghi ở bước xác nhận `…/files`.
-- `POST /shared/settings/email-templates/{template}/preview` và `/test`.
-- `POST /assistant/chat` — đã có `assistant_conversation`/`assistant_query_log` (`05` ¶2) làm nhật ký riêng.
-- `POST /internal/ingestion/source-webhook` (chỉ nhận tín hiệu) — kết quả đồng bộ ghi bằng `source.sync` actor `system`.
-- `POST …/trigger-ai-verification` khi lệnh gộp vào job `verification.run` đang chờ/đang chạy (`merged_into_running_job = true`, D-SD03-012 (¶3.3) bước (3), D-SD03-024 (¶5.4)) — không tạo job, không đổi trạng thái.
+- `shared.previewEmailTemplate` (D-SD07-012) — `POST /shared/settings/email-templates/{template}/preview` và `/test`.
+- `assistant.chat` (D-SD05-012) — `POST /assistant/chat` — đã có `assistant_conversation`/`assistant_query_log` (`05` ¶2) làm nhật ký riêng.
+- `internal.receiveSourceWebhook` (D-SD03-025) — `POST /internal/ingestion/source-webhook` (chỉ nhận tín hiệu) — kết quả đồng bộ ghi bằng `source.sync` actor `system`.
+- `knowledge.triggerAiVerification` (D-SD03-024) khi lệnh gộp vào job `verification.run` đang chờ/đang chạy (`merged_into_running_job = true`, D-SD03-012 (¶3.3) bước (3), D-SD03-024 (¶5.4)) — không tạo job, không đổi trạng thái.
 - Job nền tạo dữ liệu dẫn xuất/kỹ thuật hoặc dọn dữ liệu theo thời hạn lưu: `knowledge.extract_file_metadata`, `knowledge.generate_transcript`, `assistant.reindex_entry` (lúc chạy), `assistant.refresh_domain_tags`, `assistant.query_log_cleanup`, `search.rebuild_fulltext`, `shared.usage_snapshot`, `shared.job_cleanup`, `shared.audit_log_cleanup`, `shared.apply_storage_lifecycle` — theo dõi qua màn hình job nền (D-SD01-004 (¶4)).
 - Tạo tài khoản Quản trị hệ thống đầu tiên qua seed (D-SD02-002 (¶3.0)), tự sinh/xoá role theo phạm vi (nằm trong `research_topic.create`/`research_topic.delete`).
 - Lần đăng nhập sai chưa tới ngưỡng tạm khoá, lần nhập sai mật khẩu hiện tại khi đổi mật khẩu.
@@ -290,6 +290,12 @@ Sau khi trình duyệt tải xong trang từ 1 trong 3 tiến trình trên, Java
 - **Upload file lớn cho nội dung do nền tảng tự quản lý** (ví dụ `knowledge_object_file` — file biên tập Nội dung, D-SD03-007 (¶2.7)): không proxy file qua REST/JSON như request thông thường — dùng **presigned URL** lên thẳng Object storage (D-SD01-001 (¶1)): API chỉ cấp URL có thời hạn và xác nhận/ghi metadata bản ghi sau khi client upload xong trực tiếp lên S3-compatible/MinIO. ⚠ Riêng **Tư liệu gốc** (`source`/`source_file`) **không** dùng đường này — file được nạp vào MinIO/S3 từ bên ngoài hệ thống, nền tảng chỉ đồng bộ lại qua liệt kê thư mục (xem D-SD01-005 (¶5); chi tiết D-SD03-017 (¶4.2), D-SD03-020 (¶4.5)).
 - ⚠ **Đề xuất bổ sung — quy ước cụ thể 2 bước cho upload qua presigned URL** (hoàn thiện kỹ thuật cho gạch đầu dòng trên, áp dụng cho `knowledge_object_file` module 03 và `entry_file` module 04): (1) client gọi `POST .../upload-url` (body tối thiểu `{file_type, file_name}`) → server sinh `storage_key`, ký presigned PUT URL có thời hạn ngắn (vài phút), trả `{upload_url, storage_key, expires_at}` — **chưa tạo dòng DB**; (2) client PUT thẳng file lên `upload_url`; (3) client gọi endpoint xác nhận đã có sẵn (`POST .../files`, body gồm `storage_key` vừa nhận) để tạo dòng bản ghi. **Xem/tải file đã có** dùng cơ chế ngược chiều: `GET .../{file_id}/download-url` ký presigned GET URL ngắn hạn, gọi **theo yêu cầu** (khi người dùng bấm xem/tải) — không trả sẵn URL này trong response danh sách/chi tiết, tránh URL hết hạn nằm sẵn trong dữ liệu cache. Cơ chế này áp dụng cả cho `source_file` (Tư liệu gốc) — dù không upload qua app, vẫn cần `download-url` để xem/chọn vị trí tham chiếu (D-SD03-007 (¶2.7)); chi tiết endpoint từng loại file ở `03`/`04` mục "Thiết kế API".
 - **Streaming cho AI Văn Minh Việt**: là ngoại lệ của quy ước REST/JSON ở trên — endpoint chat trả lời dạng **SSE (Server-Sent Events)** hoặc chunked transfer để đạt yêu cầu token đầu ≤3 giây (R-NFR-011 (§3.2.2), D-SD01-008 (¶8)), không phải JSON trả về một lần như các endpoint khác.
+- **Hợp đồng OpenAPI**: mỗi nhóm route `admin`, `partner`, `public` có một file hợp đồng OpenAPI 3 riêng. Đây là bản máy đọc được của phần "Thiết kế API" trong các tài liệu module. Hành vi do tài liệu thiết kế quyết định; hợp đồng mâu thuẫn với thiết kế thì thiết kế thắng.
+  - Mỗi operation mang đúng operationId của endpoint trong tài liệu thiết kế (`common/requirements-design-sync.md` mục 2.5). Endpoint mount ở nhiều nhóm route có mặt trong từng file hợp đồng tương ứng, với cùng operationId.
+  - Hợp đồng phải khớp code backend cả về route (method, path, operationId, nhóm route mount) lẫn schema request/response. Sự khớp này được kiểm tra tự động trong CI; lệch thì CI báo lỗi. Cách bảo đảm do team Code chọn và ghi trong tài liệu của repo: sinh hợp đồng từ code, sinh code từ hợp đồng, hoặc viết tay hợp đồng kèm kiểm tra route và kiểm response theo hợp đồng trong test tích hợp.
+  - admin-web, partner-web, public-web sinh API client (types và hàm gọi) từ file hợp đồng của nhóm route mình dùng, không viết tay lời gọi API. Hợp đồng thay đổi thì sinh lại client trước khi làm tiếp phần giao diện phụ thuộc.
+  - Endpoint chat của AI Văn Minh Việt khai báo response với content type `text/event-stream`. Định dạng sự kiện theo D-SD05-012 (¶5.1).
+  - Webhook nội bộ (D-SD03-025 (¶5.5)) không thuộc 3 file hợp đồng trên. AI Gateway công bố OpenAPI riêng của service, với operationId theo đúng `06`.
 
 ## 4. [D-SD01-004] Xử lý nền (background jobs)
 
@@ -338,19 +344,19 @@ Mỗi loại job tự khai báo (trong code, cùng chỗ đăng ký worker) các
 
 API — chỉ mount ở nhóm `admin`, yêu cầu role `quan_tri_he_thong` (tầng service, D-SD01-007 (¶7)):
 
-| Method | Path | Mô tả |
-|---|---|---|
-| GET | `/shared/jobs` | Danh sách job — filter `type`, `status`, `from`, `to`; cursor pagination (D-SD01-003 (¶3)) |
-| GET | `/shared/jobs/{id}` | Chi tiết: payload, lỗi lần gần nhất, lịch sử các lần thử (`errors` của river) |
-| POST | `/shared/jobs/{id}/retry` | Chạy lại ngay — chỉ hợp lệ khi `status = failed` (cả `exhausted` true lẫn false) |
-| POST | `/shared/jobs/{id}/cancel` | Huỷ — chỉ hợp lệ khi `status = pending`; không huỷ job đang chạy |
+| Method | Path | operationId | Mô tả |
+|---|---|---|---|
+| GET | `/shared/jobs` | `shared.listJobs` | Danh sách job — filter `type`, `status`, `from`, `to`; cursor pagination (D-SD01-003 (¶3)) |
+| GET | `/shared/jobs/{id}` | `shared.getJob` | Chi tiết: payload, lỗi lần gần nhất, lịch sử các lần thử (`errors` của river) |
+| POST | `/shared/jobs/{id}/retry` | `shared.retryJob` | Chạy lại ngay — chỉ hợp lệ khi `status = failed` (cả `exhausted` true lẫn false) |
+| POST | `/shared/jobs/{id}/cancel` | `shared.cancelJob` | Huỷ — chỉ hợp lệ khi `status = pending`; không huỷ job đang chạy |
 
 Mỗi dòng trả: `id` (bigint — định danh job của river, không phải UUID), `type`, `status`, `exhausted`, `attempts`, `max_attempts`, `created_at`, `started_at`, `finished_at`, `last_error`, `payload`, `related_entity: {entity_type, entity_id} | null`.
 
 - `retry`/`cancel` là thao tác ghi nên có audit log theo quy ước chung (D-SD01-003 (¶3)), ghi **cùng transaction** với `JobRetryTx`/`JobCancelTx`: `action_type` = `job.retry`/`job.cancel`, `entity_type = job`, `entity_id = NULL` (id job là bigint), `detail = {job_id, job_type, previous_status, related_entity}`.
 - Hệ quả khi huỷ một số loại job — UI hiển thị cảnh báo xác nhận trước khi huỷ, không cần cơ chế khôi phục mới:
   - `verification.run`: Hạng mục tri thức ở lại `dang_xet_duyet_ai` — khôi phục bằng cách kích hoạt lại AI Verification (D-SD03-012 (¶3.3) bước (3)).
-  - `assistant.reindex_entry`: chỉ mục RAG của Mục từ không được cập nhật — khôi phục bằng `POST /assistant/reindex/{entry_id}` (D-SD05-013 (¶5.2)).
+  - `assistant.reindex_entry`: chỉ mục RAG của Mục từ không được cập nhật — khôi phục bằng `assistant.reindexEntry` (D-SD05-013) — `POST /assistant/reindex/{entry_id}`.
   - `ingestion.sync_source`: khôi phục bằng nút "Đồng bộ lại" (D-SD03-020 (¶4.5)).
 - Job đã xong/đã huỷ/hết lượt thử lại được xoá sau một thời gian giữ lại do Quản trị hệ thống cấu hình (`operations.job_retention_*`), bằng periodic job `shared.job_cleanup` thay cho bộ dọn dẹp mặc định của river. Màn hình theo dõi chỉ xem được lịch sử trong khoảng này. Audit log (`shared.audit_log_cleanup`) và nhật ký hỏi đáp AI (`assistant.query_log_cleanup`) được dọn theo thời hạn lưu cấu hình tương ứng — D-SD07-009 (¶4.3).
 
@@ -400,7 +406,7 @@ Tổ chức 2 năng lực trong cùng một service Python (theo capability bên
 - Mã hoá dữ liệu nhạy cảm at-rest: email, số điện thoại (R-NFR-003 (§3.1.1), R-ID-003 (§2.1.2) đặc tả gốc — hiện là thông tin định danh của **Nhân viên**, vì Người dùng công khai không còn tài khoản/dữ liệu cá nhân nào ở giai đoạn này).
 - Mã hoá truyền tải: TLS/HTTPS bắt buộc trên mọi kênh (website, ứng dụng di động, backend) — R-NFR-006 (§3.1.4) đặc tả gốc.
 - Xác thực đa yếu tố (MFA): chưa bắt buộc ở giai đoạn này cho bất kỳ vai trò nào, kể cả Quản trị hệ thống — R-NFR-007 (§3.1.5) đặc tả gốc; có thể xem xét bổ sung cho các vai trò nhạy cảm ở giai đoạn sau.
-- Rate limit theo IP cho Trợ lý AI Văn Minh Việt trên Web công khai (R-NFR-008 (§3.1.6) đặc tả gốc — truy cập ẩn danh, không tài khoản; hệ thống có sẵn cơ chế, khi mới triển khai ở trạng thái tắt); áp dụng cho `POST /api/v1/public/assistant/chat` (D-SD01-002 (¶2)) bằng **middleware Go**, bật/tắt và ngưỡng do Quản trị hệ thống cấu hình (`assistant.public_rate_limit_*`, mặc định tắt) — chi tiết D-SD07-009 (¶4.3), D-SD05-012 (¶5.1).
+- Rate limit theo IP cho Trợ lý AI Văn Minh Việt trên Web công khai (R-NFR-008 (§3.1.6) đặc tả gốc — truy cập ẩn danh, không tài khoản; hệ thống có sẵn cơ chế, khi mới triển khai ở trạng thái tắt); áp dụng cho `assistant.chat` (D-SD05-012) — `POST /api/v1/public/assistant/chat` (D-SD01-002 (¶2)) bằng **middleware Go**, bật/tắt và ngưỡng do Quản trị hệ thống cấu hình (`assistant.public_rate_limit_*`, mặc định tắt) — chi tiết D-SD07-009 (¶4.3), D-SD05-012 (¶5.1).
 - Chính sách mật khẩu, tạm khoá đăng nhập sau nhiều lần sai và đổi mật khẩu khi đang đăng nhập (R-ID-029 (§2.1.5.8)–R-ID-035 (§2.1.5.10)), tham số do Quản trị hệ thống cấu hình (R-CFG-007 (§2.8.4.2)) — D-SD02-004 (¶3.2)–D-SD02-006 (¶3.4), `07-system-settings.md`.
 - **Data residency (R-NFR-005 (§3.1.3) đặc tả gốc)**: toàn bộ dữ liệu hệ thống — dữ liệu cá nhân Nhân viên, Tư liệu gốc, nội dung Hạng mục tri thức và Mục từ — bắt buộc lưu trữ trong lãnh thổ Việt Nam; ràng buộc việc chọn nhà cung cấp hạ tầng Database/Object storage ở D-SD01-001 (¶1). **Phạm vi không bao gồm Email/SMTP** (xem D-SD01-001 (¶1)): email là hạ tầng truyền tải/chuyển tiếp, không phải nơi lưu trữ lâu dài dữ liệu cá nhân, nên giữ nguyên Amazon SES.
 - **Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân** — được `business-requirements.md` R-NFR-003 (§3.1.1) chính thức tham chiếu. Áp dụng trực tiếp cho việc mã hoá dữ liệu định danh cá nhân Nhân viên (email, số điện thoại) ở trên. Các khía cạnh vận hành cụ thể hơn (cơ chế đồng ý, quyền xoá, giới hạn mục đích sử dụng...) vẫn để lại cho giai đoạn triển khai thực tế — đặc tả gốc chưa yêu cầu chi tiết hơn.
@@ -424,7 +430,7 @@ Các mục kỹ thuật bổ sung (không phải chỉ số chính thức của 
 |---|---|
 | Sẵn sàng | Runbook khôi phục cụ thể + lịch test định kỳ để đảm bảo đạt RPO/RTO đã chốt chính thức (R-NFR-023 (§3.4.1), xem bảng phía trên) |
 | Quan sát | Logging, tracing (`trace_id`), dashboard trạng thái job nền |
-| Tài liệu kỹ thuật | OpenAPI spec làm hợp đồng giữa Backend/Web/App, chốt trước và giữ đồng bộ |
+| Tài liệu kỹ thuật | Hợp đồng OpenAPI theo từng nhóm route — D-SD01-003 (¶3) |
 | Kiểm thử | Bộ test tự động cho state machine xét duyệt và tính "có dẫn nguồn" của AI |
 
 ## 9. Vấn đề mở
@@ -434,7 +440,7 @@ Các mục kỹ thuật bổ sung (không phải chỉ số chính thức của 
 - Domain allowlist cụ thể cho CORS (D-SD01-003 (¶3)) — chốt khi có domain production thật.
 - Danh sách cụ thể các loại sự kiện `usage_event` (D-SD01-002 (¶2)) và logic tính chi phí (cách tính, đơn giá, xuất hoá đơn) — chờ đặc tả nghiệp vụ billing cụ thể sau này (R-ID-015 (§2.1.4.6) đặc tả gốc), hiện chỉ chốt cơ chế ghi nhận.
 - Model CPU nhỏ cụ thể dùng cho chế độ `cpu-small` (D-SD01-006 (¶6), dev không GPU) — chọn model/version cụ thể khi bắt đầu code AI service, không chốt trước ở tài liệu này.
-- **Ghép tên/email Nhân viên vào `GET /shared/audit-logs`** (D-SD01-002 (¶2)) — ⚠ bổ sung 2026-09-23: hoàn thiện kỹ thuật cho màn hình Nhật ký hoạt động (D-ADM-021 (¶4.21), trước đó chỉ có `employee_id` thô). Chọn ghép ở tầng handler (`/cmd/api`, gọi `identity.GetEmployeeSummaries` sau khi có `shared.ListAuditLogs`) thay vì lưu snapshot tên/email vào `audit_log` lúc ghi, để tránh import cycle Go giữa `/shared` và `/identity`. Không đổi schema `audit_log`.
+- **Ghép tên/email Nhân viên vào `shared.listAuditLogs` (D-SD01-002) — `GET /shared/audit-logs`** (D-SD01-002 (¶2)) — ⚠ bổ sung 2026-09-23: hoàn thiện kỹ thuật cho màn hình Nhật ký hoạt động (D-ADM-021 (¶4.21), trước đó chỉ có `employee_id` thô). Chọn ghép ở tầng handler (`/cmd/api`, gọi `identity.GetEmployeeSummaries` sau khi có `shared.ListAuditLogs`) thay vì lưu snapshot tên/email vào `audit_log` lúc ghi, để tránh import cycle Go giữa `/shared` và `/identity`. Không đổi schema `audit_log`.
 - **Hàng đợi job dùng river, Redis không bắt buộc** (D-SD01-001 (¶1)) — ⚠ quyết định kỹ thuật: các điểm enqueue đã chốt ở `03`/`04` (`TriggerAIVerification`, `SetPublicVersion`, `AssignCulturalDomain`…) đều enqueue cùng transaction với thao tác nghiệp vụ, điều mà hàng đợi trên Redis không đảm bảo được.
-- **Tên loại job, ánh xạ trạng thái và API `/shared/jobs`** (D-SD01-004 (¶4)) — ⚠ đề xuất bổ sung, hoàn thiện kỹ thuật cho màn hình theo dõi job nền của Admin nội bộ (D-ADM-026 (¶4.26)). Không đổi hành vi nghiệp vụ.
+- **Tên loại job, ánh xạ trạng thái và API `shared.listJobs` (D-SD01-004)** (D-SD01-004 (¶4)) — ⚠ đề xuất bổ sung, hoàn thiện kỹ thuật cho màn hình theo dõi job nền của Admin nội bộ (D-ADM-026 (¶4.26)). Không đổi hành vi nghiệp vụ.
 - **Danh mục sự kiện audit, cột `actor_type`** (D-SD01-002 (¶2)) — ⚠ đề xuất bổ sung: mở rộng R-NFR-004 (§3.1.2) thành mọi thao tác ghi thành công của Nhân viên, cộng thay đổi do hệ thống tự thực hiện trên dữ liệu nghiệp vụ (`source.sync` qua webhook, `knowledge_object.ai_verification_complete`, `auth.login_locked`). `audit_log.employee_id` thành nullable, thêm `actor_type`. Thao tác soạn thảo chi tiết vẫn ghi mọi lần, `detail` chỉ chứa id/tên trường. Đăng nhập sai chỉ ghi khi tạm khoá.

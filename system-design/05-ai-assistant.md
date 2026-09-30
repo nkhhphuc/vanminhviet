@@ -88,7 +88,7 @@ Kích hoạt bởi sự kiện từ `/encyclopedia` (module 04), qua hàng đợ
 ### 3.2. [D-SD05-005] Trả lời câu hỏi (Chat) — hội thoại nhiều lượt (multi-turn), theo D-SD01-006 (¶6)
 
 0. **Xác định hội thoại** — request kèm `conversation_id` (do client tự sinh, xem D-SD05-012 (¶5.1), ¶6). Nếu `conversation_id` chưa tồn tại trong `assistant_conversation`: insert mới (`channel` và `asked_by_employee_id` theo nhóm route gọi vào, `started_at = now()`, `turn_count = 0`). Nếu đã tồn tại: ⚠ kiểm tra `channel` và `asked_by_employee_id` của hội thoại phải khớp với request hiện tại (cùng kênh; với kênh `admin` thì phải cùng Nhân viên). Nếu không khớp, trả sự kiện `error` với `error_code = conversation_mismatch` rồi dừng: không đọc lịch sử, không ghi log. Client sinh `conversation_id` mới để bắt đầu hội thoại mới. Sau đó đọc N lượt gần nhất (N = `assistant.history_turns`, mặc định 6 — `07-system-settings.md`; N = 0 thì không đọc lịch sử, mỗi lượt hỏi xử lý như lượt đầu tiên) từ `assistant_query_log` theo `conversation_id`, sắp theo `turn_index` giảm dần, làm lịch sử hội thoại cho các bước dưới. Lượt hỏi đầu tiên của một hội thoại mới không có lịch sử.
-1. **Rewrite query** ⚠ Đề xuất bổ sung — nếu `assistant.rewrite_query_enabled = true` và hội thoại đã có lịch sử (không phải lượt đầu tiên): gọi AI Gateway `POST /v1/rewrite-query` (D-SD06-005 (¶3.3)), truyền câu hỏi hiện tại + N lượt gần nhất, nhận về câu hỏi độc lập (self-contained), lưu vào `rewritten_question`. Lượt đầu tiên: bỏ qua bước này, dùng thẳng `question` gốc cho bước Retrieve. Tắt Rewrite → dùng thẳng `question` gốc cho Retrieve ở mọi lượt.
+1. **Rewrite query** ⚠ Đề xuất bổ sung — nếu `assistant.rewrite_query_enabled = true` và hội thoại đã có lịch sử (không phải lượt đầu tiên): gọi AI Gateway `gateway.rewriteQuery` (D-SD06-002) — `POST /v1/rewrite-query` (D-SD06-005 (¶3.3)), truyền câu hỏi hiện tại + N lượt gần nhất, nhận về câu hỏi độc lập (self-contained), lưu vào `rewritten_question`. Lượt đầu tiên: bỏ qua bước này, dùng thẳng `question` gốc cho bước Retrieve. Tắt Rewrite → dùng thẳng `question` gốc cho Retrieve ở mọi lượt.
 2. **Retrieve** — hybrid search trên `assistant_chunk` (chỉ `is_active = true`): kết hợp vector similarity (`embedding`) + full-text (`content_chunk`) trên câu hỏi đã rewrite ở bước 1 (hoặc câu hỏi gốc nếu là lượt đầu tiên); lọc `cultural_domain_id = ANY(cultural_domain_ids)` nếu người dùng chọn Cương vực (R-AI-004 (§2.4.3)), bỏ lọc nếu không chọn (R-AI-004 (§2.4.3): "trả lời trên toàn bộ Bách khoa"). Lấy top-K đoạn liên quan nhất (K = `assistant.retrieve_top_k`, mặc định 8 — `07-system-settings.md`). Nếu không truy hồi được đoạn nào (ví dụ Cương vực đã chọn chưa có Mục từ nào được đánh chỉ mục): bỏ qua bước 3–4, stream nguyên văn `assistant.no_context_answer` qua sự kiện `token`, `citations` rỗng, `self_audit` là `[]`, rồi tiếp tục bước 6 (vẫn ghi log). Sau khi có top-K, gọi `encyclopedia.GetEntryTitles` (D-SD04-013 (¶4.3)) cho các `entry_id` riêng biệt để gắn `title` vào `context_chunks` gửi AI Gateway (D-SD06-004 (¶3.2)).
 3. **Generate** — gọi AI Gateway (LLM), dựa trên các đoạn đã truy hồi ở bước 2 **và lịch sử hội thoại** (bước 0) làm ngữ cảnh, sinh câu trả lời kèm danh sách Mục từ nguồn (`cited_entry_ids`) — đúng R-AI-002 (§2.4.1), R-AI-005 (§2.4.4) (giới hạn trong phạm vi tri thức Bách khoa, không trả lời ngoài phạm vi). Truyền kèm `no_answer_text = assistant.no_context_answer` để LLM dùng đúng câu này khi các đoạn truy hồi không đủ thông tin trả lời (D-SD06-004 (¶3.2)).
 4. **Self-audit pass** — gọi AI Gateway lần nữa (model khác hoặc cùng model, vai trò kiểm tra), rà lại câu trả lời so với các đoạn đã truy hồi, gắn cờ phát biểu chưa được chứng thực (`self_audit_flags`) — không chặn trả lời, chỉ gắn cờ để hiển thị cảnh báo hoặc phục vụ rà soát sau. Chạy **sau khi** phần Generate đã stream xong cho người dùng. Lỗi/timeout ở bước này không làm hỏng lượt hỏi: ghi `self_audit_flags = NULL` (chưa kiểm được), vẫn tiếp tục bước 5–6.
@@ -156,10 +156,10 @@ func LogQuery(ctx context.Context, tx pgx.Tx, log AssistantQueryLog) error
 
 Theo D-SD01-006 (¶6) và hợp đồng cụ thể ở `06-ai-gateway.md`:
 
-- sinh `embedding` (bước indexing) — `POST /v1/embed`;
-- **Rewrite query** (bước mới cho multi-turn, D-SD05-005 (¶3.2) bước 1) — **endpoint riêng `POST /v1/rewrite-query`** (D-SD06-005 (¶3.3)): dùng chung LLM với Generate nhưng khác prompt và khác kiểu trả (JSON một lần, không streaming), nên tách endpoint riêng cho đúng hợp đồng — cùng lý do `/v1/self-audit` được tách khỏi `/v1/generate`;
-- `Generate` (LLM trả lời) — `POST /v1/generate`, streaming SSE;
-- `Self-audit` (LLM kiểm tra lại) — `POST /v1/self-audit`.
+- sinh `embedding` (bước indexing) — `gateway.embed` (D-SD06-002) — `POST /v1/embed`;
+- **Rewrite query** (bước mới cho multi-turn, D-SD05-005 (¶3.2) bước 1) — **endpoint riêng `gateway.rewriteQuery` (D-SD06-002) — `POST /v1/rewrite-query`** (D-SD06-005 (¶3.3)): dùng chung LLM với Generate nhưng khác prompt và khác kiểu trả (JSON một lần, không streaming), nên tách endpoint riêng cho đúng hợp đồng — cùng lý do `gateway.selfAudit` (D-SD06-002) được tách khỏi `gateway.generate` (D-SD06-002);
+- `Generate` (LLM trả lời) — `gateway.generate` (D-SD06-002) — `POST /v1/generate`, streaming SSE;
+- `Self-audit` (LLM kiểm tra lại) — `gateway.selfAudit` (D-SD06-002) — `POST /v1/self-audit`.
 
 Cả 4 qua cùng AI Gateway (API nội bộ REST, D-SD06-001 (¶1)), hỗ trợ 3 chế độ backend (`mock`/`cpu-small`/`gpu-onprem`) để phát triển local không cần GPU.
 
@@ -167,61 +167,61 @@ Cả 4 qua cùng AI Gateway (API nội bộ REST, D-SD06-001 (¶1)), hỗ trợ 
 
 ### 5.1. [D-SD05-012] Chat — mount ở cả `admin` và `public` (R-AI-003 (§2.4.2): phục vụ cả Nhân viên lẫn Người dùng công khai)
 
-| Method | Path | Mô tả | Xác thực |
-|---|---|---|---|
-| POST | `/assistant/chat` | Đặt câu hỏi — body `{question, conversation_id, cultural_domain_id?}`. Response: SSE gồm các sự kiện có tên (bảng dưới) — chốt ở D-SD01-003 (¶3) | Admin: JWT (ghi `asked_by_employee_id`). Public: không |
+| Method | Path | operationId | Mô tả | Xác thực |
+|---|---|---|---|---|
+| POST | `/assistant/chat` | `assistant.chat` | Đặt câu hỏi — body `{question, conversation_id, cultural_domain_id?}`. Response: SSE gồm các sự kiện có tên (bảng dưới) — chốt ở D-SD01-003 (¶3) | Admin: JWT (ghi `asked_by_employee_id`). Public: không |
 
 **Hợp đồng sự kiện SSE** (⚠ Bổ sung — dùng chung cho kênh `admin` và `public`):
 
 | `event` | `data` | Thời điểm |
 |---|---|---|
-| `token` | `{text}` | Lặp lại trong lúc Generate stream (relay từ `delta` của `/v1/generate`) |
+| `token` | `{text}` | Lặp lại trong lúc Generate stream (relay từ `delta` của `gateway.generate` (D-SD06-002)) |
 | `citations` | `{items: [{entry_id, title}]}` | Một lần, khi Generate xong. `title` là tiêu đề phiên bản đang công khai (`GetEntryTitles`) |
-| `self_audit` | `{flags: [{claim_text, reason}] \| null}` | Một lần, sau bước Self-audit. Cùng schema `flags` của `/v1/self-audit` (D-SD06-006 (¶3.4)). `[]` = không có cờ; `null` = không kiểm được (lỗi/timeout) |
+| `self_audit` | `{flags: [{claim_text, reason}] \| null}` | Một lần, sau bước Self-audit. Cùng schema `flags` của `gateway.selfAudit` (D-SD06-002) (D-SD06-006 (¶3.4)). `[]` = không có cờ; `null` = không kiểm được (lỗi/timeout) |
 | `done` | `{query_log_id, turn_index}` | Một lần, sau khi ghi `assistant_query_log` (D-SD05-005 (¶3.2) bước 6) — sự kiện cuối của lượt hỏi thành công |
 | `error` | `{error_code, message, trace_id}` | Bất kỳ lúc nào; stream kết thúc ngay sau sự kiện này. Định dạng theo quy ước lỗi chung (D-SD01-003 (¶3), D-SD06-012 (¶6)) |
 
 Nếu lỗi xảy ra sau khi đã gửi `citations`, client giữ nguyên phần câu trả lời đã hiển thị và thông báo lỗi.
 
 - **Rate limit kênh `public`** (R-NFR-008 (§3.1.6)): khi bật (`assistant.public_rate_limit_enabled`), request vượt ngưỡng bị từ chối **trước khi** mở stream SSE — HTTP 429, body lỗi JSON theo quy ước chung (`error_code = rate_limited`), header `Retry-After`; không tạo/ghi hội thoại. Cơ chế ở D-SD07-009 (¶4.3). Kênh `admin` không áp dụng.
-- **Câu miễn trừ trách nhiệm và thời hạn hội thoại phía client**: frontend đọc `assistant.disclaimer_text` và `assistant.conversation_ttl_hours` qua `GET /client-settings` (D-SD07-013 (¶5.2)).
+- **Câu miễn trừ trách nhiệm và thời hạn hội thoại phía client**: frontend đọc `assistant.disclaimer_text` và `assistant.conversation_ttl_hours` qua `clientSettings.getSettings` (D-SD07-013) — `GET /client-settings`.
 
 - Cùng 1 path `/assistant/chat`, mount riêng dưới `/api/v1/admin/...` và `/api/v1/public/...` — handler dùng chung logic (D-SD05-005 (¶3.2)), chỉ khác `channel`/`asked_by_employee_id` gắn theo nhóm route gọi vào.
 - **Không mount ở `/api/v1/partner/...`**: Nhân viên Tổ chức khác dùng AI Văn Minh Việt qua route `public` như người dùng thường, không có trải nghiệm chat xác thực riêng theo tổ chức.
-- Danh sách Cương vực để hiển thị bộ lọc: dùng lại `GET /encyclopedia/cultural-domains` (admin — mở cho mọi Nhân viên đã đăng nhập, D-SD04-017 (¶5.3)) / `GET /public/cultural-domains` (public) đã có ở D-SD04-017 (¶5.3)/D-SD04-018 (¶5.4) — không tạo endpoint trùng.
+- Danh sách Cương vực để hiển thị bộ lọc: dùng lại `encyclopedia.listCulturalDomains` (D-SD04-017) — `GET /encyclopedia/cultural-domains` (admin — mở cho mọi Nhân viên đã đăng nhập, D-SD04-017 (¶5.3)) / `public.listCulturalDomains` (D-SD04-018) — `GET /public/cultural-domains` (public) đã có ở D-SD04-017 (¶5.3)/D-SD04-018 (¶5.4) — không tạo endpoint trùng.
 - **`conversation_id`** (UUID) do client tự sinh và tự quản lý (không do server cấp phát) — bắt buộc trong body ở mọi request, kể cả lượt hỏi đầu tiên của một hội thoại mới (client tự sinh UUID mới cho hội thoại mới). Server dùng để nhóm các lượt hỏi thành 1 hội thoại (D-SD05-002 (¶2.2)), đọc lịch sử N lượt gần nhất phục vụ bước Rewrite/Generate (D-SD05-005 (¶3.2)). Hỗ trợ hội thoại nhiều lượt (multi-turn) — xem ¶6. Một `conversation_id` gắn cố định với kênh và người hỏi của lượt đầu tiên. Nếu dùng lại ở kênh khác, hoặc bởi Nhân viên khác, server trả `error` `conversation_mismatch` (D-SD05-005 (¶3.2) bước 0).
 
 ### 5.2. [D-SD05-013] Nhóm `assistant/*` — chỉ mount `admin` (rà soát chất lượng, role `quan_tri_he_thong`)
 
-| Method | Path | Mô tả |
-|---|---|---|
-| GET | `/assistant/query-logs` | Danh sách log hỏi–đáp (filter `channel`, `cultural_domain_id`, `conversation_id`, `asked_by_employee_id`, `has_self_audit_flags`, khoảng thời gian) — cursor pagination |
-| GET | `/assistant/query-logs/{id}` | Chi tiết 1 lượt hỏi–đáp (câu hỏi/trả lời/trích dẫn/cờ self-audit) |
-| GET | `/assistant/conversations/{id}` | ⚠ Đề xuất bổ sung — xem toàn bộ các lượt hỏi–đáp trong 1 hội thoại, sắp theo `turn_index`, phục vụ rà soát ngữ cảnh multi-turn |
-| POST | `/assistant/reindex/{entry_id}` | ⚠ Đề xuất bổ sung — kích hoạt lại thủ công job `reindex_entry` cho 1 Mục từ (khắc phục sự cố/đổi model embedding) |
+| Method | Path | operationId | Mô tả |
+|---|---|---|---|
+| GET | `/assistant/query-logs` | `assistant.listQueryLogs` | Danh sách log hỏi–đáp (filter `channel`, `cultural_domain_id`, `conversation_id`, `asked_by_employee_id`, `has_self_audit_flags`, khoảng thời gian) — cursor pagination |
+| GET | `/assistant/query-logs/{id}` | `assistant.getQueryLog` | Chi tiết 1 lượt hỏi–đáp (câu hỏi/trả lời/trích dẫn/cờ self-audit) |
+| GET | `/assistant/conversations/{id}` | `assistant.getConversation` | ⚠ Đề xuất bổ sung — xem toàn bộ các lượt hỏi–đáp trong 1 hội thoại, sắp theo `turn_index`, phục vụ rà soát ngữ cảnh multi-turn |
+| POST | `/assistant/reindex/{entry_id}` | `assistant.reindexEntry` | ⚠ Đề xuất bổ sung — kích hoạt lại thủ công job `reindex_entry` cho 1 Mục từ (khắc phục sự cố/đổi model embedding) |
 
 **Response bổ sung** (⚠ Bổ sung — hoàn thiện kỹ thuật cho màn hình rà soát D-ADM-024 (¶4.24)–D-ADM-025 (¶4.25)):
 
 - Mỗi lượt hỏi–đáp (ở cả 3 endpoint `GET`) trả thêm `asked_by: {id, display_name, email} | null` (`null` với kênh `public`) và `cited_entries: [{entry_id, title, is_public}]` (qua `GetEntryTitles`; `is_public = false` khi Mục từ không còn công khai — `title` khi đó là tiêu đề phiên bản đã chốt mới nhất).
-- Filter `channel` và `asked_by_employee_id` ở `GET /assistant/query-logs` lọc qua JOIN `assistant_query_log.conversation_id → assistant_conversation` (D-SD05-003 (¶2.3)). `asked_by` của mỗi lượt lấy theo hội thoại chứa lượt đó.
-- Riêng `GET /assistant/query-logs` (danh sách) trả thêm `self_audit_flag_count` (int, `null` nếu `self_audit_flags` là `NULL`).
-- `GET /assistant/conversations/{id}`: `asked_by` trả một lần ở cấp hội thoại.
-- Tên/email Nhân viên ghép ở **tầng handler HTTP** (`/cmd/api`) bằng `identity.GetEmployeeSummaries` (D-SD02-008 (¶4)), tiêu đề Mục từ bằng `encyclopedia.GetEntryTitles` — cùng cách đã áp dụng cho `GET /shared/audit-logs` (D-SD01-002 (¶2)). Không đổi schema `assistant_query_log`, không JOIN chéo, không phát sinh import cycle.
+- Filter `channel` và `asked_by_employee_id` ở `assistant.listQueryLogs` (D-SD05-013) — `GET /assistant/query-logs` lọc qua JOIN `assistant_query_log.conversation_id → assistant_conversation` (D-SD05-003 (¶2.3)). `asked_by` của mỗi lượt lấy theo hội thoại chứa lượt đó.
+- Riêng `assistant.listQueryLogs` (D-SD05-013) — `GET /assistant/query-logs` (danh sách) trả thêm `self_audit_flag_count` (int, `null` nếu `self_audit_flags` là `NULL`).
+- `assistant.getConversation` (D-SD05-013) — `GET /assistant/conversations/{id}`: `asked_by` trả một lần ở cấp hội thoại.
+- Tên/email Nhân viên ghép ở **tầng handler HTTP** (`/cmd/api`) bằng `identity.GetEmployeeSummaries` (D-SD02-008 (¶4)), tiêu đề Mục từ bằng `encyclopedia.GetEntryTitles` — cùng cách đã áp dụng cho `shared.listAuditLogs` (D-SD01-002) — `GET /shared/audit-logs`. Không đổi schema `assistant_query_log`, không JOIN chéo, không phát sinh import cycle.
 
 ## 6. Vấn đề mở / giả định
 
-- **Rate limiting cho `/assistant/chat` (kênh `public`)** hiện thực R-NFR-008 (§3.1.6): theo IP, Quản trị hệ thống bật/tắt và đặt hạn mức, mặc định tắt. ⚠ Cách làm — middleware Go, bộ đếm trong bộ nhớ tiến trình — là quyết định kỹ thuật (D-SD07-009 (¶4.3)).
+- **Rate limiting cho `assistant.chat` (D-SD05-012) (kênh `public`)** hiện thực R-NFR-008 (§3.1.6): theo IP, Quản trị hệ thống bật/tắt và đặt hạn mức, mặc định tắt. ⚠ Cách làm — middleware Go, bộ đếm trong bộ nhớ tiến trình — là quyết định kỹ thuật (D-SD07-009 (¶4.3)).
 - **Rà soát nhật ký hỏi đáp** (D-SD05-013 (¶5.2)) do role `quan_tri_he_thong` thực hiện (R-AI-012 (§2.4.9.2)).
 - **`is_active`/`cultural_domain_ids` denormalize trên `assistant_chunk`** (D-SD05-001 (¶2.1)) — ⚠ giải pháp kỹ thuật để tránh JOIN chéo sang `/encyclopedia` khi truy hồi, đổi lại phải đồng bộ qua job mỗi khi phiên bản công khai/Cương vực thay đổi (D-SD05-004 (¶3.1), D-SD05-009 (¶4.3)).
 - **Hội thoại nhiều lượt** hiện thực R-AI-007 (§2.4.6), R-PUB-011 (§2.6.4.3). Các quyết định kỹ thuật đi kèm:
   - `conversation_id` do client tự sinh (UUID) và tự quản lý (ví dụ lưu `localStorage` phía public-web/app) — server không cấp phát, không cần thêm cơ chế session/cookie hay định danh thiết bị ẩn danh riêng ở tầng ứng dụng (nhất quán với quyết định ở bullet rate limiting phía trên).
   - Lịch sử hội thoại giới hạn N lượt gần nhất, dùng cho cả bước Rewrite query và Generate (D-SD05-005 (¶3.2)) — N là tham số cấu hình `assistant.history_turns` (`07-system-settings.md`).
-  - Có bước Rewrite query (gọi AI Gateway `POST /v1/rewrite-query`, D-SD06-005 (¶3.3)) trước Retrieve khi hội thoại đã có lượt trước đó, để xử lý câu hỏi nối tiếp phụ thuộc ngữ cảnh (ví dụ "còn về X thì sao?"). ⚠ Cập nhật 2026-09-23: trước đó tài liệu ghi "dùng chung endpoint Generate, đổi prompt", nhưng schema của `/v1/generate` (`{question, context_chunks}`) không có chỗ truyền lịch sử hội thoại — nay tách thành endpoint riêng, cùng khuôn với `/v1/self-audit` (cũng dùng chung LLM nhưng là endpoint riêng).
+  - Có bước Rewrite query (gọi AI Gateway `gateway.rewriteQuery` (D-SD06-002) — `POST /v1/rewrite-query`, D-SD06-005 (¶3.3)) trước Retrieve khi hội thoại đã có lượt trước đó, để xử lý câu hỏi nối tiếp phụ thuộc ngữ cảnh (ví dụ "còn về X thì sao?"). ⚠ Cập nhật 2026-09-23: trước đó tài liệu ghi "dùng chung endpoint Generate, đổi prompt", nhưng schema của `gateway.generate` (D-SD06-002) (`{question, context_chunks}`) không có chỗ truyền lịch sử hội thoại — nay tách thành endpoint riêng, cùng khuôn với `gateway.selfAudit` (D-SD06-002) (cũng dùng chung LLM nhưng là endpoint riêng).
   - Mô hình dữ liệu: bảng `assistant_conversation` riêng (D-SD05-002 (¶2.2)) lưu metadata hội thoại, gồm cả `channel` và `asked_by_employee_id`. `assistant_query_log` (D-SD05-003 (¶2.3)) lưu từng lượt với `conversation_id`, `turn_index`, `rewritten_question`.
 - **Ràng buộc hội thoại theo kênh/người hỏi** ⚠ Đề xuất bổ sung — vì `conversation_id` do client tự sinh, server kiểm tra hội thoại đã có phải khớp kênh và Nhân viên với request (D-SD05-005 (¶3.2) bước 0). Việc này ngăn dùng `conversation_id` của hội thoại `admin` để đọc lịch sử qua kênh `public`, hoặc đọc hội thoại của Nhân viên khác. Riêng giữa các người dùng ẩn danh ở kênh `public` thì không phân biệt được. Ở đây chỉ dựa vào việc UUID khó đoán, nhất quán với quyết định không có định danh thiết bị ẩn danh (bullet rate limiting ở trên).
 - **Rủi ro độ trễ do bước Rewrite query** ⚠ — bước Rewrite (D-SD05-005 (¶3.2) bước 1) thêm 1 lời gọi AI Gateway tuần tự trước Retrieve khi hội thoại đã có lịch sử, có thể ảnh hưởng NFR token đầu ≤3 giây (đặc tả gốc R-NFR-011 (§3.2.2), D-SD01-008 (¶8)) — cần đo đạc thực tế lúc code; có thể cân nhắc rút gọn prompt rewrite hoặc dùng model nhỏ/nhanh hơn cho riêng bước này nếu cần (timeout đề xuất cho endpoint này là 5s, D-SD06-012 (¶6)). Quản trị hệ thống có thể tắt bước này (`assistant.rewrite_query_enabled`) nếu đo thực tế không đạt NFR.
 - **Không có chức năng đánh giá câu trả lời** (thích/không thích, báo sai) ở giai đoạn này (R-AI-013 (§2.4.9.3)).
 - **Chunking strategy cụ thể** (kích thước đoạn, overlap, chiến lược cắt theo block JSON hay theo `content_plain_text`) — chi tiết kỹ thuật, chưa chốt số liệu cụ thể, để lại cho lúc code (tương tự các mục "chốt sau khi có số liệu thực tế" ở tài liệu 01).
-- **Hợp đồng sự kiện SSE của `/assistant/chat`** (D-SD05-005 (¶3.2), D-SD05-012 (¶5.1)) — ⚠ bổ sung: thứ tự `token` → `citations` → `self_audit` → `done`, cùng `error`; self-audit chạy sau khi đã stream câu trả lời; lỗi self-audit không làm hỏng lượt hỏi (`NULL` = chưa kiểm được); lỗi trước khi Generate xong thì không ghi log.
+- **Hợp đồng sự kiện SSE của `assistant.chat` (D-SD05-012)** (D-SD05-005 (¶3.2), D-SD05-012 (¶5.1)) — ⚠ bổ sung: thứ tự `token` → `citations` → `self_audit` → `done`, cùng `error`; self-audit chạy sau khi đã stream câu trả lời; lỗi self-audit không làm hỏng lượt hỏi (`NULL` = chưa kiểm được); lỗi trước khi Generate xong thì không ghi log.
 - **`asked_by`, `cited_entries`, `self_audit_flag_count` và 2 filter mới ở API rà soát** (D-SD05-003 (¶2.3), D-SD05-013 (¶5.2)) — ⚠ bổ sung: hoàn thiện kỹ thuật cho màn hình rà soát của Admin nội bộ; ghép dữ liệu ở tầng handler. Không đổi schema, không đổi hành vi nghiệp vụ.
 - **Thời hạn lưu nhật ký hỏi đáp** (D-SD05-003 (¶2.3), D-SD05-006 (¶3.3)) hiện thực R-AI-014 (§2.4.9.4). ⚠ Mặc định 180 ngày và cách dọn theo cả hội thoại (không theo từng lượt) là quyết định của thiết kế.

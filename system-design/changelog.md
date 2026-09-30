@@ -60,3 +60,11 @@
 - DC-20260930-03: nguồn dữ liệu cho thông báo "AI Verification đang chạy" (theo báo cáo của luồng admin-web).
   - **03-cultural-knowledge-base.md** ¶5.3 (D-SD03-023): chi tiết Hạng mục tri thức thêm `ai_verification_running` (bool, còn job `verification.run` đang chờ/đang chạy theo định nghĩa job trùng ở D-SD03-012 (¶3.3) bước (3)). ¶5.4 (D-SD03-024): response `trigger-ai-verification` thêm `merged_into_running_job`; lệnh gộp thì không tạo job, không đổi trạng thái, không ghi audit.
   - **01-architecture-and-tech-stack.md** ¶2 (D-SD01-002): thêm trường hợp trigger bị gộp vào danh sách "Không ghi audit".
+
+- DC-20260930-04: định danh endpoint API bằng operationId và quy ước hợp đồng OpenAPI.
+  - `common/requirements-design-sync.md`: thêm mục 2.5 (operationId — phạm vi, định dạng `<tiền tố>.<tên>`, dùng chung khi mount nhiều nhóm route, quy tắc bất biến, cách trích `` `op` (D-…) ``); mục 5 thêm các lỗi operationId và lỗi trích endpoint chỉ bằng method + path; mục 7 thêm quy định dùng operationId trong hợp đồng OpenAPI, kế hoạch, code và test.
+  - **01-architecture-and-tech-stack.md** ¶3 (D-SD01-003): thêm quy ước hợp đồng OpenAPI — một file cho mỗi nhóm route `admin`/`partner`/`public`, operationId theo thiết kế, kiểm tra tự động trong CI hợp đồng khớp code cả route lẫn schema (cách làm do Code chọn), 3 web app sinh API client từ hợp đồng, chat khai báo `text/event-stream`, webhook nội bộ và AI Gateway ngoài 3 file hợp đồng. ¶8 (D-SD01-008): dòng "Tài liệu kỹ thuật" trỏ về ¶3.
+  - `00-claude-instructions.md` mục 6: thêm nguyên tắc operationId.
+  - **01**–**07**: thêm cột `operationId` vào mọi bảng endpoint (133 endpoint); `07` ¶5.2 (D-SD07-013) ghi operationId dưới tiêu đề; `06` ¶7 gắn `gateway.getHealth` cho `GET /v1/health`.
+  - **01**–**07**, `index.md`: đổi 216 chỗ trích endpoint sang dạng `` `op` (D-…) `` (văn xuôi có đủ method + path giữ thêm ` — METHOD /path`), bỏ trích dẫn cùng mục bị lặp ngay sau; danh mục sự kiện audit ở `01` ¶2 ghi operationId thay cho path viết tắt.
+  - `common/tools/check-requirement-refs.py`: đọc operationId từ bảng endpoint; báo bảng thiếu cột, endpoint thiếu operationId, sai định dạng/tiền tố, trùng, endpoint trong mục chưa có ID, trích `op` sai hoặc sai ID mục, và trích endpoint chỉ bằng method + path.

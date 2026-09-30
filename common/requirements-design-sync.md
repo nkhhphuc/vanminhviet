@@ -78,6 +78,24 @@ requirements → system-design → admin-web / partner-web / public-web → code
   - Không dùng "mục N" để trích số mục của tài liệu thiết kế.
 - **Cách gõ `¶`** (U+00B6): trên Windows dùng Alt+0182, tương tự Alt+0167 cho `§`.
 
+### 2.5. operationId của endpoint API
+
+- **Phạm vi**: mọi endpoint HTTP khai báo trong `system-design/`, gồm các nhóm route `admin`/`partner`/`public`, webhook nội bộ và endpoint của AI Gateway. Mỗi endpoint có đúng một operationId, ghi ở cột `operationId` (ngay sau cột Path) trong bảng endpoint của mục thiết kế chứa endpoint đó. Chỉ tài liệu system-design đặt operationId. Các luồng web chỉ trích dẫn; cần endpoint mới thì đề xuất sang system-design như các thay đổi thiết kế khác.
+- **Định dạng**: `<tiền tố>.<tên>`, duy nhất trong toàn hệ thống.
+  - Tiền tố là đoạn đầu của path sau nhóm route: `auth`, `identity`, `knowledge`, `encyclopedia`, `assistant`, `shared`, `public`. Đoạn có gạch ngang viết thành camelCase (`client-settings` → `clientSettings`). Webhook nội bộ dùng `internal`. Endpoint AI Gateway dùng `gateway`.
+  - Tên viết camelCase tiếng Anh, dạng động từ + danh từ: `list…` (danh sách), `get…` (chi tiết), `create…`, `update…`, `delete…`. Endpoint hành động lấy động từ theo path, ví dụ `…/trigger-ai-verification` → `triggerAiVerification`.
+  - Ví dụ: `auth.login`, `knowledge.getKnowledgeObject`, `knowledge.triggerAiVerification`, `shared.retryJob`, `public.getEntry`, `gateway.generate`.
+- **Endpoint mount ở nhiều nhóm route** với cùng hành vi (ví dụ `auth/*` ở `admin` và `partner`) dùng chung một operationId.
+- **Quy tắc bất biến**:
+  - operationId không đổi khi đổi path, method hoặc mô tả.
+  - Endpoint bị bỏ thì không dùng lại operationId của nó.
+  - Khi đổi hành vi theo cách không tương thích với bên gọi, tạo endpoint mới với operationId mới và bỏ endpoint cũ.
+  - Thêm endpoint thì đặt operationId trong cùng lượt ghi.
+- **Cách trích dẫn**:
+  - Dạng chuẩn: `` `knowledge.triggerAiVerification` (D-SD03-024) ``, tức operationId kèm ID của mục thiết kế chứa bảng endpoint, không kèm `¶`.
+  - Khi cần cho dễ đọc, thêm method + path sau dấu gạch ngang: `` `knowledge.triggerAiVerification` (D-SD03-024) — `POST /knowledge/knowledge-objects/{id}/trigger-ai-verification` ``.
+  - Không trích endpoint chỉ bằng method + path.
+
 ## 3. Change Request (CR) và Design Change (DC)
 
 - **CR**: mỗi lần ghi thay đổi vào `business-requirements.md` (một lượt preview được duyệt) tạo một CR, mã `CR-YYYYMMDD-NN`. Luồng requirements ghi CR vào sổ theo dõi ngay sau khi ghi đặc tả, cùng lúc với `requirements/changelog.md`. Mục changelog ghi kèm mã CR.
@@ -132,6 +150,9 @@ requirements → system-design → admin-web / partner-web / public-web → code
   - ID thiết kế bị trùng, hoặc bảng "ID thiết kế lớn nhất đã cấp" thấp hơn ID thực có.
   - Trích dẫn `¶` tới một mục đang mang ID nhưng không ghi ID.
   - Trích số mục thiết kế theo dạng cũ: "`0X` mục N", "`0X-….md` mục N", "admin-web N"/"admin-web mục N" (và tương tự cho partner-web, public-web), hoặc "mục N" trong chính tài liệu thiết kế.
+  - Bảng endpoint thiếu operationId, operationId bị trùng hoặc sai định dạng (mục 2.5).
+  - operationId được trích nhưng không có trong bảng endpoint nào, hoặc ID mục đi kèm không phải mục chứa endpoint đó.
+  - Trích endpoint chỉ bằng method + path, không kèm operationId (mục 2.5). Path viết tắt (`…/x`) chỉ bị báo khi khớp đúng một endpoint; khớp nhiều endpoint được coi là mô tả mẫu chung.
   - Trích đặc tả bằng "mục X.Y" (không có `§`, không có ID) khi đứng cạnh "đặc tả", "BR", `business-requirements`.
 - Cách chạy: `python common/tools/check-requirement-refs.py` (chạy được từ bất kỳ thư mục nào); thêm `--luong <tên luồng>` để chỉ báo lỗi trong file của một luồng. Mỗi lỗi in kèm `file:dòng`; mã thoát 0 = không có lỗi, 1 = có lỗi.
 - Chạy: sau mỗi CR/DC, và bắt buộc trước khi chạy "Đồng bộ sang Code".
@@ -146,4 +167,5 @@ requirements → system-design → admin-web / partner-web / public-web → code
 - CR/DC đã xong ở thiết kế (✅ hoặc — ở cột system-design và web liên quan) mà chưa có ✅ hoặc — trong `planning/cr-status.md` là phần cần cập nhật code. Ghi trạng thái và dọn dẹp theo mục 4.1.
 - Khi lập kế hoạch (milestone, sprint, task), trích tài liệu thiết kế bằng ID kèm `¶` (`D-SD04-012 (¶2.2)`, `D-ADM-019 (¶4.19)`), kèm R-ID liên quan nếu có. Ô trạng thái của các luồng trong sổ theo dõi cho biết mỗi CR/DC đã sửa mục thiết kế nào, kể cả mục bị đánh số lại. Dùng thông tin này để xác định task nào cần cập nhật.
 - Trong code/test (comment, tên/mô tả test), chỉ ghi ID (`R-KB-014`, `D-SD03-001`), không kèm `§`/`¶`, vì code nằm ngoài phạm vi kiểm tra của mục 5 nên số mục đi kèm sẽ không được cập nhật.
+- Hợp đồng OpenAPI dùng đúng operationId của thiết kế (mục 2.5, D-SD01-003 (¶3)). Trong kế hoạch, code và test, trích endpoint bằng operationId, có thể kèm ID mục thiết kế (`knowledge.triggerAiVerification`, `D-SD03-024`).
 - Nếu `requirements/`, `system-design/` mâu thuẫn với code, tài liệu thiết kế luôn thắng.
