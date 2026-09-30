@@ -6,7 +6,6 @@
 
 - Biên tập, hoàn thiện `business-requirements.md` thành một đặc tả đủ chi tiết, rõ ràng, không mơ hồ — để **bất kỳ ai** (không giới hạn người biên soạn) có thể dùng làm đầu vào cho Claude Code (hoặc AI/đội dev khác) thiết kế và build phần mềm.
 - Đây không phải tài liệu giữ kín riêng cho một người — mục tiêu chính là chất lượng & độ đầy đủ của đặc tả, không phải kiểm soát ai được dùng nó.
-- (Việc phụ, on-demand, không ảnh hưởng mục tiêu chính): từng thử tạo một skill tóm tắt điều hành (rút gọn, ẩn chi tiết) để trình cấp trên/ban lãnh đạo, nhưng bản thử không đủ chi tiết theo đánh giá thực tế nên đã huỷ. Đã tạo lại theo hướng khác — xem skill `van-minh-viet-bao-cao-cong-viec` ở mục 7.
 
 ## 2. File nguồn duy nhất
 
@@ -45,10 +44,13 @@
 ## 6. Trạng thái hiện tại (cập nhật lần cuối: xem ngày sửa file business-requirements.md)
 
 - Đã rà soát chi tiết, đóng các gap chính: mục 2.1 (Quản Lý Người Dùng, gồm cả RBAC ở 2.1.3.1), 2.2 (Cơ Sở Dữ Liệu Văn Hóa), 2.3 (Bách Khoa Toàn Thư), 2.4 (AI Văn Minh Việt).
-- Mục 2.5 ("Module ngoài phạm vi giai đoạn này") gồm Lịch & Sự Kiện, chưa cần đặc tả chi tiết.
-- Mục 3 (Yêu Cầu Phi Chức Năng) đã chốt: bảo mật/quyền riêng tư (data residency Việt Nam, mã hoá truyền tải, audit log mở rộng + retention 12 tháng, MFA chưa bắt buộc, rate limiting AI công khai), hiệu năng (ước tính dung lượng lưu trữ để lại cho thiết kế kỹ thuật), nền tảng đa kênh (di động cả iOS/Android, trình duyệt hiện đại, chỉ tiếng Việt giai đoạn này, accessibility chưa yêu cầu), sao lưu (RPO/RTO 24 giờ, sao lưu hàng ngày).
-- Có tài liệu thiết kế kỹ thuật riêng tại `system-design/00-claude-instructions.md`, bám theo đặc tả này.
+- Mục 2.5 ("Module ngoài phạm vi giai đoạn này") liệt kê 8 module chưa cần đặc tả chi tiết: Trò Chơi Lịch Sử, Phim Lịch Sử, Cộng Đồng Văn Hóa, Hộ Chiếu Văn Hóa, Lịch & Sự Kiện, Bảo tàng số 3D, Bản đồ văn hóa, Giáo dục. Kèm ghi chú: chuông thông báo trên mockup web công khai chờ đặc tả khi làm các module đó.
+- Mục 2.6 (Ứng dụng Web cho Người dùng công khai) đã chốt: lớp giao diện trên 2.3/2.4, không cần tài khoản; tìm kiếm và duyệt Mục từ theo Cương vực, trang chi tiết Mục từ, trợ lý AI có trích dẫn Mục từ nguồn, hội thoại lưu trên thiết bị người dùng.
+- Mục 2.7 (Ứng dụng cho Nhân viên Tổ chức khác) đã chốt: chỉ vai trò Chủ nhiệm đề tài, Nghiên cứu, Xét duyệt trong Đề tài được gán; không có quản lý người dùng/phân quyền/Tổ chức.
+- Mục 2.8 (Cấu hình hệ thống) đã chốt: chỉ Quản trị hệ thống; 5 nhóm tham số (AI Verification tự động/thủ công, tài khoản & bảo mật, email hệ thống, AI Văn Minh Việt, vận hành); danh sách tham số cụ thể, mặc định và giới hạn do thiết kế kỹ thuật quyết định.
+- Mục 3 (Yêu Cầu Phi Chức Năng) đã chốt: bảo mật/quyền riêng tư (data residency Việt Nam, mã hoá truyền tải, audit log mở rộng + retention tối thiểu 12 tháng do Quản trị hệ thống cấu hình, MFA chưa bắt buộc, rate limiting AI công khai theo IP — mặc định tắt), hiệu năng (tải đỉnh 50–100 req/s, burst 200–300 req/s, AI token đầu ≤3 giây/hoàn tất ≤15 giây, uptime 99.5%, ~200 Nhân viên đồng thời; dung lượng lưu trữ để lại cho thiết kế kỹ thuật), nền tảng đa kênh (di động cả iOS/Android, trình duyệt hiện đại, chỉ tiếng Việt giai đoạn này, accessibility chưa yêu cầu), sao lưu (RPO/RTO 24 giờ, sao lưu hàng ngày), kiểm duyệt nội dung (tạm chưa áp dụng, chờ module Cộng Đồng Văn Hóa).
+- Các luồng thiết kế bám theo đặc tả này: `system-design/`, `admin-web/`, `partner-web/`, `public-web/` (mỗi luồng có `00-claude-instructions.md` riêng). Thay đổi đặc tả lan xuống các luồng qua CR trong `common/requirements-change-tracker.md`.
 
 ## 7. Skill hỗ trợ đã lưu
 
-- **`van-minh-viet-bao-cao-cong-viec`** (đã lưu, đang dùng được): tạo báo cáo công việc ngắn gọn (file Word) tóm tắt các thay đổi đã ghi vào `business-requirements.md` trong một phiên hoặc khoảng thời gian làm việc — mỗi mục nêu đã đổi gì kèm lý do ngắn gọn. Với phiên hiện tại, dựa vào chính hội thoại; với khoảng thời gian khác/nhiều session trước đó, đọc `requirements/changelog.md` (xem mục 2) để lấy đúng phạm vi thay vì phải hỏi người dùng kể lại thủ công.
+- **`dong-bo-sang-code`**: copy nguyên văn (không dịch) file nguồn của một, nhiều hoặc tất cả các luồng từ `Z:\VanMinhSo\docs` sang `Z:\VanMinhSo\vanminhviet\docs` cho team Code. Các file khung nguyên tắc cho Claude không được copy. Trước khi chạy, bắt buộc chạy `common/tools/check-requirement-refs.py` (`common/requirements-design-sync.md` mục 5).
