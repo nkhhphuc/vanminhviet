@@ -16,7 +16,7 @@
 
 ## 3. Quy ước cấu trúc tài liệu
 
-- Giữ nguyên phong cách trình bày mobile-first đã có trong bản mockup gốc (status bar, bottom tab bar...) trừ khi có quyết định khác — xem quyết định đã chốt ở mục 6.
+- Mô tả mỗi màn hình theo màn hình hẹp; khác biệt ở màn hình rộng viết thành quy tắc chung ở `public-web` ¶5, chỉ ghi riêng trong màn hình khi là ngoại lệ — xem quyết định ở mục 6.
 - Đánh số màn hình theo mục `4.x` (một màn hình = một mục con), giữ nguyên cách đánh số hiện có khi thêm màn hình mới để không xáo trộn tham chiếu — trừ khi người dùng chủ động yêu cầu sắp xếp lại thứ tự (xem ví dụ ở mục 6), trường hợp đó cần rà soát và cập nhật toàn bộ tham chiếu chéo trong `public-web-design.md` và file này.
 - ID thiết kế: Bảng màu D-PUB-011 (¶2.1), Thành phần dùng chung D-PUB-012 (¶2.3), Cấu trúc điều hướng D-PUB-010 (¶3) và từng màn hình 4.x mang ID `D-PUB-NNN` đặt ngay sau số mục trong tiêu đề, theo `common/requirements-design-sync.md` mục 2.4. Màn hình mới nhận ID kế tiếp theo bảng "ID thiết kế lớn nhất đã cấp" trong `common/requirements-change-tracker.md`; ID không đổi khi đánh số lại mục. Trong `public-web-design.md`, trích mục có ID dùng dạng `D-PUB-003 (¶4.3)` (kể cả khi nhắc số màn hình), mục không có ID dùng `¶N`.
 - Phần nào là thiết kế UI đi trước đặc tả nghiệp vụ (chưa có cơ sở ở `business-requirements.md`) cần được đánh dấu rõ ràng trong tài liệu (ví dụ ghi chú ngay dưới tiêu đề màn hình) để người đọc không nhầm là đã chốt nghiệp vụ.
@@ -38,7 +38,7 @@ Khi phát hiện một điểm trong `public-web-design.md` không có cơ sở 
 ## 6. Quyết định đã chốt
 
 - **UI-first cho các module ngoài phạm vi**: các màn hình mô tả module chưa có đặc tả nghiệp vụ (Bảo tàng số 3D, Bản đồ văn hóa, Game lịch sử, Phim & TV, Cộng đồng...) vẫn giữ trong `public-web-design.md` như thiết kế đi trước, không xoá.
-- **Giữ phong cách mobile**: không chuyển đổi bố cục sang dạng web desktop (top nav, nhiều cột...); giữ nguyên bottom tab bar, status bar như mockup gốc.
+- **Chỉ website, responsive 2 mức**: `public-web-design.md` chỉ đặc tả website (Next.js), ứng dụng di động không thuộc phạm vi. Bố cục 2 mức: màn hình hẹp dùng Bottom Tab Bar, màn hình rộng dùng Top Nav ngang. Khác biệt giữa hai mức viết thành quy tắc chung, chỉ ghi riêng các ngoại lệ.
 - **Mục 4.9 (Cộng đồng)**: tạm gác lại, chưa biên tập chi tiết — chờ quay lại sau.
 - **Theme**: sáng (light mode), nền trắng ngà/kem, màu nhấn đỏ/đỏ mận, icon set minh hoạ màu (illustrated). Áp dụng cho toàn bộ `public-web-design.md` (`public-web` ¶2 Design System, mô tả màu sắc ở `public-web` ¶4, ghi chú theme ở `public-web` ¶7).
 - **Thứ tự màn hình 4.x**: Bách Khoa Toàn Thư (Danh sách Mục từ, Trang chi tiết Mục từ) đặt ngay sau D-PUB-002 (¶4.2) (Chat AI); các màn hình còn lại theo sau: 4.5 Bản đồ văn hóa, 4.6 Bảo tàng số 3D, 4.7 Game lịch sử, 4.8 Phim & TV, 4.9 Cộng đồng.

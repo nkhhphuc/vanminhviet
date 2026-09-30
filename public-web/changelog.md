@@ -12,3 +12,4 @@
 ## 2026-09-30
 
 - DC-20260930-08: đổi tên `public-web-layout.md` → `public-web-design.md`. Không đổi nội dung. File: **00-claude-instructions.md** (cập nhật tên file); ngoài luồng: `common/requirements-design-sync.md`, `common/tools/check-requirement-refs.py`.
+- DC-20260930-10: chuyển đặc tả sang website responsive 2 mức (hẹp < 1024px / rộng ≥ 1024px), chỉ website. Top Nav ngang cho màn hình rộng, bỏ status bar, quy tắc responsive chung ở ¶5, ngoại lệ ở 4.2–4.4, bảng đường dẫn URL, chia sẻ, hover/focus. File: **public-web-design.md** (1, 2.3, 3, 4.2, 4.3, 4.4, 5, 7), **00-claude-instructions.md** (3, 6).

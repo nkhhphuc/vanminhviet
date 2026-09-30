@@ -9,7 +9,7 @@
 | system-design | DC-20260930-05 |
 | admin-web | DC-20260930-07 |
 | partner-web | DC-20260930-06 |
-| public-web | DC-20260930-08 |
+| public-web | DC-20260930-10 |
 
 ## ID lớn nhất đã cấp
 
@@ -59,3 +59,4 @@
 | DC-20260930-07 | 2026-09-30 | admin-web bổ sung vào danh sách API các endpoint đã có ở system-design, mount `admin`: `auth.getMe` (¶3 — khôi phục phiên khi tải lại trang), `identity.getEmployee` (4.5), `identity.getOrganization` (4.7), `knowledge.searchResearchTopicEmployees` (4.9 — ô tìm Nhân viên ở khối Chủ nhiệm đề tài và Quản lý nhân sự đề tài), `knowledge.getSourceFileDownloadUrl` (4.11 — nút "Xem/Tải" từng file, disable khi `is_missing`). Không đổi API. Code: admin app gọi đủ các endpoint này. | D-ADM-029, D-ADM-005, D-ADM-007, D-ADM-009, D-ADM-011 | — | ✅ 3, 4.5, 4.7, 4.9, 4.11 · `00-claude-instructions.md`: 6 | — | — |
 | DC-20260930-08 | 2026-09-30 | Đổi tên tài liệu thiết kế web công khai `public-web/public-web-layout.md` → `public-web/public-web-design.md`, cùng quy ước tên với `admin-web-design.md`, `partner-web-design.md`. Không đổi nội dung, ID, số mục. `common/requirements-design-sync.md` mục 2.4 và `common/tools/check-requirement-refs.py` cập nhật đường dẫn. requirements: ghi chú ở `business-requirements.md` (dòng nhắc mockup chuông thông báo) cần đổi đường dẫn. Code: xoá bản `public-web-layout.md` cũ trong `docs/` của repo khi đồng bộ, cập nhật tham chiếu tên file trong kế hoạch. | — | — | — | — | ✅ đổi tên file · `00-claude-instructions.md`: 1, 2, 4, 5, 6, 7 |
 | CR-20260930-09 | 2026-09-30 | Ghi chú cuối §2.5 (chuông thông báo) đổi đường dẫn mockup `public-web/public-web-layout.md` → `public-web/public-web-design.md`, theo DC-20260930-08. Không đổi nội dung yêu cầu. | — (sửa đường dẫn ở ghi chú cuối §2.5) | — | — | — | — |
+| DC-20260930-10 | 2026-09-30 | `public-web-design.md` đặc tả website responsive (Next.js, D-SD01-001 (¶1)), không còn là ứng dụng di động; ứng dụng di động không thuộc phạm vi tài liệu. Bố cục 2 mức, ngưỡng 1024px: màn hình hẹp dùng Top App Bar + Bottom Tab Bar, màn hình rộng dùng Top Nav ngang. Bỏ status bar. Quy tắc responsive chung ở ¶5 (container, độ rộng nội dung đọc, grid chức năng, carousel, filter chips, hero banner). Ngoại lệ ghi ở D-PUB-002/003/004. Thêm: URL riêng cho mỗi màn hình (bảng đường dẫn đề xuất), chia sẻ qua Web Share API hoặc sao chép liên kết, trạng thái hover/focus và thao tác bàn phím. Code: public-web build theo 2 mức bố cục và bảng đường dẫn. | — | — | — | — | ✅ 1, 2.3, 3, 4.2, 4.3, 4.4, 5, 7 · `00-claude-instructions.md`: 3, 6 |

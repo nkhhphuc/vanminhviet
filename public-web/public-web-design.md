@@ -1,6 +1,6 @@
-# TÀI LIỆU ĐẶC TẢ GIAO DIỆN — ỨNG DỤNG "VĂN MINH VIỆT"
+# TÀI LIỆU ĐẶC TẢ GIAO DIỆN — WEB CÔNG KHAI "VĂN MINH VIỆT"
 
-> Tài liệu mô tả UI/UX từ bản thiết kế mockup, dùng để bàn giao cho đội phát triển web/app.
+> Tài liệu mô tả UI/UX của website cho Người dùng công khai, dùng để bàn giao cho đội phát triển web. Ứng dụng di động (R-NFR-018 (§3.3.3)) không thuộc phạm vi tài liệu này.
 
 ---
 
@@ -8,8 +8,8 @@
 
 - **Tên sản phẩm:** Văn Minh Việt
 - **Slogan:** "Hệ sinh thái số toàn cầu về văn minh Việt" / "Kết nối quá khứ — Kiến tạo tương lai"
-- **Loại hình:** Ứng dụng di động (thiết kế theo chuẩn iOS, status bar 9:41), tổng hợp nội dung văn hóa – lịch sử Việt Nam dưới nhiều hình thức: bách khoa tri thức, AI trợ lý, bảo tàng số 3D/VR/AR, game giáo dục, phim ảnh, bản đồ văn hóa và mạng xã hội cộng đồng.
-- **Nền tảng đề xuất:** Responsive web app hoặc app di động (React Native / Flutter / PWA đều phù hợp với bố cục này).
+- **Loại hình:** Website responsive cho Người dùng công khai (R-GEN-007 (§1.2.2), R-PUB-001 (§2.6)), một giao diện dùng cho cả màn hình hẹp (điện thoại) và màn hình rộng (máy tính) theo 2 mức bố cục (¶5); tổng hợp nội dung văn hóa – lịch sử Việt Nam dưới nhiều hình thức: bách khoa tri thức, AI trợ lý, bảo tàng số 3D/VR/AR, game giáo dục, phim ảnh, bản đồ văn hóa và mạng xã hội cộng đồng.
+- **Nền tảng:** Next.js (SSR/SSG) theo D-SD01-001 (¶1); hỗ trợ trình duyệt theo R-NFR-019 (§3.3.4).
 
 ---
 
@@ -38,20 +38,31 @@
 
 ### 2.3 [D-PUB-012] Thành phần dùng chung (Shared Components)
 
-- **Status bar** giả lập iOS (giờ, sóng, wifi, pin) — không cần dựng thật nếu build web, chỉ dựng cho app.
-- **Top App Bar:** gồm nút back/menu (trái), tiêu đề màn hình (giữa), icon action (phải: search/notification/share/QR...).
-- **Bottom Tab Bar (5 tab cố định):** Trang chủ · Khám phá · [Nút trung tâm nổi bật, icon trống đồng, dùng để mở nhanh tính năng chính/AI] · Cộng đồng · Cá nhân. Nút trung tâm có style khác biệt: hình tròn, viền đỏ, nổi lên trên thanh tab. *Tab "Khám phá" dẫn tới màn hình Bách Khoa Toàn Thư (D-PUB-003 (¶4.3)) — cùng đích đến với icon "Bách khoa" ở lưới chức năng Trang chủ.*
+- **Top App Bar (màn hình hẹp):** gồm nút back/menu (trái), tiêu đề màn hình (giữa), icon action (phải: search/notification/share...). Nút back quay lại trang trước trong lịch sử trình duyệt; nếu người dùng mở màn hình trực tiếp từ liên kết ngoài thì về Trang chủ.
+- **Top Nav ngang (màn hình rộng):** thay cho cả Top App Bar và Bottom Tab Bar, dính ở đầu trang (sticky), nền trắng, viền dưới `#E7DECD`.
+  - **Bên trái:** logo và chữ "VĂN MINH VIỆT" màu đỏ; bấm vào thì về Trang chủ.
+  - **Ở giữa:** 5 mục có cùng đích đến với 5 tab của Bottom Tab Bar: Trang chủ · Khám phá · [mục trung tâm] · Cộng đồng · Cá nhân.
+    - Mục trung tâm hiển thị dạng pill viền đỏ, có icon trống đồng, để giữ vai trò nổi bật như nút trung tâm.
+    - Mục đang active có chữ đỏ và gạch chân đỏ.
+  - **Bên phải:** icon tìm kiếm và chuông thông báo.
+  - **Tiêu đề màn hình** là H1 ở đầu vùng nội dung. Các icon action của màn hình (share...) đặt cạnh tiêu đề. Không có nút back riêng, người dùng dùng nút back của trình duyệt.
+- **Bottom Tab Bar (màn hình hẹp, 5 tab cố định):** Trang chủ · Khám phá · [Nút trung tâm nổi bật, icon trống đồng, dùng để mở nhanh tính năng chính/AI] · Cộng đồng · Cá nhân. Nút trung tâm có style khác biệt: hình tròn, viền đỏ, nổi lên trên thanh tab. *Tab "Khám phá" dẫn tới màn hình Bách Khoa Toàn Thư (D-PUB-003 (¶4.3)) — cùng đích đến với icon "Bách khoa" ở lưới chức năng Trang chủ.*
 - **Card hình chữ nhật bo góc** (radius ~12–16px) dùng cho danh sách nội dung nổi bật, ảnh nền + gradient tối phía dưới để đè chữ.
 - **Nút CTA chính:** nền đỏ, chữ trắng, bo góc, dùng cho hành động chính (vd: "Chơi ngay", "Tìm hiểu ngay").
 - **Search bar:** bo tròn/bo góc lớn, nền sáng hơn/khác tông nhẹ so với nền chính (viền mảnh xám kem), icon kính lúp bên phải, placeholder dạng câu hỏi gợi ý.
 - **Grid icon chức năng:** lưới 4 cột, mỗi ô gồm icon minh hoạ màu (illustrated), nền sáng, bo góc vuông + label bên dưới.
+- **Chia sẻ:** nếu trình duyệt hỗ trợ thì mở hộp chia sẻ của hệ thống (Web Share API). Nếu không, sao chép URL của màn hình vào clipboard và hiện thông báo ngắn "Đã sao chép liên kết".
+- **Trạng thái tương tác:**
+  - Mọi phần tử bấm được đều có trạng thái hover (chữ hoặc viền chuyển đỏ, hoặc nền đậm nhẹ).
+  - Mọi phần tử bấm được đều có focus ring nhìn rõ (viền accent 2px) khi điều hướng bằng bàn phím.
+  - Mọi thao tác đều làm được bằng bàn phím (Tab, Enter, Esc).
 
 ---
 
 ## 3. [D-PUB-010] Cấu trúc điều hướng (Navigation Map)
 
 ```
-Bottom Tab Bar
+Bottom Tab Bar (màn hình hẹp) / Top Nav ngang (màn hình rộng) — D-PUB-012 (¶2.3)
 ├── Trang chủ (Home)
 ├── Khám phá (Explore) ──► Màn hình Bách Khoa Toàn Thư (D-PUB-003 (¶4.3))
 ├── [Trung tâm] — truy cập nhanh (AI / mở rộng)
@@ -72,6 +83,22 @@ Thanh tìm kiếm Hero banner (D-PUB-001 (¶4.1), gõ câu hỏi rồi nhấn En
 
 Mục từ Bách Khoa (từ carousel Trang chủ, trích dẫn Chat AI, hoặc D-PUB-003 (¶4.3)) ──► Trang chi tiết Mục từ (D-PUB-004 (¶4.4))
 ```
+
+**Đường dẫn (URL):** mỗi màn hình có URL riêng, mở trực tiếp và chia sẻ được. Nút back và forward của trình duyệt phải hoạt động đúng. Từ khoá tìm kiếm và bộ lọc Cương vực ở D-PUB-003 (¶4.3) được phản ánh lên query của URL.
+
+⚠ Đề xuất bảng đường dẫn:
+
+| Màn hình | Đường dẫn |
+|---|---|
+| Trang chủ D-PUB-001 (¶4.1) | `/` |
+| Chat AI D-PUB-002 (¶4.2) | `/tro-ly-ai` |
+| Bách Khoa Toàn Thư D-PUB-003 (¶4.3) | `/bach-khoa` |
+| Trang chi tiết Mục từ D-PUB-004 (¶4.4) | `/muc-tu/{id}` |
+| Bản đồ văn hóa D-PUB-005 (¶4.5) | `/ban-do` |
+| Bảo tàng số 3D D-PUB-006 (¶4.6) | `/bao-tang` |
+| Game lịch sử D-PUB-007 (¶4.7) | `/game` |
+| Phim & TV D-PUB-008 (¶4.8) | `/phim` |
+| Cộng đồng D-PUB-009 (¶4.9) | `/cong-dong` |
 
 ---
 
@@ -119,7 +146,7 @@ Mỗi item: icon minh hoạ màu, nền sáng, bo góc vuông + nhãn text bên 
 
 > ⚠️ **Thiết kế đi trước / đơn giản hoá so với đặc tả nghiệp vụ**: Business Requirements R-PUB-008 (§2.6.4) quy định Trợ lý AI cho phép chọn Cương vực để giới hạn phạm vi trả lời (R-PUB-009 (§2.6.4.1)); hệ thống chỉ hỗ trợ tiếng Việt (R-NFR-020 (§3.3.5)). Ở giai đoạn thiết kế này, màn hình tạm **không có UI chọn Cương vực, chỉ hỗ trợ tiếng Việt** — đây là lựa chọn đơn giản hoá cho UI ở giai đoạn này, không phải đề xuất thay đổi Business Requirements. Riêng **quick-reply chips + nhập giọng nói** bên dưới (hai chi tiết chưa có cơ sở trong BR) tạm để xử lý sau.
 
-**Top bar:** nút back — tiêu đề "AI VĂN MINH VIỆT" — icon mở rộng/full-screen.
+**Top bar:** nút back — tiêu đề "AI VĂN MINH VIỆT".
 
 **Khung chat:**
 - Tin nhắn người dùng: bong bóng bo góc, căn phải, nền đỏ nhạt/hồng phấn.
@@ -129,7 +156,9 @@ Mỗi item: icon minh hoạ màu, nền sáng, bo góc vuông + nhãn text bên 
 
 **Gợi ý câu hỏi nhanh (Quick reply chips):** dạng nút bo tròn nhỏ, xếp dạng wrap, ví dụ: "Nguồn gốc đình làng", "Kiến trúc đình làng", "Vai trò đình làng".
 
-**Thanh nhập liệu (input bar) dưới cùng:** ô nhập text bo tròn lớn, placeholder "Bạn muốn hỏi thêm gì?", icon microphone bên phải để nhập giọng nói.
+**Thanh nhập liệu (input bar) dưới cùng:** ô nhập text bo tròn lớn, placeholder "Bạn muốn hỏi thêm gì?", icon microphone bên phải để nhập giọng nói — chỉ hiển thị khi trình duyệt hỗ trợ nhận dạng giọng nói.
+
+**Màn hình rộng:** khung chat và thanh nhập liệu có độ rộng tối đa của nội dung đọc (¶5), căn giữa; thanh nhập liệu dính ở đáy vùng nội dung.
 
 ---
 
@@ -139,9 +168,9 @@ Mỗi item: icon minh hoạ màu, nền sáng, bo góc vuông + nhãn text bên 
 
 **Thanh tìm kiếm:** placeholder "Tìm mục từ theo tên hoặc nội dung...", tìm theo tiêu đề, nội dung (Business Requirements R-PUB-004 (§2.6.2.1)).
 
-**Bộ lọc Cương vực** (filter chips, đa chọn, cuộn ngang): "Văn minh đình làng việt", "Văn minh gia lễ việt", "Văn minh quân sự việt", "Văn minh trống đồng" (R-PUB-005 (§2.6.2.2), R-ENC-032 (§2.3.7) — danh sách "dự kiến", có thể mở rộng khi Nhân viên tạo thêm Cương vực).
+**Bộ lọc Cương vực** (filter chips, đa chọn; cuộn ngang ở màn hình hẹp, xuống dòng ở màn hình rộng): "Văn minh đình làng việt", "Văn minh gia lễ việt", "Văn minh quân sự việt", "Văn minh trống đồng" (R-PUB-005 (§2.6.2.2), R-ENC-032 (§2.3.7) — danh sách "dự kiến", có thể mở rộng khi Nhân viên tạo thêm Cương vực).
 
-**Danh sách Mục từ — lưới 2 cột:** mỗi ô là một card dọc gồm:
+**Danh sách Mục từ — lưới 2 cột (màn hình hẹp), 4 cột (màn hình rộng):** mỗi ô là một card dọc gồm:
 - Ảnh minh hoạ tỉ lệ vuông (1:1), bo góc, lấy từ file đính kèm của Mục từ.
 - Nhãn Cương vực đầu tiên (nếu có), dạng chip nhỏ đặt đè góc trên-trái của ảnh.
 - Tiêu đề Mục từ bên dưới ảnh, đậm, tối đa 2 dòng (không hiện mô tả phụ do khổ card hẹp).
@@ -166,6 +195,8 @@ Empty state khi tìm kiếm/lọc không có kết quả: minh hoạ + text "Kh�
 - Block nhúng ảnh: full-width, bo góc.
 - Block nhúng âm thanh: thanh audio player ngang.
 - Block nhúng phim: video player/thumbnail có nút play.
+
+**Màn hình rộng:** phần nội dung có độ rộng tối đa của nội dung đọc (¶5), căn giữa; section "Mục từ liên quan" dạng lưới 4 cột.
 
 > ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: section "Mục từ liên quan" (gợi ý các Mục từ khác cùng Cương vực) bên dưới nội dung — chưa có cơ sở trong Business Requirements, là đề xuất UI thêm để tăng khả năng khám phá nội dung.
 
@@ -251,13 +282,24 @@ Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (D-PUB-001 (�
 
 ---
 
-## 5. Hệ thống lưới & Spacing (đề xuất cho dev)
+## 5. Hệ thống lưới, Spacing & Responsive (đề xuất cho dev)
 
 - **Container padding:** 16–20px hai bên.
 - **Bo góc chuẩn:** card lớn 16px, button/pill 20–24px (bo tròn hoàn toàn với nút nhỏ), thumbnail vuông 8–12px.
 - **Khoảng cách giữa các section:** 24–32px.
-- **Grid icon chức năng:** 4 cột đều nhau, gap ngang/dọc ~16px.
-- **Carousel ngang:** card rộng ~65–75% màn hình, hiển thị hé card tiếp theo để gợi ý vuốt.
+
+**Responsive 2 mức:**
+
+- **Màn hình hẹp** (< 1024px ⚠) và **màn hình rộng** (≥ 1024px ⚠).
+- Mô tả "Top bar" và "Bottom tab bar" trong từng màn hình ở ¶4 áp dụng cho màn hình hẹp. Ở màn hình rộng, cả hai được thay bằng Top Nav ngang (D-PUB-012 (¶2.3)).
+- **Container ở màn hình rộng:** vùng nội dung rộng tối đa 1200px ⚠, căn giữa, padding hai bên 24–32px.
+- **Nội dung đọc** (khung Chat AI, nội dung Mục từ): rộng tối đa 760px ⚠, căn giữa.
+- **Grid icon chức năng:** màn hình hẹp 4 cột × 2 hàng; màn hình rộng 8 cột × 1 hàng; gap ~16px.
+- **Carousel ngang:**
+  - Màn hình hẹp: card rộng khoảng 65–75% màn hình, hé một phần card tiếp theo để gợi ý vuốt.
+  - Màn hình rộng: hiện 3–4 card mỗi lượt, có nút mũi tên trái/phải ở hai bên, vẫn cuộn được bằng trackpad.
+- **Filter chips / tab switch:** màn hình hẹp cuộn ngang; màn hình rộng xuống dòng nếu không đủ chỗ.
+- **Hero banner** (D-PUB-001 (¶4.1)) ở màn hình rộng: chiều cao tối đa ~480px, thanh tìm kiếm rộng tối đa ~640px, căn giữa.
 
 ## 6. Icon & Hình ảnh
 
@@ -267,10 +309,10 @@ Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (D-PUB-001 (�
 
 ## 7. Ghi chú kỹ thuật cho dev
 
-- Toàn bộ app mặc định **light theme (nền sáng/kem)**; nếu cần dark mode, cần thiết kế bổ sung (không có trong mockup mới).
-- Các màn hình con (Bảo tàng, Game, Phim, Cộng đồng...) đều giữ **bottom tab bar** để đảm bảo điều hướng nhất quán trong toàn app — trừ Chat AI và Bản đồ (dùng top bar back thay vì tab bar, có thể coi là màn hình dạng "full flow" mở từ trang chủ).
-- Cần chuẩn bị hệ thống **component tái sử dụng**: Card ảnh + tiêu đề, Pill/Chip button, Progress bar, Segmented control (tab switch), Post card (cộng đồng), Bottom tab bar, Top app bar biến thể (menu/back).
-- Nội dung media (ảnh 360°, VR/AR cho bảo tàng số) cần xác định rõ công nghệ triển khai (WebXR, model-viewer, hoặc SDK riêng) — phần này nên trao đổi thêm với dev trước khi implement để chọn giải pháp phù hợp nền tảng.
+- Toàn bộ website mặc định **light theme (nền sáng/kem)**; nếu cần dark mode, cần thiết kế bổ sung (không có trong mockup mới).
+- Ở màn hình hẹp, các màn hình con (Bảo tàng, Game, Phim, Cộng đồng...) đều giữ **bottom tab bar** để điều hướng nhất quán — trừ Chat AI và Bản đồ (dùng top bar back thay vì tab bar, có thể coi là màn hình dạng "full flow" mở từ trang chủ). Ở màn hình rộng, mọi màn hình đều có Top Nav ngang.
+- Cần chuẩn bị hệ thống **component tái sử dụng**: Card ảnh + tiêu đề, Pill/Chip button, Progress bar, Segmented control (tab switch), Post card (cộng đồng), Bottom tab bar, Top app bar biến thể (menu/back), Top Nav ngang.
+- Nội dung media (ảnh 360°, VR/AR cho bảo tàng số) cần xác định rõ công nghệ triển khai (WebXR, model-viewer) — mức hỗ trợ WebXR/AR khác nhau giữa các trình duyệt trong R-NFR-019 (§3.3.4), cần có cách xem thay thế (360°/ảnh) khi trình duyệt không hỗ trợ; phần này nên trao đổi thêm với dev trước khi implement để chọn giải pháp phù hợp nền tảng.
 
 ---
 
