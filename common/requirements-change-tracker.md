@@ -6,10 +6,10 @@
 
 | Luồng | Đã đồng bộ đến |
 |---|---|
-| system-design | DC-20260930-01 |
-| admin-web | DC-20260930-01 |
+| system-design | DC-20260930-02 |
+| admin-web | DC-20260930-02 |
 | partner-web | DC-20260929-05 |
-| public-web | DC-20260930-01 |
+| public-web | DC-20260930-02 |
 
 ## ID lớn nhất đã cấp
 
@@ -51,3 +51,4 @@
 | DC-20260929-04 | 2026-09-29 | Gắn ID `D-PUB-NNN` cho `public-web-layout.md`: ¶4.1–¶4.9 → D-PUB-001–D-PUB-009, ¶3 → D-PUB-010, ¶2.1 → D-PUB-011, ¶2.3 → D-PUB-012. Đổi trích dẫn mục trong cùng file sang `D-PUB-… (¶…)` / `¶N`, kể cả ở `00-claude-instructions.md`. Luồng khác đang trích `public-web ¶2.1`, `public-web ¶4.4` hoặc "`public-web-layout.md` mục 2.1" cần thêm ID vào trích dẫn. Không đổi nội dung cần hiện thực, không đánh số lại mục. | — | — | ✅ 3, 4.23 | ✅ 3 | ✅ 2.1, 2.3, 3, 4.1–4.9 · `00-claude-instructions.md`: 1, 3, 6, 7 |
 | DC-20260929-05 | 2026-09-29 | Job `ingestion.sync_source`: khi trùng với job đang `running`, tạo job nối tiếp payload `{source_id, follows_job_id}` (lấy `id` từ kết quả `InsertTx`, không đọc `river_job`), sự kiện sau gộp vào job nối tiếp; `ByState` gồm `available`, `pending`, `scheduled`, `running`, `retryable`, không gồm `completed`/`cancelled`/`discarded`; khi advisory lock theo `source_id` đang bị giữ, worker hoãn job bằng `JobSnooze` trong `operations.source_sync_debounce_seconds` thay vì bỏ qua. Payload trong bảng loại job thêm dạng `{source_id, follows_job_id}`. | — | ✅ `01`: 1, 4 · `03`: 4.2, 6 · `07`: 2.3 | ✅ 4.26, 4.28 | — | — |
 | DC-20260930-01 | 2026-09-30 | admin-web căn theo cơ chế kích hoạt AI Verification theo cấu hình (D-SD07-004 (¶3.1), D-SD03-023 (¶5.3)): nút kích hoạt ở 4.13/4.14 hiện theo `can_trigger_ai_verification` thay cho danh sách role cố định; tách nhãn "Kích hoạt AI Verification" (`cho_xet_duyet`) / "Kích hoạt lại AI Verification"; "Gửi xét duyệt" hiển thị kết quả theo `status` trả về (`dang_xet_duyet_ai` hoặc `cho_xet_duyet`), không mặc định tự chạy AI; 4.14 gọi thêm `GET /knowledge/knowledge-objects/{id}`; Dashboard 4.22 ghi cụm "Chờ & Xác minh AI" là tự động hoặc thủ công theo cấu hình. partner-web cần kiểm tra các màn hình Nghiên cứu/Xét duyệt Hạng mục tri thức tương ứng. | D-ADM-013, D-ADM-014, D-ADM-022 | — | ✅ 4.13, 4.14, 4.22 · `00-claude-instructions.md`: 6 | ⏳ | — |
+| DC-20260930-02 | 2026-09-30 | Nhật ký hoạt động admin-web căn theo D-SD01-002 (¶2): 4.21 hiển thị và lọc theo `actor_type` (Nhân viên/Hệ thống), lọc theo `entity_type`, lọc theo đối tượng cụ thể (`entity_type` + `entity_id`) qua icon trên dòng hoặc nút "Lịch sử hoạt động" mới ở các màn hình chi tiết (chỉ `quan_tri_he_thong`; 4.28 lọc `entity_type = system_setting`), bộ lọc phản ánh lên URL; nhãn hành động lấy từ Danh mục sự kiện audit của SD01 (mã lạ hiện nguyên mã); popup `detail` trình bày theo quy ước `detail` của SD01. Không đổi API. | D-ADM-029, D-ADM-005, D-ADM-007, D-ADM-009, D-ADM-011, D-ADM-013, D-ADM-014, D-ADM-015, D-ADM-017, D-ADM-018, D-ADM-019, D-ADM-021, D-ADM-028 | — | ✅ 3, 4.5, 4.7, 4.9, 4.11, 4.13–4.15, 4.17–4.19, 4.21, 4.28 · `00-claude-instructions.md`: 6 | — | — |
