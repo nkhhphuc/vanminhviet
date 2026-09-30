@@ -246,6 +246,7 @@ Quy ước `detail` chung:
 - `POST /shared/settings/email-templates/{template}/preview` và `/test`.
 - `POST /assistant/chat` — đã có `assistant_conversation`/`assistant_query_log` (`05` ¶2) làm nhật ký riêng.
 - `POST /internal/ingestion/source-webhook` (chỉ nhận tín hiệu) — kết quả đồng bộ ghi bằng `source.sync` actor `system`.
+- `POST …/trigger-ai-verification` khi lệnh gộp vào job `verification.run` đang chờ/đang chạy (`merged_into_running_job = true`, D-SD03-012 (¶3.3) bước (3), D-SD03-024 (¶5.4)) — không tạo job, không đổi trạng thái.
 - Job nền tạo dữ liệu dẫn xuất/kỹ thuật hoặc dọn dữ liệu theo thời hạn lưu: `knowledge.extract_file_metadata`, `knowledge.generate_transcript`, `assistant.reindex_entry` (lúc chạy), `assistant.refresh_domain_tags`, `assistant.query_log_cleanup`, `search.rebuild_fulltext`, `shared.usage_snapshot`, `shared.job_cleanup`, `shared.audit_log_cleanup`, `shared.apply_storage_lifecycle` — theo dõi qua màn hình job nền (D-SD01-004 (¶4)).
 - Tạo tài khoản Quản trị hệ thống đầu tiên qua seed (D-SD02-002 (¶3.0)), tự sinh/xoá role theo phạm vi (nằm trong `research_topic.create`/`research_topic.delete`).
 - Lần đăng nhập sai chưa tới ngưỡng tạm khoá, lần nhập sai mật khẩu hiện tại khi đổi mật khẩu.

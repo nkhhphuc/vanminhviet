@@ -54,3 +54,9 @@
   - **03-cultural-knowledge-base.md** ¶4.2 (D-SD03-017): `HandleSourceReadyWebhook` — tính trùng theo payload, `ByState` gồm `available`, `pending`, `scheduled`, `running`, `retryable`; trùng với job đang `running` thì enqueue job nối tiếp `{source_id, follows_job_id}` với `id` lấy từ kết quả `InsertTx`, sự kiện sau gộp vào job nối tiếp; gặp advisory lock thì hoãn bằng `JobSnooze` trong `operations.source_sync_debounce_seconds`, áp dụng cho cả job thường và job nối tiếp. ¶6: bullet debounce/coalesce ghi thêm thời gian hoãn và job nối tiếp.
   - **01-architecture-and-tech-stack.md** ¶4 (D-SD01-004): payload `ingestion.sync_source` là `{source_id}` hoặc `{source_id, follows_job_id}`. ¶1 (D-SD01-001): river có thêm hoãn job (snooze).
   - **07-system-settings.md** ¶2.3 (D-SD07-003): `operations.source_sync_debounce_seconds` áp dụng cả cho job hoãn.
+
+## 2026-09-30
+
+- DC-20260930-03: nguồn dữ liệu cho thông báo "AI Verification đang chạy" (theo báo cáo của luồng admin-web).
+  - **03-cultural-knowledge-base.md** ¶5.3 (D-SD03-023): chi tiết Hạng mục tri thức thêm `ai_verification_running` (bool, còn job `verification.run` đang chờ/đang chạy theo định nghĩa job trùng ở D-SD03-012 (¶3.3) bước (3)). ¶5.4 (D-SD03-024): response `trigger-ai-verification` thêm `merged_into_running_job`; lệnh gộp thì không tạo job, không đổi trạng thái, không ghi audit.
+  - **01-architecture-and-tech-stack.md** ¶2 (D-SD01-002): thêm trường hợp trigger bị gộp vào danh sách "Không ghi audit".
