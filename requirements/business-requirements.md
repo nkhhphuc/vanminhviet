@@ -330,7 +330,7 @@ Các bước trong quy trình được thực hiện bởi các vai trò đã m�
 - **2.5.7.** [R-OOS-008] Bản đồ văn hóa.
 - **2.5.8.** [R-OOS-009] Giáo dục.
 
-**Ghi chú:** Mockup ở `public-web/public-web-layout.md` còn có tính năng chuông thông báo (notification bell) chưa được đặc tả nghiệp vụ ở tài liệu này — nội dung thông báo cụ thể sẽ phụ thuộc vào các module tương tác/phát sinh sự kiện phát triển sau này (ví dụ Cộng Đồng Văn Hóa — 2.5.3, Lịch & Sự Kiện — 2.5.5). Sẽ làm rõ khi đặc tả các module đó.
+**Ghi chú:** Mockup ở `public-web/public-web-design.md` còn có tính năng chuông thông báo (notification bell) chưa được đặc tả nghiệp vụ ở tài liệu này — nội dung thông báo cụ thể sẽ phụ thuộc vào các module tương tác/phát sinh sự kiện phát triển sau này (ví dụ Cộng Đồng Văn Hóa — 2.5.3, Lịch & Sự Kiện — 2.5.5). Sẽ làm rõ khi đặc tả các module đó.
 
 ### 2.6. [R-PUB-001] Ứng dụng Web cho Người dùng công khai
 
