@@ -15,8 +15,8 @@ Mỗi tham số được **khai báo trong code Go** (registry trong `/shared`),
 
 `exposure`:
 - `server` — chỉ backend đọc (mặc định).
-- `admin_client` — trả thêm cho frontend Admin nội bộ qua `clientSettings.getSettings` (D-SD07-013) — `GET /client-settings` — mọi Nhân viên đã đăng nhập ở kênh `admin`.
-- `public_client` — trả thêm cho Web công khai qua `clientSettings.getSettings` (D-SD07-013) — `GET /client-settings` ở kênh `public` (không xác thực). Một tham số có thể thuộc cả `admin_client` và `public_client`.
+- `admin_client` — trả thêm cho frontend Admin nội bộ qua `clientSettings.getSettings` — `GET /client-settings` — mọi Nhân viên đã đăng nhập ở kênh `admin`.
+- `public_client` — trả thêm cho Web công khai qua `clientSettings.getSettings` — `GET /client-settings` ở kênh `public` (không xác thực). Một tham số có thể thuộc cả `admin_client` và `public_client`.
 
 ### 2.2. [D-SD07-002] Bảng `system_setting` — chỉ lưu giá trị đã đổi khỏi mặc định
 
@@ -102,10 +102,10 @@ Ký hiệu cột **Áp dụng**: *Ngay* = có hiệu lực cho thao tác tiếp 
 
 ### 3.2. [D-SD07-005] Sửa cấu hình
 
-1. Quản trị hệ thống mở màn hình Cấu hình, sửa một hoặc nhiều tham số trong một nhóm, bấm Lưu → `shared.updateSettings` (D-SD07-012) — `PATCH /shared/settings`.
+1. Quản trị hệ thống mở màn hình Cấu hình, sửa một hoặc nhiều tham số trong một nhóm, bấm Lưu → `shared.updateSettings` — `PATCH /shared/settings`.
 2. Backend validate từng key theo registry, sau đó validate ràng buộc liên key (ví dụ `manual_trigger_roles` không rỗng khi `trigger_mode = manual` — kiểm trên giá trị **sau khi** áp toàn bộ thay đổi của request). Có lỗi → từ chối cả request (không lưu một phần), trả lỗi theo từng key.
 3. Hợp lệ → trong **một transaction**: upsert các dòng `system_setting` (giá trị trùng mặc định thì xoá dòng thay vì upsert); ghi một dòng `audit_log` cho mỗi key thay đổi (D-SD07-006 (¶3.3)); gửi `NOTIFY system_setting_changed` (D-SD07-008 (¶4.2)).
-4. "Khôi phục mặc định" một key → `shared.resetSetting` (D-SD07-012) — `DELETE /shared/settings/{key}`, cùng cơ chế validate liên key, audit và NOTIFY như trên.
+4. "Khôi phục mặc định" một key → `shared.resetSetting` — `DELETE /shared/settings/{key}`, cùng cơ chế validate liên key, audit và NOTIFY như trên.
 
 ### 3.3. [D-SD07-006] Audit log
 
@@ -133,7 +133,7 @@ Ký hiệu cột **Áp dụng**: *Ngay* = có hiệu lực cho thao tác tiếp 
 - **Thời hạn lưu audit log (`operations.audit_log_retention_months`)** (R-NFR-004 (§3.1.2)): periodic job `shared.audit_log_cleanup` (river periodic job, chạy mỗi ngày) xoá các dòng `audit_log` có `created_at < now() - N tháng`, xoá theo lô để không khoá bảng lâu. Đây là thao tác DELETE duy nhất trên `audit_log` (D-SD01-007 (¶7)). Job không tự ghi audit log.
 - **Thời hạn lưu nhật ký hỏi đáp AI (`assistant.query_log_retention_days`)** (R-AI-014 (§2.4.9.4)): periodic job `assistant.query_log_cleanup` (chạy mỗi ngày, thuộc `/assistant` — package sở hữu bảng) xoá các hội thoại có `last_message_at < now() - N ngày`, cùng toàn bộ lượt hỏi–đáp của hội thoại đó (D-SD05-006 (¶3.3)).
 - **Chuyển tư liệu cũ sang cold storage (`operations.source_cold_storage_after_days`)**: khi lưu key này, enqueue job `shared.apply_storage_lifecycle` cùng transaction. Job gọi API lifecycle của S3/MinIO trên bucket Tư liệu gốc: đặt (hoặc gỡ, khi giá trị là `null`) quy tắc chuyển **các phiên bản không còn là bản hiện hành** (noncurrent versions) sang tầng lưu trữ lạnh sau N ngày. Tên tầng lưu trữ lạnh lấy từ biến môi trường `STORAGE_COLD_TIER` (cấu hình hạ tầng). Không xoá phiên bản nào (R-KB-029 (§2.2.3.4) — D-SD01-001 (¶1)).
-- **Rate limit Chat AI công khai (`assistant.public_rate_limit_*`)**: middleware Go gắn trên route `assistant.chat` (D-SD05-012) — `POST /api/v1/public/assistant/chat`. Đếm theo IP client lấy từ header `X-Forwarded-For` do Traefik gắn (chỉ tin header khi request đến từ Traefik). Thuật toán cửa sổ cố định, lưu bộ đếm trong bộ nhớ tiến trình. ⚠ Nếu chạy nhiều bản `/cmd/api` song song, giới hạn tính riêng cho từng bản — chấp nhận ở quy mô hiện tại (D-SD01-008 (¶8)); cần chuyển bộ đếm sang Postgres hoặc Redis nếu mở rộng ngang. Vượt ngưỡng → HTTP 429 với lỗi `rate_limited` (quy ước lỗi chung D-SD01-003 (¶3)), kèm header `Retry-After`; không ghi `assistant_query_log`.
+- **Rate limit Chat AI công khai (`assistant.public_rate_limit_*`)**: middleware Go gắn trên route `assistant.chat` — `POST /api/v1/public/assistant/chat`. Đếm theo IP client lấy từ header `X-Forwarded-For` do Traefik gắn (chỉ tin header khi request đến từ Traefik). Thuật toán cửa sổ cố định, lưu bộ đếm trong bộ nhớ tiến trình. ⚠ Nếu chạy nhiều bản `/cmd/api` song song, giới hạn tính riêng cho từng bản — chấp nhận ở quy mô hiện tại (D-SD01-008 (¶8)); cần chuyển bộ đếm sang Postgres hoặc Redis nếu mở rộng ngang. Vượt ngưỡng → HTTP 429 với lỗi `rate_limited` (quy ước lỗi chung D-SD01-003 (¶3)), kèm header `Retry-After`; không ghi `assistant_query_log`.
 
 ### 4.4. [D-SD07-010] Mẫu email
 
@@ -159,7 +159,7 @@ Chi tiết luồng ở D-SD02-004 (¶3.2) (dùng `identity.login_max_failed_atte
 | POST | `/shared/settings/email-templates/{template}/preview` | `shared.previewEmailTemplate` | `template ∈ {invite, password_reset}` — body `{subject, body_html}` (bản đang soạn, chưa lưu); trả `{subject, body_html, body_text}` đã render với dữ liệu mẫu, hoặc lỗi validate (D-SD07-010 (¶4.4)) |
 | POST | `/shared/settings/email-templates/{template}/test` | `shared.testEmailTemplate` | Gửi thử bản đang soạn (body như trên) tới email của chính Quản trị hệ thống đang đăng nhập, dữ liệu mẫu, link giả không dùng được. Không ghi audit log (không thay đổi dữ liệu) |
 
-Mỗi phần tử trong `shared.getSettings` (D-SD07-012) — `GET /shared/settings`:
+Mỗi phần tử trong `shared.getSettings` — `GET /shared/settings`:
 
 ```json
 {
@@ -176,7 +176,7 @@ Mỗi phần tử trong `shared.getSettings` (D-SD07-012) — `GET /shared/setti
 }
 ```
 
-- `updated_by` ghép ở tầng handler (`/cmd/api`) bằng `identity.GetEmployeeSummaries` — cùng cách `shared.listAuditLogs` (D-SD01-002) — `GET /shared/audit-logs`.
+- `updated_by` ghép ở tầng handler (`/cmd/api`) bằng `identity.GetEmployeeSummaries` — cùng cách `shared.listAuditLogs` — `GET /shared/audit-logs`.
 - Nhãn hiển thị tiếng Việt và mô tả của từng tham số do frontend quản lý (theo `key`), không trả từ API.
 - Lỗi validate (`PATCH`, `DELETE`): HTTP 422, `error_code = invalid_settings`, kèm `details: [{key, reason}]`.
 
@@ -193,8 +193,8 @@ Mỗi phần tử trong `shared.getSettings` (D-SD07-012) — `GET /shared/setti
 | Endpoint | admin | partner | public |
 |---|---|---|---|
 | `/shared/settings/*` | ✓ (`quan_tri_he_thong`) | | |
-| `clientSettings.getSettings` (D-SD07-013) | ✓ | | ✓ |
-| `auth.getPasswordPolicy` (D-SD02-009) | ✓ | ✓ | |
+| `clientSettings.getSettings` | ✓ | | ✓ |
+| `auth.getPasswordPolicy` | ✓ | ✓ | |
 
 ## 6. Vấn đề mở / giả định
 

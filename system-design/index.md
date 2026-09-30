@@ -19,7 +19,7 @@
 `07 settings` ← `02 identity` ← `03 knowledge…` ← `04 encyclopedia` ← `05 assistant`
 
 - `01` là nền cho mọi tài liệu. `07` (cấu hình, thuộc package `/shared`) chỉ phụ thuộc `01`; 02, 03, 05 đọc cấu hình qua getter `shared.Settings` (D-SD07-007 (¶4.1)).
-- API `/shared/settings` dùng xác thực và role `quan_tri_he_thong` của 02, và ghép `updated_by` bằng `identity.GetEmployeeSummaries` ở tầng handler `/cmd/api` — cùng cách `shared.listAuditLogs` (D-SD01-002) — `GET /shared/audit-logs`. Đây là ghép nối ở tầng entrypoint, không phải phụ thuộc giữa package: `/shared` không import `/identity`.
+- API `/shared/settings` dùng xác thực và role `quan_tri_he_thong` của 02, và ghép `updated_by` bằng `identity.GetEmployeeSummaries` ở tầng handler `/cmd/api` — cùng cách `shared.listAuditLogs` — `GET /shared/audit-logs`. Đây là ghép nối ở tầng entrypoint, không phải phụ thuộc giữa package: `/shared` không import `/identity`.
 - `06` (AI Gateway) được gọi bởi 03 (`/verification`, transcript) và 05 (`/assistant`).
 - Không có phụ thuộc ngược chiều mũi tên; giao tiếp giữa module qua interface nội bộ, không JOIN chéo bảng (D-SD01-002 (¶2)).
 

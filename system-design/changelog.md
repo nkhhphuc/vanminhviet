@@ -68,3 +68,8 @@
   - **01**–**07**: thêm cột `operationId` vào mọi bảng endpoint (133 endpoint); `07` ¶5.2 (D-SD07-013) ghi operationId dưới tiêu đề; `06` ¶7 gắn `gateway.getHealth` cho `GET /v1/health`.
   - **01**–**07**, `index.md`: đổi 216 chỗ trích endpoint sang dạng `` `op` (D-…) `` (văn xuôi có đủ method + path giữ thêm ` — METHOD /path`), bỏ trích dẫn cùng mục bị lặp ngay sau; danh mục sự kiện audit ở `01` ¶2 ghi operationId thay cho path viết tắt.
   - `common/tools/check-requirement-refs.py`: đọc operationId từ bảng endpoint; báo bảng thiếu cột, endpoint thiếu operationId, sai định dạng/tiền tố, trùng, endpoint trong mục chưa có ID, trích `op` sai hoặc sai ID mục, và trích endpoint chỉ bằng method + path.
+
+- DC-20260930-05: trích endpoint chỉ bằng operationId, bỏ ID mục đi kèm.
+  - `common/requirements-design-sync.md`: mục 2.5 dạng chuẩn chỉ ghi operationId, trích mục hành vi thì ghi riêng theo mục 2.4, không ghi ID trần ngay sau operationId; mục 5 đổi lỗi tương ứng; mục 7 Code trích endpoint chỉ bằng operationId.
+  - `common/tools/check-requirement-refs.py`: kiểm tra mọi operationId được trích; báo lỗi khi có ID mục trần ngay sau operationId.
+  - **01**–**07**, `index.md`: bỏ ID mục đi kèm operationId ở 215 chỗ.

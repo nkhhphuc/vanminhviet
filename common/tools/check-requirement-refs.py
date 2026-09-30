@@ -53,10 +53,10 @@ EP_ROW_RE = re.compile(rf"^\|\s*({METHOD})\s*\|\s*`([^`]+)`\s*\|([^|]*)\|")
 EP_ROW06_RE = re.compile(rf"^\|\s*\d+\s*\|[^|]*\|\s*`({METHOD}) ([^`]+)`\s*\|([^|]*)\|")
 OP_BULLET_RE = re.compile(r"^- operationId: `([^`]+)`")
 OP_INLINE_RE = re.compile(rf"`({METHOD}) ([^`]+)` \(operationId `([^`]+)`\)")
-OP_CITE_RE = re.compile(rf"`({OP})`\s*\(({DID})\)")
+OP_CITE_RE = re.compile(rf"`({OP})`(\s*\(({DID})\))?")
 # Trích endpoint bằng method + path: `POST /knowledge/...`, `GET .../{id}`
 MP_RE = re.compile(rf"`({METHOD}) ((?:/|\.\.\.|…)[^`\s]*)[^`]*`")
-MP_AFTER_OP_RE = re.compile(rf"`{OP}`\s*\({DID}\)\s*—\s*$")
+MP_AFTER_OP_RE = re.compile(rf"`{OP}`\s*—\s*$")
 TRACKER_R_RE = re.compile(r"\|\s*([A-Z]+)\s*\|\s*(R-[A-Z]+-(\d{3}))\s*\|")
 TRACKER_D_RE = re.compile(r"\|\s*((?:SD0[1-9]|ADM|PRT|PUB))\s*\|\s*(D-[A-Z0-9]+-(\d{3}))\s*\|")
 
@@ -281,11 +281,11 @@ def check_file(path, ids, dids, secs, own_code, ops, paths):
                 errors.append(f"{where}: trích dẫn {m.group(0)} không kèm ID — mục này là {secs[code][sec]}")
 
         for m in OP_CITE_RE.finditer(body):
-            op, did = m.groups()
+            op, _, did = m.groups()
             if op not in ops:
                 errors.append(f"{where}: operationId {op} không có trong bảng endpoint nào (đã bỏ hoặc gõ sai)")
-            elif ops[op][0] != did:
-                errors.append(f"{where}: {op} ghi {did}, endpoint này nằm ở mục {ops[op][0]}")
+            if did:
+                errors.append(f"{where}: {op} kèm ID mục {did} — chỉ ghi operationId (mục 2.5)")
 
         # Tiêu đề mục và dòng bảng endpoint là nơi khai báo endpoint, không phải trích dẫn
         if not (head or EP_ROW_RE.match(line) or EP_ROW06_RE.match(line)):
@@ -295,7 +295,7 @@ def check_file(path, ids, dids, secs, own_code, ops, paths):
                 op = endpoint_of(m.group(1), m.group(2), paths)
                 if op:
                     errors.append(f"{where}: trích endpoint {m.group(0)} chỉ bằng method + path — "
-                                  f"dùng `{op}` ({ops[op][0]})")
+                                  f"dùng `{op}`")
 
         for m in OLD_WEB_RE.finditer(line):
             errors.append(f"{where}: dạng cũ \"{m.group(0).strip()}\" — dùng ID kèm ¶ hoặc \"{m.group(1)} ¶…\"")
