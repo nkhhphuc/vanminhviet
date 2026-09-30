@@ -62,7 +62,7 @@ TRACKER_D_RE = re.compile(r"\|\s*((?:SD0[1-9]|ADM|PRT|PUB))\s*\|\s*(D-[A-Z0-9]+-
 
 WEB_FILES = {"ADM": "admin-web/admin-web-design.md",
              "PRT": "partner-web/partner-web-design.md",
-             "PUB": "public-web/public-web-layout.md"}
+             "PUB": "public-web/public-web-design.md"}
 WEB_CODE = {"admin-web": "ADM", "partner-web": "PRT", "public-web": "PUB"}
 
 

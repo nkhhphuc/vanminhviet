@@ -9,7 +9,7 @@
 | system-design | DC-20260930-05 |
 | admin-web | DC-20260930-07 |
 | partner-web | DC-20260930-06 |
-| public-web | DC-20260930-07 |
+| public-web | DC-20260930-08 |
 
 ## ID lớn nhất đã cấp
 
@@ -57,3 +57,4 @@
 | DC-20260930-05 | 2026-09-30 | Trích endpoint chỉ bằng operationId, không kèm ID mục thiết kế (`common/requirements-design-sync.md` mục 2.5): dạng chuẩn `` `op` ``, kèm ` — METHOD /path` khi cần. Ghi ID mục trần ngay sau operationId là lỗi; cần dẫn tới mục mô tả hành vi thì trích mục đó theo mục 2.4. Script kiểm tra mọi operationId được trích. Thay cho dạng `` `op` (D-…) `` của DC-20260930-04: admin-web, partner-web khi xử lý DC-20260930-04 trích theo dạng mới. Code: trong kế hoạch, code, test trích endpoint chỉ bằng operationId, không kèm ID mục. | — | ✅ `01`: 2, 4, 7, 9 · `02`: 3.0, 4, 5.1, 5.2, 6 · `03`: 2.7, 3.6, 4.2, 4.4, 5.1–5.3, 5.6, 6 · `04`: 2.2, 2.4, 3.2, 3.4, 5.3, 6 · `05`: 3.2, 4.5, 5.1, 5.2, 6 · `06`: 1, 2, 3.2–3.4, 4, 5, 6, 8 · `07`: 2.1, 3.2, 4.3, 5.1, 5.3 · `index.md`: 2 | — | — | — |
 | DC-20260930-06 | 2026-09-30 | partner-web bổ sung vào danh sách API các endpoint đã có ở system-design, mount `partner`: presigned URL tải lên/tải xuống file Nội dung và file Tư liệu gốc (4.7–4.9), `knowledge.listClaims` ở 4.9, `knowledge.searchResearchTopicEmployees` ở 4.10. Không đổi API, không đổi hành vi màn hình. Code: partner app gọi đủ các endpoint này. | D-PRT-007, D-PRT-008, D-PRT-009, D-PRT-010 | — | — | ✅ 4.7–4.10 | — |
 | DC-20260930-07 | 2026-09-30 | admin-web bổ sung vào danh sách API các endpoint đã có ở system-design, mount `admin`: `auth.getMe` (¶3 — khôi phục phiên khi tải lại trang), `identity.getEmployee` (4.5), `identity.getOrganization` (4.7), `knowledge.searchResearchTopicEmployees` (4.9 — ô tìm Nhân viên ở khối Chủ nhiệm đề tài và Quản lý nhân sự đề tài), `knowledge.getSourceFileDownloadUrl` (4.11 — nút "Xem/Tải" từng file, disable khi `is_missing`). Không đổi API. Code: admin app gọi đủ các endpoint này. | D-ADM-029, D-ADM-005, D-ADM-007, D-ADM-009, D-ADM-011 | — | ✅ 3, 4.5, 4.7, 4.9, 4.11 · `00-claude-instructions.md`: 6 | — | — |
+| DC-20260930-08 | 2026-09-30 | Đổi tên tài liệu thiết kế web công khai `public-web/public-web-layout.md` → `public-web/public-web-design.md`, cùng quy ước tên với `admin-web-design.md`, `partner-web-design.md`. Không đổi nội dung, ID, số mục. `common/requirements-design-sync.md` mục 2.4 và `common/tools/check-requirement-refs.py` cập nhật đường dẫn. requirements: ghi chú ở `business-requirements.md` (dòng nhắc mockup chuông thông báo) cần đổi đường dẫn. Code: xoá bản `public-web-layout.md` cũ trong `docs/` của repo khi đồng bộ, cập nhật tham chiếu tên file trong kế hoạch. | — | — | — | — | ✅ đổi tên file · `00-claude-instructions.md`: 1, 2, 4, 5, 6, 7 |

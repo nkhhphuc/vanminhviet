@@ -51,7 +51,7 @@ requirements → system-design → admin-web / partner-web / public-web → code
 
 ### 2.4. ID và cách trích dẫn mục thiết kế
 
-- **Tài liệu thiết kế** gồm: `system-design/01`–`07`, `admin-web/admin-web-design.md`, `partner-web/partner-web-design.md`, `public-web/public-web-layout.md`. Các file `00-claude-instructions.md`, `changelog.md` và file trong `common/` không thuộc nhóm này. Khi trích mục của các file đó, vẫn ghi "mục N".
+- **Tài liệu thiết kế** gồm: `system-design/01`–`07`, `admin-web/admin-web-design.md`, `partner-web/partner-web-design.md`, `public-web/public-web-design.md`. Các file `00-claude-instructions.md`, `changelog.md` và file trong `common/` không thuộc nhóm này. Khi trích mục của các file đó, vẫn ghi "mục N".
 - **Định dạng ID**: `D-<mã file>-<số thứ tự 3 chữ số>`. Mã file:
 
 | Mã | File |
@@ -59,7 +59,7 @@ requirements → system-design → admin-web / partner-web / public-web → code
 | SD01 … SD07 | `system-design/01-…` … `07-…` (theo số file) |
 | ADM | `admin-web/admin-web-design.md` |
 | PRT | `partner-web/partner-web-design.md` |
-| PUB | `public-web/public-web-layout.md` |
+| PUB | `public-web/public-web-design.md` |
 
 - Khi thêm một tài liệu thiết kế mới, phải bổ sung mã file của nó vào bảng này trước khi cấp ID.
 - **Mục được gắn ID** là các mục mà luồng khác hoặc team Code trỏ tới:
