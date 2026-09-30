@@ -22,3 +22,15 @@
 - DC-20260929-02: đổi trích dẫn admin-web sang `D-ADM-029 (¶3)`, `D-ADM-022 (¶4.22)`. Không đổi nội dung thiết kế. File: **partner-web-design.md** (mục 3, 4.11).
 - DC-20260929-03: gắn ID `D-PRT-001`–`D-PRT-012` cho màn hình 4.1–4.12 và `D-PRT-013` cho mục 3 (Quy ước chung); đổi trích dẫn mục trong cùng file (kể cả số màn hình viết trần) sang `D-PRT-… (¶…)` / `¶N`. Không đổi nội dung thiết kế. File: **partner-web-design.md**, **00-claude-instructions.md** (mục 3 thêm quy ước ID).
 - DC-20260929-04: đổi trích dẫn bảng màu public-web sang D-PUB-011 (¶2.1), gỡ ⚠ chờ public-web cấp ID. Không đổi nội dung thiết kế. File: **partner-web-design.md** (mục 3).
+
+## 2026-09-30
+
+- DC-20260930-01: căn theo cơ chế kích hoạt AI Verification theo cấu hình (D-SD07-004 (¶3.1), D-SD03-023 (¶5.3)). File **partner-web-design.md**:
+  - Mục 4.7: "Gửi xét duyệt" không mặc định tự chạy AI Verification — hiện toast theo `status` trả về (`dang_xet_duyet_ai` / `cho_xet_duyet`); `cho_xet_duyet` ghi rõ khi nào hạng mục dừng ở đây; nút kích hoạt hiện theo `can_trigger_ai_verification` thay cho role cố định, tách nhãn "Kích hoạt AI Verification" (`cho_xet_duyet`) / "Kích hoạt lại AI Verification" (`dang_xet_duyet_ai`, `khong_dat_xet_duyet`).
+  - Mục 4.8: nút "Kích hoạt lại AI Verification" tại `da_qua_xet_duyet_ai` hiện theo `can_trigger_ai_verification`; API thêm `GET /knowledge/knowledge-objects/{id}`.
+  - Mục 4.11: cụm "Chờ & Xác minh AI" ghi "tự động hoặc kích hoạt thủ công theo cấu hình".
+- DC-20260930-03: mục 4.7 — tại `dang_xet_duyet_ai` hiển thị theo `ai_verification_running` (`true`: "Đang chạy AI Verification..."; `false`: banner vàng báo AI Verification đã dừng, cần kích hoạt lại, thêm vế "liên hệ Nhân viên được phép kích hoạt AI Verification của đề tài" khi người xem không có nút kích hoạt); kết quả kích hoạt theo `merged_into_running_job` (`true`: thông báo AI Verification đang chạy, không tạo job mới; `false`: toast "Đã kích hoạt AI Verification"), dùng chung cho 4.8. File: **partner-web-design.md**.
+- `00-claude-instructions.md` mục 7: ghi nhận lỗi ghi nhầm cột ở dòng DC-20260930-03 của sổ theo dõi, để xử lý sau.
+- DC-20260930-04: đổi toàn bộ trích dẫn endpoint sang operationId, dạng `` `op` `` (giữ ` — METHOD /path` ở route đọc file Tư liệu gốc vì đang nói về nhóm mount), không kèm ID mục. Không đổi nội dung thiết kế. File: **partner-web-design.md** (mục 3, 4.1–4.10, 4.12, 6), **00-claude-instructions.md** (mục 6).
+- DC-20260930-06: bổ sung vào danh sách API các endpoint đã có ở system-design, mount `partner`: 4.7 thêm `knowledge.createKnowledgeObjectFileUploadUrl`, `knowledge.getKnowledgeObjectFileDownloadUrl`, `knowledge.getResearchTopicSourceFileDownloadUrl`; 4.8 thêm 2 op download-url; 4.9 thêm `knowledge.listClaims` và 2 op download-url; 4.10 thêm `knowledge.searchResearchTopicEmployees`. File: **partner-web-design.md**.
+- `00-claude-instructions.md` mục 7: gỡ ghi chú về lỗi ghi nhầm cột ở dòng DC-20260930-03, vì luồng admin-web đã sửa sổ theo dõi. Mốc đồng bộ partner-web: DC-20260930-06.
