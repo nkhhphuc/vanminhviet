@@ -9,7 +9,7 @@
 | system-design | DC-20260930-05 |
 | admin-web | DC-20260930-07 |
 | partner-web | DC-20260930-06 |
-| public-web | DC-20260930-02 |
+| public-web | DC-20260930-07 |
 
 ## ID lớn nhất đã cấp
 
