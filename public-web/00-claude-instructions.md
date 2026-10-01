@@ -40,7 +40,7 @@ Khi phát hiện một điểm trong `public-web-design.md` không có cơ sở 
 - **UI-first cho các module ngoài phạm vi**: các màn hình mô tả module chưa có đặc tả nghiệp vụ (Bảo tàng số 3D, Bản đồ văn hóa, Game lịch sử, Phim & TV, Cộng đồng...) vẫn giữ trong `public-web-design.md` như thiết kế đi trước, không xoá.
 - **Chỉ website, responsive 2 mức**: `public-web-design.md` chỉ đặc tả website (Next.js), ứng dụng di động không thuộc phạm vi. Bố cục 2 mức: màn hình hẹp dùng Bottom Tab Bar, màn hình rộng dùng Top Nav ngang. Khác biệt giữa hai mức viết thành quy tắc chung, chỉ ghi riêng các ngoại lệ.
 - **Mục 4.9 (Cộng đồng)**: tạm gác lại, chưa biên tập chi tiết — chờ quay lại sau.
-- **Theme**: sáng (light mode), nền trắng ngà/kem, màu nhấn đỏ/đỏ mận, icon set minh hoạ màu (illustrated). Áp dụng cho toàn bộ `public-web-design.md` (`public-web` ¶2 Design System, mô tả màu sắc ở `public-web` ¶4, ghi chú theme ở `public-web` ¶7).
+- **Theme**: sáng (light mode), nền trắng ngà, màu nhấn đỏ son, icon set minh hoạ màu (illustrated); nhận diện (màu, font, logo, phong cách ảnh) dùng chung với landing vanminhviet.org. Áp dụng cho toàn bộ `public-web-design.md` (`public-web` ¶2 Design System, mô tả màu sắc ở `public-web` ¶4, ghi chú theme ở `public-web` ¶7).
 - **Thứ tự màn hình 4.x**: Bách Khoa Toàn Thư (Danh sách Mục từ, Trang chi tiết Mục từ) đặt ngay sau D-PUB-002 (¶4.2) (Chat AI); các màn hình còn lại theo sau: 4.5 Bản đồ văn hóa, 4.6 Bảo tàng số 3D, 4.7 Game lịch sử, 4.8 Phim & TV, 4.9 Cộng đồng.
 
 ## 7. Trạng thái hiện tại — đối chiếu phạm vi (10 điểm)

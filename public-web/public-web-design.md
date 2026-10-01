@@ -15,31 +15,40 @@
 
 ## 2. Design System
 
+Nhận diện thương hiệu (màu, font, logo, phong cách ảnh) dùng chung với landing page giới thiệu dự án vanminhviet.org (`assets/css/main.css`). Bố cục và mật độ thông tin theo đặc tả riêng của tài liệu này.
+
 ### 2.1 [D-PUB-011] Bảng màu (Color Palette)
 
-| Vai trò | Mô tả | Gợi ý mã màu |
+| Vai trò | Mô tả | Mã màu |
 |---|---|---|
-| Nền chính (Background) | Trắng ngà / kem sáng | `#FAF6EE` – `#F5EFE3` |
-| Nền phụ / Card | Trắng, viền xám nhạt phân tách | `#FFFFFF` (viền `#E7DECD`) |
-| Màu nhấn chính (Accent) | Đỏ / đỏ mận | `#A6192E` – `#8E1B2B` |
-| Chữ chính | Đen / nâu đậm | `#241C15` |
-| Chữ phụ | Xám nâu nhạt | `#7A7166` |
-| Đường viền / Divider | Xám kem nhạt | `#E7DECD` |
-| Icon active (tab bar) | Đỏ, trùng màu accent | Trùng màu accent |
+| Nền chính (Background) | Trắng ngà | `#F7F2EA` |
+| Nền phụ / Card | Trắng, viền phân tách | `#FFFFFF` (viền `#E6E0D7`) |
+| Màu nhấn chính (Accent) | Đỏ son — logo, nút CTA, icon active, link, badge | `#C4171D` |
+| Accent đậm | Đỏ đậm — hover/pressed của phần tử dùng Accent | `#9C2B2B` |
+| Chữ trên nền Accent | Trắng | `#FFFFFF` |
+| Chữ chính | Đen nâu | `#252421` |
+| Chữ phụ | Xám nâu | `#6D6A64` |
+| Đường viền / Divider | Xám kem nhạt | `#E6E0D7` |
+| Màu phụ — Vàng đồng | Hoạ tiết, đường kẻ trang trí, viền/biểu tượng badge | `#C8944A` |
+| Màu phụ — Xanh rêu | Nền khối tối (footer, section nhấn mạnh); chữ trên nền này dùng `#F7F2EA` | `#2F4B3F` |
+| Icon active (tab bar) | Trùng màu Accent | `#C4171D` |
 
-**Nguyên tắc:** Nền sáng chủ đạo (light mode by default), điểm nhấn đỏ/đỏ mận cho logo, tiêu đề, icon, nút CTA, badge — vẫn giữ cảm giác cổ kính, trang trọng nhưng theo tông sáng, ấm áp thay vì tông tối như trước.
+**Nguyên tắc:** Nền sáng chủ đạo, đỏ son là màu nhấn duy nhất cho phần tử tương tác. Hai màu phụ chỉ dùng trang trí, không dùng cho nút/CTA/link. Vàng đồng không dùng làm màu chữ trên nền sáng (không đủ tương phản).
 
 ### 2.2 Typography
 
-- **Heading/Logo:** Font serif hoặc có chân cách điệu, chữ hoa, letter-spacing rộng (dùng cho "VĂN MINH VIỆT", tiêu đề trang chủ) — màu đỏ.
-- **Tiêu đề mục (H2/H3):** Sans-serif đậm (bold/semibold), màu đen/nâu đậm.
-- **Body text:** Sans-serif thường, cỡ trung bình, màu xám nhạt cho mô tả phụ.
-- **Nút bấm/label tab:** Sans-serif nhỏ, đều, dễ đọc ở kích thước icon 20–24px.
+- **Font:** sans-serif **Be Vietnam Pro** (400/500/600/700), dự phòng `system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif`; serif **Lora** (500/600/700), dự phòng `Georgia, "Times New Roman", serif`. Nạp từ Google Fonts; với Next.js nạp qua `next/font`, subset `vietnamese`.
+- **Logo / chữ "VĂN MINH VIỆT":** serif, chữ hoa, màu Accent.
+- **H1 (tiêu đề trang), H2 (tiêu đề section):** Lora, màu Chữ chính.
+- **H3 (tiêu đề card, khối con):** Be Vietnam Pro semibold, màu Chữ chính.
+- **Nhãn section nhỏ** (vd. "KHÁM PHÁ NỔI BẬT", "HÔM NAY"): Be Vietnam Pro, chữ hoa, letter-spacing rộng, màu Accent.
+- **Body text:** Be Vietnam Pro regular, màu Chữ chính; mô tả phụ màu Chữ phụ.
+- **Nút bấm/label tab:** Be Vietnam Pro medium, cỡ nhỏ.
 
 ### 2.3 [D-PUB-012] Thành phần dùng chung (Shared Components)
 
 - **Top App Bar (màn hình hẹp):** gồm nút back/menu (trái), tiêu đề màn hình (giữa), icon action (phải: search/notification/share...). Nút back quay lại trang trước trong lịch sử trình duyệt; nếu người dùng mở màn hình trực tiếp từ liên kết ngoài thì về Trang chủ.
-- **Top Nav ngang (màn hình rộng):** thay cho cả Top App Bar và Bottom Tab Bar, dính ở đầu trang (sticky), nền trắng, viền dưới `#E7DECD`.
+- **Top Nav ngang (màn hình rộng):** thay cho cả Top App Bar và Bottom Tab Bar, dính ở đầu trang (sticky), nền trắng, viền dưới `#E6E0D7`.
   - **Bên trái:** logo và chữ "VĂN MINH VIỆT" màu đỏ; bấm vào thì về Trang chủ.
   - **Ở giữa:** 5 mục có cùng đích đến với 5 tab của Bottom Tab Bar: Trang chủ · Khám phá · [mục trung tâm] · Cộng đồng · Cá nhân.
     - Mục trung tâm hiển thị dạng pill viền đỏ, có icon trống đồng, để giữ vai trò nổi bật như nút trung tâm.
@@ -47,7 +56,7 @@
   - **Bên phải:** icon tìm kiếm và chuông thông báo.
   - **Tiêu đề màn hình** là H1 ở đầu vùng nội dung. Các icon action của màn hình (share...) đặt cạnh tiêu đề. Không có nút back riêng, người dùng dùng nút back của trình duyệt.
 - **Bottom Tab Bar (màn hình hẹp, 5 tab cố định):** Trang chủ · Khám phá · [Nút trung tâm nổi bật, icon trống đồng, dùng để mở nhanh tính năng chính/AI] · Cộng đồng · Cá nhân. Nút trung tâm có style khác biệt: hình tròn, viền đỏ, nổi lên trên thanh tab. *Tab "Khám phá" dẫn tới màn hình Bách Khoa Toàn Thư (D-PUB-003 (¶4.3)) — cùng đích đến với icon "Bách khoa" ở lưới chức năng Trang chủ.*
-- **Card hình chữ nhật bo góc** (radius ~12–16px) dùng cho danh sách nội dung nổi bật, ảnh nền + gradient tối phía dưới để đè chữ.
+- **Card hình chữ nhật bo góc** (radius 16px, ¶5) dùng cho danh sách nội dung nổi bật, ảnh nền + gradient tối phía dưới để đè chữ.
 - **Nút CTA chính:** nền đỏ, chữ trắng, bo góc, dùng cho hành động chính (vd: "Chơi ngay", "Tìm hiểu ngay").
 - **Search bar:** bo tròn/bo góc lớn, nền sáng hơn/khác tông nhẹ so với nền chính (viền mảnh xám kem), icon kính lúp bên phải, placeholder dạng câu hỏi gợi ý.
 - **Grid icon chức năng:** lưới 4 cột, mỗi ô gồm icon minh hoạ màu (illustrated), nền sáng, bo góc vuông + label bên dưới.
@@ -285,7 +294,7 @@ Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (D-PUB-001 (�
 ## 5. Hệ thống lưới, Spacing & Responsive (đề xuất cho dev)
 
 - **Container padding:** 16–20px hai bên.
-- **Bo góc chuẩn:** card lớn 16px, button/pill 20–24px (bo tròn hoàn toàn với nút nhỏ), thumbnail vuông 8–12px.
+- **Bo góc chuẩn** (thang 8 / 16 / 24px và pill): thumbnail và ô lưới chức năng 8px; card 16px; khối lớn (hero banner, card "Hôm nay", banner nổi bật) 24px; nút, chip, search bar, input bar dạng pill (bo tròn hoàn toàn).
 - **Khoảng cách giữa các section:** 24–32px.
 
 **Responsive 2 mức:**
@@ -304,8 +313,8 @@ Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (D-PUB-001 (�
 ## 6. Icon & Hình ảnh
 
 - Icon set dùng dạng **minh hoạ màu (illustrated), phong cách thân thiện, đồng bộ 1 style** (gợi ý: bộ icon custom theo mô-típ hoa văn Đông Sơn, tông màu đỏ/be/nâu đất).
-- Ảnh minh họa mang phong cách **tranh vẽ/render 3D chất lượng cao**, tông màu ấm (vàng, nâu, cam) trên nền tối — nên thống nhất bằng một bộ ảnh AI-generated hoặc minh họa custom theo đúng phong cách "cổ trang – huyền sử".
-- Logo: biểu tượng trống đồng/hoa văn cách điệu, màu đỏ, đặt trong vòng tròn viền mảnh — dùng làm avatar AI, icon nút trung tâm tab bar, watermark.
+- Ảnh minh hoạ theo phong cách **thuỷ mặc, tông sáng**: nền giấy ngà, nét mực nhạt, điểm xuyết đỏ son/vàng đồng, mô-típ trống đồng, hạc, núi, mái đình — thống nhất với landing vanminhviet.org. Ảnh thật của Mục từ hiển thị nguyên trạng, không áp phong cách này.
+- Logo: dùng logo của landing vanminhviet.org ở Top Nav và Top App Bar Trang chủ. Biểu tượng trống đồng cách điệu màu đỏ trong vòng tròn viền mảnh dùng làm avatar AI, icon nút trung tâm tab bar, watermark.
 
 ## 7. Ghi chú kỹ thuật cho dev
 
@@ -316,4 +325,4 @@ Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (D-PUB-001 (�
 
 ---
 
-*Tài liệu này mô tả lại giao diện dựa trên bản mockup hình ảnh do người dùng cung cấp, dùng làm cơ sở tham khảo khi triển khai — các thông số màu sắc/spacing là gợi ý ước lượng, cần đối chiếu lại với file thiết kế gốc (Figma/XD) nếu có để lấy giá trị chính xác.*
+*Tài liệu này mô tả lại giao diện dựa trên bản mockup hình ảnh do người dùng cung cấp. Màu, font và bo góc theo bộ nhận diện của landing vanminhviet.org; các thông số spacing là gợi ý ước lượng, cần đối chiếu lại với file thiết kế gốc (Figma/XD) nếu có.*
