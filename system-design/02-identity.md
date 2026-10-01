@@ -81,16 +81,35 @@ Quy tắc ai được gán role theo phạm vi cho Nhân viên khác — logic n
 
 ## 3. Luồng trạng thái / nghiệp vụ
 
-### 3.0 [D-SD02-002] Khởi tạo tài khoản Quản trị hệ thống đầu tiên (bootstrap)
+### 3.0 [D-SD02-002] Tài khoản Quản trị hệ thống gốc (root admin)
 
 Hiện thực R-ID-019 (§2.1.5.2.1): tài khoản Quản trị hệ thống đầu tiên được tạo trong quá trình triển khai, thuộc Tổ chức Văn Minh Việt, dùng được ngay không qua email mời.
 
-1. Một seed/migration chạy khi triển khai một môi trường mới — cùng cơ chế "seed data" đã dùng cho role theo chức năng (D-SD02-001 (¶2)) — đọc `email`, `password` (bản rõ, băm lúc chạy seed bằng cùng cơ chế hash dùng cho `employee.password_hash`), `display_name` từ biến môi trường/file cấu hình lúc chạy migration. Không hard-code giá trị mặc định trong code, tránh cùng một tài khoản/mật khẩu cố định lặp lại giữa các môi trường.
-2. Seed kiểm tra Tổ chức "Văn Minh Việt" theo `name` đã tồn tại chưa — nếu chưa, tạo mới; nếu đã có (lần deploy sau, hoặc đã tạo tay), dùng lại `id` hiện có. Tài khoản Quản trị hệ thống đầu tiên thuộc Tổ chức này (R-ID-014 (§2.1.4.5): mọi Nhân viên thuộc đúng một Tổ chức).
-3. Seed kiểm tra tồn tại `employee` theo `email` seed (email vốn unique — D-SD02-001 (¶2)) — nếu đã tồn tại thì bỏ qua, không tạo trùng hoặc ghi đè mật khẩu. Nhờ vậy an toàn khi chạy lại migration nhiều lần hoặc redeploy cùng môi trường (idempotent).
-4. Nếu chưa tồn tại: insert `employee` với `status = active` ngay (bỏ qua luồng mời qua email ở D-SD02-003 (¶3.1) — không áp dụng được cho tài khoản đầu tiên vì chưa có ai để gửi lời mời), `password_hash` từ bước 1; gán role `quan_tri_he_thong` (đã có sẵn từ seed role theo chức năng, D-SD02-001 (¶2)) qua `employee_role`.
-5. Không ghi `audit_log` cho bước này — audit log ghi nhận hành động của một Nhân viên đã xác thực (D-SD01-003 (¶3)); đây là thao tác vận hành hạ tầng trước khi hệ thống có Nhân viên nào, không có `employee_id` hợp lệ để gán làm actor.
-6. Sau khi có tài khoản Quản trị hệ thống đầu tiên, mọi tài khoản tiếp theo tạo qua luồng bình thường (D-SD02-003 (¶3.1), `identity.createEmployee` — `POST /identity/employees`) — bootstrap này chỉ tạo đúng 1 Nhân viên Quản trị hệ thống đầu tiên cho cả hệ thống, không lặp lại cho mỗi Tổ chức mới.
+⚠ `/cmd/api` xử lý tài khoản gốc mỗi lần khởi động, sau migration và seed, trước khi nhận request (D-SD01-009 (¶9)). Không nằm trong migration. Dữ liệu đọc từ biến môi trường `ROOT_ADMIN_EMAIL`, `ROOT_ADMIN_PASSWORD` (bản rõ, băm bằng cùng cơ chế của `employee.password_hash`), `ROOT_ADMIN_DISPLAY_NAME`. Không hard-code giá trị mặc định. Nhân viên có email trùng `ROOT_ADMIN_EMAIL` là **tài khoản gốc**; không có cột đánh dấu riêng trong DB.
+
+**Chung cho hai chế độ:**
+
+- Thiếu một trong 3 biến: ghi log cảnh báo, `/cmd/api` vẫn khởi động.
+- Tổ chức "Văn Minh Việt": tìm theo `name`; chưa có thì tạo, có rồi thì dùng lại (R-ID-014 (§2.1.4.5)).
+- Khi tạo mới: insert `employee` với `status = active`, bỏ qua luồng mời D-SD02-003 (¶3.1); gán role `quan_tri_he_thong` (seed, D-SD02-001 (¶2)) qua `employee_role`.
+- Chạy trong một transaction, giữ advisory lock riêng.
+- Không ghi `audit_log` — chưa có Nhân viên làm actor (D-SD01-003 (¶3)).
+- Ghi log thông tin kèm email, không ghi mật khẩu.
+
+**`DEV_MODE=false`:**
+
+1. Chưa có Nhân viên theo `ROOT_ADMIN_EMAIL`: tạo mới. Mật khẩu phải thoả chính sách mật khẩu (`identity.password_*`, `07-system-settings.md`); không thoả thì ghi log cảnh báo và bỏ qua.
+2. Đã có: không đổi gì, không đặt lại mật khẩu. Nếu Nhân viên đó chưa giữ `quan_tri_he_thong`: ghi log cảnh báo, không tự gán role.
+
+**`DEV_MODE=true`:**
+
+1. Chưa có Nhân viên theo `ROOT_ADMIN_EMAIL`: tạo mới.
+2. Đã có: đặt lại `password_hash` theo `ROOT_ADMIN_PASSWORD`, `display_name` theo `ROOT_ADMIN_DISPLAY_NAME`; đặt `status = active`, `failed_login_count = 0`, `locked_until = NULL`; gán `quan_tri_he_thong` nếu chưa có. Không đổi Tổ chức.
+3. Không áp dụng chính sách mật khẩu cho `ROOT_ADMIN_PASSWORD`.
+
+**Bảo vệ tài khoản gốc (mọi chế độ):** không khoá được, không gỡ được role `quan_tri_he_thong`, không đổi được Tổ chức. Các endpoint tương ứng trả HTTP 422 `root_admin_protected` (D-SD02-010 (¶5.2)). Tạm khoá đăng nhập do sai mật khẩu nhiều lần (D-SD02-004 (¶3.2)) vẫn áp dụng. `ROOT_ADMIN_*` phải luôn có trong cấu hình môi trường; đổi `ROOT_ADMIN_EMAIL` thì lần khởi động sau tài khoản theo email mới là tài khoản gốc, tài khoản theo email cũ thành Nhân viên bình thường.
+
+Các tài khoản khác tạo qua luồng mời (D-SD02-003 (¶3.1), `identity.createEmployee` — `POST /identity/employees`).
 
 ### 3.1 [D-SD02-003] Luồng mời & kích hoạt tài khoản (R-ID-018 (§2.1.5.2)–R-ID-020 (§2.1.5.3))
 
@@ -293,11 +312,14 @@ Response body của `auth.login` — `POST /auth/login` và `auth.getMe` — `GE
     { "id": "uuid", "name": "nghien_cuu", "scope_type": "research_topic", "scope_id": "uuid" },
     { "id": "uuid", "name": "quan_tri_he_thong", "scope_type": "function", "scope_id": null }
   ],
+  "dev_mailbox_url": null,
   "access_token": "string",
   "refresh_token": "string"
 }
 // GET /auth/me (200) — giống hệt trên, bỏ access_token/refresh_token
 ```
+
+`dev_mailbox_url` (⚠ bổ sung, D-SD01-009 (¶9)): địa chỉ giao diện Mailpit khi `DEV_MODE=true`, `null` khi tắt. admin-web hiện link "Hộp thư DEV" khi trường này khác `null`.
 
 `roles` trả toàn bộ role Nhân viên đang giữ (không rút gọn) — dùng `GetEmployeeWithRoles` (D-SD02-008 (¶4)). `auth.getMe` — `GET /auth/me` mount ở cả `admin`/`partner`, cùng nhóm ngoại lệ `auth/*` (D-SD01-002 (¶2) ) — không ghi audit log cho `auth.getMe` — `GET /auth/me` (request đọc).
 
@@ -315,11 +337,11 @@ Yêu cầu JWT hợp lệ + role `quan_tri_he_thong` cho mọi endpoint dưới 
 
 | Method | Path | operationId | Mô tả |
 |---|---|---|---|
-| GET | `/identity/employees` | `identity.listEmployees` | Danh sách Nhân viên — cursor pagination, filter `organization_id`, `status`; mỗi dòng trả kèm `roles: [{id, name, scope_type, scope_id}]` (toàn bộ role đang giữ — chức năng lẫn phạm vi, cùng cấu trúc `auth.login` D-SD02-009 (¶5.1)) — ⚠ bổ sung |
+| GET | `/identity/employees` | `identity.listEmployees` | Danh sách Nhân viên — cursor pagination, filter `organization_id`, `status`; mỗi dòng trả kèm `roles: [{id, name, scope_type, scope_id}]` (toàn bộ role đang giữ — chức năng lẫn phạm vi, cùng cấu trúc `auth.login` D-SD02-009 (¶5.1)) — ⚠ bổ sung; kèm `is_root_admin` (⚠ bổ sung — `true` với tài khoản gốc, D-SD02-002 (¶3.0)) |
 | POST | `/identity/employees` | `identity.createEmployee` | Tạo Nhân viên mới → trạng thái `invited`, gửi email mời (D-SD02-003 (¶3.1) bước 1–2) |
-| GET | `/identity/employees/{id}` | `identity.getEmployee` | Chi tiết 1 Nhân viên, kèm danh sách role đang giữ |
-| PATCH | `/identity/employees/{id}` | `identity.updateEmployee` | Cập nhật `display_name`/`phone`/`organization_id` |
-| POST | `/identity/employees/{id}/disable` | `identity.disableEmployee` | Vô hiệu hoá tài khoản (R-ID-024 (§2.1.5.7)): chuyển `status` → `disabled`; trong cùng transaction thu hồi toàn bộ refresh token và đặt `sessions_invalidated_at = now()` — đăng xuất ngay mọi phiên (R-ID-025 (§2.1.5.7.1), D-SD02-007 (¶3.5)). Không gỡ role, không nhả các Hạng mục tri thức/Mục từ đang phụ trách (R-ID-026 (§2.1.5.7.2)–R-ID-027 (§2.1.5.7.3)) |
+| GET | `/identity/employees/{id}` | `identity.getEmployee` | Chi tiết 1 Nhân viên, kèm danh sách role đang giữ và `is_root_admin` (⚠ bổ sung, D-SD02-002 (¶3.0)) |
+| PATCH | `/identity/employees/{id}` | `identity.updateEmployee` | Cập nhật `display_name`/`phone`/`organization_id` — ⚠ đổi `organization_id` của tài khoản gốc trả 422 `root_admin_protected` (D-SD02-002 (¶3.0)) |
+| POST | `/identity/employees/{id}/disable` | `identity.disableEmployee` | Vô hiệu hoá tài khoản (R-ID-024 (§2.1.5.7)): chuyển `status` → `disabled`; trong cùng transaction thu hồi toàn bộ refresh token và đặt `sessions_invalidated_at = now()` — đăng xuất ngay mọi phiên (R-ID-025 (§2.1.5.7.1), D-SD02-007 (¶3.5)). Không gỡ role, không nhả các Hạng mục tri thức/Mục từ đang phụ trách (R-ID-026 (§2.1.5.7.2)–R-ID-027 (§2.1.5.7.3)). ⚠ Tài khoản gốc: trả 422 `root_admin_protected` (D-SD02-002 (¶3.0)) |
 | POST | `/identity/employees/{id}/enable` | `identity.enableEmployee` | Kích hoạt lại tài khoản (R-ID-024 (§2.1.5.7)): chuyển `status` → `active`; giữ nguyên mật khẩu và role (R-ID-026 (§2.1.5.7.2)) |
 | POST | `/identity/employees/{id}/clear-login-lock` | `identity.clearEmployeeLoginLock` | Quản trị hệ thống gỡ tạm khoá đăng nhập trước thời hạn (R-ID-032 (§2.1.5.9.2); `failed_login_count = 0`, `locked_until = NULL`); chỉ hợp lệ khi `locked_until > now()`. `identity.listEmployees` và chi tiết Nhân viên trả thêm `locked_until` (null nếu không bị tạm khoá) để hiển thị trạng thái tạm khoá |
 | POST | `/identity/employees/{id}/resend-invite` | `identity.resendEmployeeInvite` | Gửi lại lời mời (D-SD02-003 (¶3.1) bước 6) — chỉ hợp lệ khi `status = invited` |
@@ -331,7 +353,7 @@ Yêu cầu JWT hợp lệ + role `quan_tri_he_thong` cho mọi endpoint dưới 
 | GET | `/identity/roles` | `identity.listRoles` | Danh sách role — filter `scope_type`, `scope_id` (ví dụ xem role của 1 Đề tài nghiên cứu) |
 | GET | `/identity/employees/{id}/roles` | `identity.listEmployeeRoles` | Role đang giữ của 1 Nhân viên |
 | POST | `/identity/employees/{id}/roles` | `identity.addEmployeeRole` | Gán 1 role cho Nhân viên — body `{ role_id }` |
-| DELETE | `/identity/employees/{id}/roles/{role_id}` | `identity.removeEmployeeRole` | Gỡ 1 role khỏi Nhân viên |
+| DELETE | `/identity/employees/{id}/roles/{role_id}` | `identity.removeEmployeeRole` | Gỡ 1 role khỏi Nhân viên — ⚠ gỡ `quan_tri_he_thong` khỏi tài khoản gốc trả 422 `root_admin_protected` (D-SD02-002 (¶3.0)) |
 
 **Tổ chức**
 
@@ -362,7 +384,7 @@ Mọi endpoint ghi ở D-SD02-010 (¶5.2) có audit log — `action_type` và `d
 - **`roles` ở `identity.listEmployees` — `GET /identity/employees`, `employee_count` ở `identity.listOrganizations` — `GET /identity/organizations`** (D-SD02-010 (¶5.2)) — ⚠ bổ sung 2026-09-23: hoàn thiện kỹ thuật cho màn hình Admin nội bộ (D-ADM-004 (¶4.4), D-ADM-006 (¶4.6)) — danh sách Nhân viên cần hiển thị role đang giữ dạng chip, danh sách Tổ chức cần đếm số Nhân viên trực thuộc; trước đó 2 endpoint danh sách chưa trả các trường này. `roles` lấy toàn bộ (chức năng + phạm vi). `employee_count` đếm không phân biệt trạng thái. Không đổi hành vi nghiệp vụ, không phát sinh mô hình phân quyền mới.
 - **`GetEmployeeSummaries`** (D-SD02-008 (¶4)) — ⚠ bổ sung 2026-09-23: hàm tra cứu hàng loạt tên/email Nhân viên theo id, phục vụ tầng handler (`/cmd/api`) ghép dữ liệu hiển thị cho `shared.listAuditLogs` — `GET /shared/audit-logs` mà không JOIN chéo hay tạo phụ thuộc vòng giữa `/shared` và `/identity`.
 - **`organization_name` trong response `auth.login` — `POST /auth/login`/`auth.getMe` — `GET /auth/me`** (D-SD02-008 (¶4), D-SD02-009 (¶5.1)) — ⚠ đề xuất bổ sung: hoàn thiện kỹ thuật thuần tuý, phục vụ Cổng Nhân viên Tổ chức khác (partner-web) hiển thị tên Tổ chức mà không cần gọi `identity.getOrganization` (chỉ mount ở admin, D-SD02-010 (¶5.2)). Không đổi hành vi nghiệp vụ, không phát sinh mô hình phân quyền mới.
-- **Tài khoản Quản trị hệ thống đầu tiên** (D-SD02-002 (¶3.0)) hiện thực R-ID-019 (§2.1.5.2.1). Cách làm cụ thể — seed/migration lúc triển khai, đọc credential từ biến môi trường, idempotent theo `email` — là quyết định kỹ thuật.
+- **Tài khoản Quản trị hệ thống gốc** (D-SD02-002 (¶3.0)) hiện thực R-ID-019 (§2.1.5.2.1). Cách làm cụ thể là quyết định kỹ thuật: `/cmd/api` tạo khi khởi động theo `ROOT_ADMIN_*`; ở `DEV_MODE` (D-SD01-009 (¶9)) tài khoản được đặt lại mỗi lần khởi động và không áp dụng chính sách mật khẩu. ⚠ Quy tắc không khoá, không gỡ `quan_tri_he_thong`, không đổi Tổ chức của tài khoản gốc là quyết định thiết kế ngoài đặc tả — là ngoại lệ của R-ID-024 (§2.1.5.7) (Quản trị hệ thống khoá được mọi tài khoản).
 - **Chính sách mật khẩu, tạm khoá đăng nhập, thời hạn đường dẫn và mẫu email** (D-SD02-001 (¶2), D-SD02-003 (¶3.1)–D-SD02-006 (¶3.4), D-SD02-009 (¶5.1), D-SD02-010 (¶5.2)) hiện thực R-ID-022 (§2.1.5.5), R-ID-029 (§2.1.5.8), R-ID-030 (§2.1.5.9); tham số đọc từ cấu hình hệ thống (R-CFG-007 (§2.8.4.2)–R-CFG-008 (§2.8.4.3), `07-system-settings.md`). Thông báo tạm khoá (D-SD02-004 (¶3.2) bước 2a) cho biết email đó có tài khoản — chấp nhận theo R-ID-031 (§2.1.5.9.1). ⚠ Thời hạn access token/refresh token là tham số kỹ thuật của thiết kế (R-CFG-007 (§2.8.4.2) chỉ nêu "thời hạn phiên đăng nhập").
 - **Đổi mật khẩu khi đang đăng nhập, `auth.changePassword` — `POST /auth/change-password`** (D-SD02-001 (¶2), D-SD02-006 (¶3.4), D-SD02-009 (¶5.1)) hiện thực R-ID-035 (§2.1.5.10). Audit `auth.password_change` ghi cùng transaction theo quy ước chung. Mã lỗi và thứ tự kiểm tra (tạm khoá → mật khẩu hiện tại → trùng → chính sách) là quyết định kỹ thuật.
 - ⚠ **Vô hiệu hoá phiên ngay bằng `sessions_invalidated_at` + kiểm tra ở middleware** (D-SD02-001 (¶2), D-SD02-007 (¶3.5), D-SD02-009 (¶5.1), D-SD02-010 (¶5.2)) — cách hiện thực yêu cầu "đăng xuất ngay" của R-ID-025 (§2.1.5.7.1), R-ID-034 (§2.1.5.9.4), R-ID-036 (§2.1.5.10.1), R-ID-038 (§2.1.5.10.3). Đánh đổi: thêm 1 truy vấn theo khoá chính mỗi request có xác thực. Không áp dụng cho lần đăng nhập bị tạm khoá ở luồng đăng nhập (D-SD02-004 (¶3.2) bước 3): đặc tả không yêu cầu đăng xuất các phiên khác trong trường hợp này.

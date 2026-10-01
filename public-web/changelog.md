@@ -17,3 +17,8 @@
 ## 2026-10-01
 
 - DC-20261001-04: áp nhận diện của landing vanminhviet.org — bảng màu theo `main.css` (Accent `#C4171D`, thêm Accent đậm, vàng đồng, xanh rêu), font Be Vietnam Pro + Lora (H1/H2 Lora), thang bo góc 8/16/24/pill, ảnh minh hoạ thuỷ mặc tông sáng, logo theo landing. File: **public-web-design.md** (2, 2.1, 2.2, 2.3, 5, 6, ghi chú cuối), **00-claude-instructions.md** (6).
+- DC-20261001-06: Trang chủ và điều hướng kiểu website.
+  - Bỏ Bottom Tab Bar, Top App Bar và tab Cá nhân. Thay bằng Header 2 mức (menu chữ + mega menu "Khám phá thêm" ở màn hình rộng, nút menu ở màn hình hẹp) và Footer lấy từ landing.
+  - Trang chủ gồm: Hero thuỷ mặc kèm ô hỏi AI và 3 câu hỏi gợi ý cố định, Hôm nay, Khám phá theo Cương vực, Mục từ nổi bật (4 Mục từ mới công khai gần nhất), Trợ lý AI, Sắp ra mắt.
+  - "Top bar" ở 4.2–4.9 đổi thành "Vùng tiêu đề".
+  - File: **public-web-design.md** (2.1, 2.3, 3, 4.1–4.9, 5, 6, 7), **00-claude-instructions.md** (6, 7).

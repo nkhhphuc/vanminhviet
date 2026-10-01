@@ -19,7 +19,7 @@ Ghi lại các quyết định kiến trúc/tech stack dùng chung cho cả 4 mo
 | CDN | Chưa dùng — phục vụ trực tiếp (local/origin) | Để chọn công nghệ cụ thể (Cloudflare/CloudFront...) ở giai đoạn sau khi lưu lượng thực tế yêu cầu; hiện tại phục vụ trực tiếp từ Object storage/Next.js là đủ cho quy mô ra mắt (R-NFR-010 (§3.2.1)) |
 | Containerization & Orchestration | Docker (đóng gói); orchestration để mở | Mọi service (Go monolith, 2 app Nhân viên, Next.js, AI service) đóng gói bằng Docker. Công cụ orchestration (Kubernetes/Nomad/docker-compose cho production...) chưa chốt — do đội triển khai (deployer) quyết định theo hạ tầng thực tế lúc đó |
 | Reverse proxy / Routing | Dev: Docker Compose · Production: Traefik | Định tuyến giữa các app (Admin nội bộ, Cổng Tổ chức khác, Web công khai, API) theo domain/path — khớp ranh giới route/API đã chốt ở D-SD01-002 (¶2) |
-| Email / SMTP | Dev: Mailpit (container) · Production: Amazon SES (giao thức SMTP) | Phục vụ gửi email dùng chung cho nhiều module (mời/tạo tài khoản, đặt lại mật khẩu ở module 02; thông báo trạng thái xét duyệt ở module 03...) — xem `/shared` ở D-SD01-002 (¶2). ⚠ **Email không thuộc phạm vi R-NFR-005 (§3.1.3)** (data residency) — đặc tả gốc liệt kê rõ phạm vi là dữ liệu lưu trữ lâu dài (dữ liệu cá nhân Nhân viên, Tư liệu gốc, nội dung Hạng mục tri thức và Mục từ trong DB/Object storage), không bao gồm hạ tầng truyền tải/chuyển tiếp như SMTP relay — giữ nguyên Amazon SES, không cần đổi nhà cung cấp |
+| Email / SMTP | Dev: Mailpit (container) · Production: Amazon SES (giao thức SMTP) | Phục vụ gửi email dùng chung cho nhiều module (mời/tạo tài khoản, đặt lại mật khẩu ở module 02; thông báo trạng thái xét duyệt ở module 03...) — xem `/shared` ở D-SD01-002 (¶2). ⚠ **Email không thuộc phạm vi R-NFR-005 (§3.1.3)** (data residency) — đặc tả gốc liệt kê rõ phạm vi là dữ liệu lưu trữ lâu dài (dữ liệu cá nhân Nhân viên, Tư liệu gốc, nội dung Hạng mục tri thức và Mục từ trong DB/Object storage), không bao gồm hạ tầng truyền tải/chuyển tiếp như SMTP relay — giữ nguyên Amazon SES, không cần đổi nhà cung cấp. Dev: giao diện web Mailpit mở qua reverse proxy, có basic auth — D-SD01-009 (¶9) |
 | Admin nội bộ (backend UI) | Quasar (Vue 3) + Pinia | Cho Nhân viên thuộc Tổ chức Văn Minh Việt (R-GEN-009 (§1.2.3.1) đặc tả gốc) — đầy đủ chức năng, gồm quản lý người dùng/phân quyền/Tổ chức |
 | Trình soạn thảo nội dung Mục từ | TipTap (Vue 3) | Dùng trong Admin nội bộ cho vai trò Biên tập (R-ENC-019 (§2.3.4) đặc tả gốc) soạn nội dung Mục từ dạng JSON block (R-ENC-007 (§2.3.2.3.1) đặc tả gốc). Core mã nguồn mở (MIT), tự host, không dùng gói Cloud trả phí của TipTap. Dựng trên ProseMirror nên định nghĩa được các loại khối (Node) tuỳ biến cho từng loại nhúng file (ảnh/audio/phim) đúng vị trí, khớp mô hình block đã chốt |
 | Cổng Nhân viên Tổ chức khác | Quasar (Vue 3) + Pinia, **app/deploy riêng** khỏi Admin nội bộ | Cho Nhân viên thuộc Tổ chức khác (R-GEN-010 (§1.2.3.2), module 2.7 đặc tả gốc) — chỉ vai trò Nghiên cứu/Xét duyệt theo Đề tài được gán, không có màn hình quản lý người dùng/Tổ chức. Tách app riêng (không chỉ ẩn UI trong cùng app Admin) để ranh giới bảo mật rõ ràng ở cả tầng route/API — xem D-SD01-002 (¶2) |
@@ -251,7 +251,7 @@ Quy ước `detail` chung:
 - `internal.receiveSourceWebhook` — `POST /internal/ingestion/source-webhook` (chỉ nhận tín hiệu) — kết quả đồng bộ ghi bằng `source.sync` actor `system`.
 - `knowledge.triggerAiVerification` khi lệnh gộp vào job `verification.run` đang chờ/đang chạy (`merged_into_running_job = true`, D-SD03-012 (¶3.3) bước (3), D-SD03-024 (¶5.4)) — không tạo job, không đổi trạng thái.
 - Job nền tạo dữ liệu dẫn xuất/kỹ thuật hoặc dọn dữ liệu theo thời hạn lưu: `knowledge.extract_file_metadata`, `knowledge.generate_transcript`, `assistant.reindex_entry` (lúc chạy), `assistant.refresh_domain_tags`, `assistant.query_log_cleanup`, `search.rebuild_fulltext`, `shared.usage_snapshot`, `shared.job_cleanup`, `shared.audit_log_cleanup`, `shared.apply_storage_lifecycle` — theo dõi qua màn hình job nền (D-SD01-004 (¶4)).
-- Tạo tài khoản Quản trị hệ thống đầu tiên qua seed (D-SD02-002 (¶3.0)), tự sinh/xoá role theo phạm vi (nằm trong `research_topic.create`/`research_topic.delete`).
+- Tạo/đặt lại tài khoản Quản trị hệ thống gốc khi `/cmd/api` khởi động (D-SD02-002 (¶3.0)) và xoá sạch dữ liệu ở `DEV_MODE` (D-SD01-009 (¶9)), tự sinh/xoá role theo phạm vi (nằm trong `research_topic.create`/`research_topic.delete`).
 - Lần đăng nhập sai chưa tới ngưỡng tạm khoá, lần nhập sai mật khẩu hiện tại khi đổi mật khẩu.
 
 - **Ghi đồng bộ, cùng transaction DB** với thao tác nghiệp vụ đang ghi nhận — không qua message queue/container riêng: audit log cần đảm bảo tính atomic với thao tác nó ghi lại (tách ra ghi bất đồng bộ dễ phát sinh "dual-write" — nghiệp vụ commit thành công nhưng bản ghi audit bị mất nếu bước publish message thất bại giữa chừng), và tải hệ thống (D-SD01-008 (¶8) — vài chục đến ~200 Nhân viên đồng thời) không đủ lớn để cần tách riêng thêm hạ tầng. Hàm `shared.RecordAudit`/`shared.RecordUsage` nhận transaction hiện tại của package gọi làm tham số (không tự mở transaction riêng), để đảm bảo insert này thật sự nằm cùng transaction với thao tác nghiệp vụ.
@@ -390,7 +390,7 @@ Nền tảng dùng mô hình **đồng bộ thư mục MinIO/S3**, áp dụng ch
    - **Văn bản**: so khớp ngữ nghĩa text-vs-text — dùng chung embedding/LLM judge với RAG, không cần gì đặc biệt.
    - **Âm thanh, và phần audio của phim**: chạy ASR self-host (Whisper hoặc PhoWhisper — bản tinh chỉnh tiếng Việt) lấy transcript đúng đoạn thời gian, rồi so khớp text như trên.
    - **Hình ảnh, và phần khung ảnh của phim**: dùng một Vision-Language Model (VLM) self-host để "đọc" nội dung trong khung toạ độ (ví dụ họ Qwen2-VL/InternVL — model mở, chạy được on-prem qua vLLM).
-   - Phiên bản model cụ thể (ASR/VLM) cần **benchmark trên dữ liệu tư liệu gốc thật** (đặc biệt audio phỏng vấn nghệ nhân, ảnh hiện vật) trước khi pin — xem ¶9.
+   - Phiên bản model cụ thể (ASR/VLM) cần **benchmark trên dữ liệu tư liệu gốc thật** (đặc biệt audio phỏng vấn nghệ nhân, ảnh hiện vật) trước khi pin — xem ¶10.
 3. **Sinh bản nháp nội dung Mục từ** (module 04, R-ENC-038 (§2.3.8)) — job nền đọc Hạng mục tri thức đã gán, gọi LLM (và VLM cho ảnh) sinh nội dung theo khối; chi tiết D-SD04-019 (¶3.5), D-SD06-014 (¶3.8).
 
 Tổ chức 3 năng lực trong cùng một service Python (theo capability bên trong), có thể tách tiếp thành nhiều service nếu tải lệch nhau nhiều về sau. Vẫn giữ AI Gateway như một lớp trừu tượng hoá phía gọi (Go monolith) để đổi/nâng cấp model self-host sau này mà không viết lại tầng gọi.
@@ -438,7 +438,50 @@ Các mục kỹ thuật bổ sung (không phải chỉ số chính thức của 
 | Tài liệu kỹ thuật | Hợp đồng OpenAPI theo từng nhóm route — D-SD01-003 (¶3) |
 | Kiểm thử | Bộ test tự động cho state machine xét duyệt và tính "có dẫn nguồn" của AI |
 
-## 9. Vấn đề mở
+## 9. [D-SD01-009] Chế độ phát triển (`DEV_MODE`)
+
+⚠ Chế độ chỉ dùng cho môi trường phát triển và test (DEV, local), giúp khởi tạo và làm lại dữ liệu nhanh. Production luôn để `DEV_MODE=false`.
+
+| Biến môi trường | Mặc định | Ý nghĩa |
+|---|---|---|
+| `DEV_MODE` | `false` | Bật chế độ phát triển |
+| `DEV_RESET_ON_START` | `false` | Xoá sạch dữ liệu mỗi lần `/cmd/api` khởi động. Chỉ hợp lệ khi `DEV_MODE=true` |
+| `DEV_MAILBOX_URL` | — | Địa chỉ giao diện web Mailpit. Chỉ đọc khi `DEV_MODE=true` |
+| `ROOT_ADMIN_EMAIL`, `ROOT_ADMIN_PASSWORD`, `ROOT_ADMIN_DISPLAY_NAME` | — | Tài khoản Quản trị hệ thống gốc (D-SD02-002 (¶3.0)). Bắt buộc ở mọi môi trường, cả hai chế độ |
+
+**Khi `DEV_MODE=true`:**
+
+- Tài khoản Quản trị hệ thống gốc được đặt lại theo `ROOT_ADMIN_*` mỗi lần `/cmd/api` khởi động (D-SD02-002 (¶3.0)).
+- Các luồng nghiệp vụ khác giữ nguyên: mời Nhân viên, quên/đặt lại mật khẩu, chính sách mật khẩu. Email gửi tới Mailpit (bên dưới).
+- `auth.login` và `auth.getMe` trả `dev_mailbox_url` theo `DEV_MAILBOX_URL` (D-SD02-009 (¶5.1)). Khi `DEV_MODE=false` trường này là `null`.
+- `/cmd/api` và `/cmd/worker` ghi log cảnh báo đang chạy `DEV_MODE` mỗi lần khởi động.
+
+`DEV_RESET_ON_START=true` khi `DEV_MODE=false`: `/cmd/api` từ chối khởi động, báo lỗi cấu hình.
+
+**Thứ tự khởi động của `/cmd/api`:**
+
+1. Xoá sạch dữ liệu, nếu `DEV_RESET_ON_START=true`.
+2. Migration và seed (role theo chức năng, Cương vực…).
+3. Tạo/đặt lại tài khoản Quản trị hệ thống gốc (D-SD02-002 (¶3.0)).
+4. Bắt đầu nhận request.
+
+**Xoá sạch dữ liệu (`DEV_RESET_ON_START`):**
+
+- Giữ advisory lock Postgres, drop rồi tạo lại toàn bộ schema của ứng dụng: bảng nghiệp vụ mọi package, `audit_log`, `usage_event`, `system_setting`, bảng job của river, embedding (`pgvector`). Bước 2–3 dựng lại từ đầu. Không ghi audit.
+- ⚠ Không xoá object trong MinIO/S3. File do ứng dụng tạo trở thành file mồ côi, không ảnh hưởng ở DEV. Thư mục Tư liệu gốc vẫn còn: vai trò Nhập liệu tạo lại `source` trỏ tới `storage_prefix` cũ rồi đồng bộ (D-SD03-020 (¶4.5)).
+- Xoá chạy ở mọi lần `/cmd/api` khởi động, kể cả khi container tự restart. Muốn giữ dữ liệu giữa các lần deploy thì tắt cờ.
+- Giả định DEV chạy một instance `/cmd/api`.
+- `/cmd/worker` không xử lý job trong lúc xoá và migrate. Cách bảo đảm do Code chọn, ví dụ worker chờ tới khi schema đạt phiên bản migration mới nhất.
+
+**Xem email ở DEV (Mailpit, D-SD01-001 (¶1)):**
+
+- Reverse proxy mở giao diện web Mailpit tại `https://<domain-dev>/mailpit/` (`MP_WEBROOT=/mailpit`).
+- Bắt buộc đăng nhập bằng basic auth (`MP_UI_AUTH`/`MP_UI_AUTH_FILE` của Mailpit, hoặc basic auth của Traefik), vì email chứa link mời và link đặt lại mật khẩu dùng được thật.
+- Cổng SMTP của Mailpit chỉ mở trong mạng nội bộ Docker.
+- Khi `DEV_MODE=true` mà SMTP trỏ tới host khác Mailpit: `/cmd/api` ghi log cảnh báo, không chặn khởi động.
+- admin-web hiện link "Hộp thư DEV" ở topbar khi `dev_mailbox_url` khác `null`.
+
+## 10. Vấn đề mở
 
 - Benchmark thực tế trên dữ liệu tư liệu gốc thật trước khi pin phiên bản cụ thể của model ASR/VLM dùng cho AI Verification — hướng phân rã đã chốt ở D-SD01-006 (¶6), chỉ còn version/model cụ thể.
 - Ngưỡng chuyển phiên bản cũ của Tư liệu gốc sang cold storage là tham số cấu hình `operations.source_cold_storage_after_days` (mặc định không chuyển) — Quản trị hệ thống đặt khi có số liệu tăng trưởng thực tế (R-NFR-014 (§3.2.5) đặc tả gốc); cơ chế áp dụng ở D-SD07-009 (¶4.3).

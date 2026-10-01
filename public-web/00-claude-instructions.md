@@ -38,10 +38,11 @@ Khi phát hiện một điểm trong `public-web-design.md` không có cơ sở 
 ## 6. Quyết định đã chốt
 
 - **UI-first cho các module ngoài phạm vi**: các màn hình mô tả module chưa có đặc tả nghiệp vụ (Bảo tàng số 3D, Bản đồ văn hóa, Game lịch sử, Phim & TV, Cộng đồng...) vẫn giữ trong `public-web-design.md` như thiết kế đi trước, không xoá.
-- **Chỉ website, responsive 2 mức**: `public-web-design.md` chỉ đặc tả website (Next.js), ứng dụng di động không thuộc phạm vi. Bố cục 2 mức: màn hình hẹp dùng Bottom Tab Bar, màn hình rộng dùng Top Nav ngang. Khác biệt giữa hai mức viết thành quy tắc chung, chỉ ghi riêng các ngoại lệ.
+- **Chỉ website, responsive 2 mức**: `public-web-design.md` chỉ đặc tả website (Next.js), ứng dụng di động không thuộc phạm vi. Bố cục 2 mức, dùng chung Header (menu chữ ở màn hình rộng, nút menu ở màn hình hẹp) và Footer; không dùng Bottom Tab Bar. Khác biệt giữa hai mức viết thành quy tắc chung, chỉ ghi riêng các ngoại lệ.
 - **Mục 4.9 (Cộng đồng)**: tạm gác lại, chưa biên tập chi tiết — chờ quay lại sau.
 - **Theme**: sáng (light mode), nền trắng ngà, màu nhấn đỏ son, icon set minh hoạ màu (illustrated); nhận diện (màu, font, logo, phong cách ảnh) dùng chung với landing vanminhviet.org. Áp dụng cho toàn bộ `public-web-design.md` (`public-web` ¶2 Design System, mô tả màu sắc ở `public-web` ¶4, ghi chú theme ở `public-web` ¶7).
 - **Thứ tự màn hình 4.x**: Bách Khoa Toàn Thư (Danh sách Mục từ, Trang chi tiết Mục từ) đặt ngay sau D-PUB-002 (¶4.2) (Chat AI); các màn hình còn lại theo sau: 4.5 Bản đồ văn hóa, 4.6 Bảo tàng số 3D, 4.7 Game lịch sử, 4.8 Phim & TV, 4.9 Cộng đồng.
+- **Trang chủ kiểu website**: module ngoài phạm vi gom vào dải "Sắp ra mắt" và menu "Khám phá thêm"; module đã có màn hình thiết kế đi trước thì liên kết tới màn hình đó, chưa có thì chỉ hiển thị. Footer lấy nội dung từ landing vanminhviet.org.
 
 ## 7. Trạng thái hiện tại — đối chiếu phạm vi (10 điểm)
 
@@ -51,11 +52,11 @@ Danh sách điểm đối chiếu giữa `public-web-design.md` và `business-re
 2. ✅ Bản đồ văn hóa — module ngoài phạm vi (BR R-OOS-008 (§2.5.7)), đã ghi chú.
 3. ✅ Game lịch sử (D-PUB-007 (¶4.7)) — module ngoài phạm vi (BR R-OOS-002 (§2.5.1)), đã ghi chú "thiết kế đi trước".
 4. ✅ Phim & TV (D-PUB-008 (¶4.8)) — module ngoài phạm vi (BR R-OOS-003 (§2.5.2)), đã ghi chú "thiết kế đi trước".
-5. ✅ Giáo dục (lưới chức năng D-PUB-001 (¶4.1)) — module mới, chưa có cơ sở trong BR, đã ghi chú "thiết kế đi trước, chưa có cơ sở".
+5. ✅ Giáo dục — module ngoài phạm vi (BR R-OOS-009 (§2.5.8)), chưa có màn hình; hiện ở dải "Sắp ra mắt" (D-PUB-001 (¶4.1)) và menu Header, không có liên kết.
 6. ✅ Cộng đồng (D-PUB-009 (¶4.9)) — module ngoài phạm vi (BR R-OOS-004 (§2.5.3), R-NFR-025 (§3.5.1)), đã ghi chú "thiết kế đi trước"; nội dung chi tiết màn hình tạm gác lại.
 7. ✅ Section "Hôm nay" (D-PUB-001 (¶4.1)) — khớp BR R-OOS-006 (§2.5.5) (ngoài phạm vi), đã ghi chú "thiết kế đi trước".
-8. ✅ "Lễ Hội Truyền Thống" trong carousel "Khám phá nổi bật" (D-PUB-001 (¶4.1)) — không lệch: mỗi card là một Mục từ (BR R-ENC-002 (§2.3.1)–R-ENC-003 (§2.3.2), R-ENC-032 (§2.3.7)), tài liệu đã làm rõ cấu trúc này.
-9. ✅ Icon thông báo ở top bar Trang chủ (D-PUB-001 (¶4.1)) — chưa có đặc tả nghiệp vụ, đã ghi chú "thiết kế đi trước".
+8. ✅ Card trong section "Mục từ nổi bật" (D-PUB-001 (¶4.1)) — không lệch: mỗi card là một Mục từ (BR R-ENC-002 (§2.3.1)–R-ENC-003 (§2.3.2), R-ENC-032 (§2.3.7)), tài liệu đã làm rõ cấu trúc này.
+9. ✅ Icon thông báo ở Header (màn hình rộng) (D-PUB-001 (¶4.1)) — chưa có đặc tả nghiệp vụ, đã ghi chú "thiết kế đi trước".
 10. ⏳ Màn hình Chat AI (D-PUB-002 (¶4.2)): (a) ✅ chỉ hỗ trợ tiếng Việt, không có UI chọn Cương vực/ngôn ngữ; (b) ✅ trích dẫn Mục từ nguồn dạng chip, bấm mở Trang chi tiết Mục từ (khớp BR R-PUB-007 (§2.6.3), R-PUB-010 (§2.6.4.2)); (c) ⏳ quick-reply chips + nhập giọng nói — chưa có cơ sở trong BR, để xử lý sau.
 
 ## 8. Đồng bộ với session khác

@@ -24,7 +24,7 @@ Tên bảng/field tiếng Anh, path API tiếng Anh (theo `00-claude-instruction
 | `entry_version_id` | UUID | FK → `entry_version.id` — gắn theo đúng phiên bản đã sinh ra đoạn này (R-ENC-010 (§2.3.2.4.1): một Mục từ có nhiều phiên bản, chỉ 1 là đang công khai tại một thời điểm) |
 | `chunk_index` | int | Thứ tự đoạn trong phiên bản |
 | `content_chunk` | text | Đoạn text đã cắt từ `content_plain_text` (D-SD04-002 (¶2.2)) |
-| `embedding` | vector(N) | pgvector — N theo model embedding đã pin (`01` ¶9 ) |
+| `embedding` | vector(N) | pgvector — N theo model embedding đã pin (`01` ¶10 ) |
 | `cultural_domain_ids` | UUID[] | ⚠ Đề xuất bổ sung — bản sao (denormalize) Cương vực đang gán cho Mục từ tại thời điểm đánh chỉ mục, dùng lọc trực tiếp trong SQL khi truy hồi mà không JOIN chéo sang bảng `entry_cultural_domain` (module 04). Đồng bộ lại khi Cương vực của Mục từ thay đổi (D-SD05-009 (¶4.3)) |
 | `is_active` | boolean | ⚠ Đề xuất bổ sung — chỉ `true` cho các đoạn thuộc phiên bản **đang công khai hiện tại** của Mục từ; khi phiên bản công khai đổi, đoạn của phiên bản cũ chuyển `false` (vô hiệu khỏi truy hồi) thay vì xoá — giữ lại phục vụ debug/audit |
 | `token_count` | int (nullable) | ⚠ metadata, phục vụ theo dõi chi phí/hiệu năng |

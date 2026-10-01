@@ -49,7 +49,7 @@ Response:
 ```
 
 - Batch nhiều đoạn trong 1 request để giảm round-trip khi đánh chỉ mục hàng loạt (job `assistant.reindex_entry`, D-SD05-004 (¶3.1) ).
-- `dim` phải khớp `vector(N)` đã khai báo cho cột `assistant_chunk.embedding` (D-SD05-001 (¶2.1) ) — đổi model embedding (khác `dim`) là thay đổi lớn, cần migration cột + re-index toàn bộ (đã nêu ở `01` ¶9 "chốt version model khi benchmark xong").
+- `dim` phải khớp `vector(N)` đã khai báo cho cột `assistant_chunk.embedding` (D-SD05-001 (¶2.1) ) — đổi model embedding (khác `dim`) là thay đổi lớn, cần migration cột + re-index toàn bộ (đã nêu ở `01` ¶10 "chốt version model khi benchmark xong").
 - **⚠ Model đề xuất (ứng viên, chưa benchmark — xem ¶8)**: **Qwen3-Embedding (bản 0.6B)** làm ứng viên chính — hỗ trợ hơn 100 ngôn ngữ (gồm tiếng Việt), instruction-aware, footprint nhỏ; **BGE-M3** làm ứng viên phụ vì có sẵn cơ chế hybrid (dense + sparse + multi-vector) trong cùng 1 model, khớp trực tiếp thiết kế retrieval hybrid đã chốt ở D-SD01-001 (¶1). `model` trong response ở trên chỉ là ví dụ minh hoạ theo ứng viên chính, chưa phải quyết định cuối.
 
 ### 3.2. [D-SD06-004] `POST /v1/generate`
@@ -248,7 +248,7 @@ Chọn backend qua factory pattern trong code Python — 1 interface chung (`AIB
 - **`gateway.verifyTextMatch`** — system prompt đóng vai "chuyên gia đối chiếu tư liệu", yêu cầu trả lời đúng 1 trong 2 nhãn (`dat`/`khong_dat`) kèm giải thích ngắn — ép output có cấu trúc (JSON mode của LLM nếu backend hỗ trợ, hoặc parse từ text có định dạng cố định).
 - **`gateway.verifyImageRegion`** — tương tự nhưng input đa phương thức (ảnh + text) qua VLM, cùng yêu cầu output có cấu trúc.
 - **`gateway.generateEntryDraft`** — system prompt ép chỉ dùng `sources`, không suy diễn; tổ chức nội dung theo mục có tiêu đề; mỗi ảnh dùng tối đa một lần; output JSON đúng schema D-SD06-014 (¶3.8).
-- ⚠ Nội dung prompt cụ thể (câu chữ, few-shot example...) để lại cho lúc implement + benchmark thực tế (cùng tinh thần "chốt sau khi có số liệu thực tế" ở `01` ¶9) — mục này chỉ chốt khung/yêu cầu, không chốt câu chữ.
+- ⚠ Nội dung prompt cụ thể (câu chữ, few-shot example...) để lại cho lúc implement + benchmark thực tế (cùng tinh thần "chốt sau khi có số liệu thực tế" ở `01` ¶10) — mục này chỉ chốt khung/yêu cầu, không chốt câu chữ.
 
 ## 6. [D-SD06-012] Xử lý lỗi, timeout, retry
 
@@ -260,13 +260,13 @@ Chọn backend qua factory pattern trong code Python — 1 interface chung (`AIB
 
 ## 7. [D-SD06-013] Cấu hình & vận hành
 
-- Biến môi trường chính: `AI_GATEWAY_MODE` (`mock`/`cpu-small`/`gpu-onprem`, đã chốt ở D-SD01-006 (¶6)), `AI_GATEWAY_INTERNAL_SECRET` (shared secret xác thực từ Go), `ENTRY_DRAFT_LLM_MODEL`/`ENTRY_DRAFT_VLM_MODEL` (tuỳ chọn — model riêng cho `gateway.generateEntryDraft`, mặc định như D-SD06-014 (¶3.8)), `MINIO_ENDPOINT`/`MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` (quyền đọc riêng cho AI Gateway, D-SD06-001 (¶1)), model path/tên model theo từng năng lực (pin version cụ thể khi benchmark xong — `01` ¶9).
+- Biến môi trường chính: `AI_GATEWAY_MODE` (`mock`/`cpu-small`/`gpu-onprem`, đã chốt ở D-SD01-006 (¶6)), `AI_GATEWAY_INTERNAL_SECRET` (shared secret xác thực từ Go), `ENTRY_DRAFT_LLM_MODEL`/`ENTRY_DRAFT_VLM_MODEL` (tuỳ chọn — model riêng cho `gateway.generateEntryDraft`, mặc định như D-SD06-014 (¶3.8)), `MINIO_ENDPOINT`/`MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` (quyền đọc riêng cho AI Gateway, D-SD06-001 (¶1)), model path/tên model theo từng năng lực (pin version cụ thể khi benchmark xong — `01` ¶10).
 - `GET /v1/health` (operationId `gateway.getHealth`) — health check cho container orchestration (D-SD01-001 (¶1)); trả kèm `mode` đang chạy (`mock`/`cpu-small`/`gpu-onprem`) để dễ debug môi trường nào đang gọi backend nào.
 - Đóng gói Docker riêng, deploy độc lập với Go monolith (đã chốt D-SD01-001 (¶1)/D-SD01-002 (¶2)) — cùng container hoặc tách container theo từng năng lực (RAG vs. Verification vs. ASR) là quyết định vận hành, không ảnh hưởng hợp đồng API ở tài liệu này.
 
 ## 8. Vấn đề mở / giả định
 
-- **Ưu tiên tải GPU giữa chat tương tác và AI Verification nền** — ⚠ đặc tả chỉ cho biết 2 NFR khác nhau (chat ≤3s/≤15s, Verification "vài phút chấp nhận được" — D-SD01-008 (¶8)/R-NFR-011 (§3.2.2)) nhưng không có cơ chế admission-control/priority queue cụ thể ở tầng AI Gateway khi cả hai cùng tranh chấp GPU. Đề xuất: request queue riêng ưu tiên `gateway.generate`/`gateway.rewriteQuery`/`gateway.selfAudit` (đường chat) hơn `gateway.embed`/`gateway.transcribe`/`/v1/verify/*`/`gateway.generateEntryDraft` (đường nền) — cần benchmark thực tế trước khi chốt cơ chế cụ thể (cùng tinh thần "chốt sau khi có số liệu" — `01` ¶9).
+- **Ưu tiên tải GPU giữa chat tương tác và AI Verification nền** — ⚠ đặc tả chỉ cho biết 2 NFR khác nhau (chat ≤3s/≤15s, Verification "vài phút chấp nhận được" — D-SD01-008 (¶8)/R-NFR-011 (§3.2.2)) nhưng không có cơ chế admission-control/priority queue cụ thể ở tầng AI Gateway khi cả hai cùng tranh chấp GPU. Đề xuất: request queue riêng ưu tiên `gateway.generate`/`gateway.rewriteQuery`/`gateway.selfAudit` (đường chat) hơn `gateway.embed`/`gateway.transcribe`/`/v1/verify/*`/`gateway.generateEntryDraft` (đường nền) — cần benchmark thực tế trước khi chốt cơ chế cụ thể (cùng tinh thần "chốt sau khi có số liệu" — `01` ¶10).
 - **`cpu-small` không hỗ trợ đầy đủ VLM** (`gateway.verifyImageRegion`, D-SD06-010 (¶4)) — môi trường dev local không GPU sẽ luôn trả `dat` cho tiêu chí hình ảnh, nghĩa là **không test được đường "khong_dat" của tiêu chí này** khi phát triển local. Chấp nhận được cho giai đoạn dev (mục đích `cpu-small` chỉ để test luồng nghiệp vụ, không cần chất lượng AI thật — D-SD01-006 (¶6)), nhưng cần lưu ý khi viết test tự động.
 - **Cách truyền frame video đã trích xuất tới `gateway.verifyImageRegion`** (D-SD06-009 (¶3.7)) — 2 phương án: (a) Go/`worker` tự trích frame bằng `ffmpeg`, ghi tạm vào Object storage rồi truyền `image_storage_key`; (b) Go/`worker` trích frame rồi truyền thẳng `image_bytes` (base64) trong request, không ghi Object storage. Tài liệu này tạm chọn phương án (a) cho nhất quán với cách các endpoint khác đều truyền `storage_key` thay vì bytes — nhưng đây là chi tiết kỹ thuật có thể đổi khi implement, không ảnh hưởng ai_verdict/nghiệp vụ.
 - **Cần cấu hình khả năng "trả lời giả để test đường không đạt" cho `mock` mode** (D-SD06-010 (¶4), dòng `gateway.verifyTextMatch`/`image-region`) — ví dụ qua query param hoặc theo nội dung `claim_text` chứa từ khoá đặc biệt (`"__mock_fail__"`) — chi tiết cụ thể để lại cho lúc viết test, chỉ ghi nhận nhu cầu ở đây.
@@ -280,7 +280,7 @@ Chọn backend qua factory pattern trong code Python — 1 interface chung (`AIB
 
   Các ứng viên này mới hơn ví dụ đã nêu ở D-SD01-006 (¶6) (Qwen2-VL/InternVL, Whisper/PhoWhisper) — **D-SD01-006 (¶6) chưa được đồng bộ theo các ứng viên mới này**, cần cập nhật riêng nếu muốn nhất quán.
 
-  **Giả định phần cứng làm cơ sở chọn các ứng viên trên**: tối thiểu **1 GPU 40–48GB VRAM** (ví dụ A100 40GB hoặc L40S 48GB) — đủ tải đồng thời cả 4 model ở dạng lượng tử hoá 4-bit (ước tính tổng ~38GB VRAM), và **NVMe SSD tối thiểu 1TB** để lưu model gốc + bản lượng tử hoá (ước tính ~165GB cho cả 4 ứng viên). Nếu hạ tầng thực tế nhỏ hơn (ví dụ GPU 24GB), cần hạ xuống ứng viên nhẹ hơn (ví dụ Qwen3-VL-7B thay 32B); nếu lớn hơn (80GB+/multi-GPU), có thể cân nhắc bản lớn hơn (Qwen3-VL-72B, LLM 72B) để tăng chất lượng thay vì tối ưu VRAM. Đây chỉ là **giả định lập kế hoạch**, chưa phải cấu hình GPU on-prem đã chốt (`01` ¶9 vẫn để ngỏ mục này) — cần benchmark thật trên dữ liệu tư liệu gốc và tải GPU thực tế trước khi pin cả model lẫn cấu hình phần cứng.
+  **Giả định phần cứng làm cơ sở chọn các ứng viên trên**: tối thiểu **1 GPU 40–48GB VRAM** (ví dụ A100 40GB hoặc L40S 48GB) — đủ tải đồng thời cả 4 model ở dạng lượng tử hoá 4-bit (ước tính tổng ~38GB VRAM), và **NVMe SSD tối thiểu 1TB** để lưu model gốc + bản lượng tử hoá (ước tính ~165GB cho cả 4 ứng viên). Nếu hạ tầng thực tế nhỏ hơn (ví dụ GPU 24GB), cần hạ xuống ứng viên nhẹ hơn (ví dụ Qwen3-VL-7B thay 32B); nếu lớn hơn (80GB+/multi-GPU), có thể cân nhắc bản lớn hơn (Qwen3-VL-72B, LLM 72B) để tăng chất lượng thay vì tối ưu VRAM. Đây chỉ là **giả định lập kế hoạch**, chưa phải cấu hình GPU on-prem đã chốt (`01` ¶10 vẫn để ngỏ mục này) — cần benchmark thật trên dữ liệu tư liệu gốc và tải GPU thực tế trước khi pin cả model lẫn cấu hình phần cứng.
 
 ---
 
