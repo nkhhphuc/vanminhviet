@@ -1,6 +1,6 @@
 # Thiết Kế Module: Bách Khoa Toàn Thư (`/encyclopedia`)
 
-> Trạng thái: ¶1–6 đã chốt, trừ R-ENC-038 (§2.3.8) "Khởi tạo nội dung Mục từ bằng AI" chưa thiết kế (¶6). Tên bảng/field/hàm nội bộ và path API dùng tiếng Anh (theo `00-claude-instructions.md` mục 6); giá trị `status`/tên role vẫn dùng tiếng Việt không dấu để đối chiếu trực tiếp với đặc tả gốc. Lịch sử thay đổi ở `system-design/changelog.md`.
+> Trạng thái: ¶1–6 đã chốt. Tên bảng/field/hàm nội bộ và path API dùng tiếng Anh (theo `00-claude-instructions.md` mục 6); giá trị `status`/tên role vẫn dùng tiếng Việt không dấu để đối chiếu trực tiếp với đặc tả gốc. Lịch sử thay đổi ở `system-design/changelog.md`.
 
 ## 1. Tổng quan module
 
@@ -9,6 +9,7 @@
 - Phụ thuộc vào module 02 (`/identity`): 3 role riêng của module này — `bien_tap`, `xuat_ban_muc_tu`, `xet_duyet_muc_tu` — đều là **role theo chức năng** (`scope_type = 'function'`), seed sẵn, không tự sinh theo sự kiện như `nghien_cuu`/`xet_duyet` ở module 03 (R-ENC-019 (§2.3.4) đặc tả gốc không mô tả phạm vi theo đề tài cho các role này).
 - Là nguồn dữ liệu cho `/assistant` (module 05, đọc **phiên bản đang công khai**) và cho Web công khai/ứng dụng di động qua nhóm route `/api/v1/public/...` (đã chốt ranh giới ở D-SD01-002 (¶2)). Module 05 chỉ được phép phụ thuộc *vào* module này qua interface đọc (D-SD04-013 (¶4.3)) và qua job queue (D-SD04-014 (¶4.4)) — không có chiều ngược lại (`/encyclopedia` không import `/assistant`).
 - Khác biệt lớn nhất so với module 03: **không có bước AI Verification** — đặc tả gốc R-ENC-022 (§2.3.5) không mô tả bước xét duyệt tự động nào cho Mục từ (khác hẳn R-KB-077 (§2.2.6.5)–R-KB-080 (§2.2.6.6) của Hạng mục tri thức); toàn bộ xét duyệt do **vai trò Xét duyệt Mục từ** thực hiện thủ công. Vì vậy không cần các bảng `claim`/`claim_reference` ở module này — nội dung Mục từ là sản phẩm biên tập lại (không cần truy vết từng phát biểu tới tư liệu gốc, việc đó đã làm ở module 03).
+- Gọi AI Gateway (`06`) cho đúng một năng lực: sinh bản nháp nội dung Mục từ từ Hạng mục tri thức đã gán (R-ENC-038 (§2.3.8), D-SD04-019 (¶3.5)). Không phải bước xét duyệt — nội dung sinh ra là nội dung soạn thảo bình thường (R-ENC-043 (§2.3.8.5)).
 
 ## 2. Mô hình dữ liệu
 
@@ -36,6 +37,7 @@ Quy ước chung theo `00-claude-instructions.md` mục 6 (UUID, `snake_case`, t
 | `title` | text | R-ENC-005 (§2.3.2.2) |
 | `content_blocks` | JSONB | R-ENC-007 (§2.3.2.3.1) — danh sách khối (block) có thứ tự, mỗi khối có `type` + dữ liệu (tiêu đề, đoạn văn, chú thích, khối nhúng ảnh/âm thanh/phim...). Khối nhúng file tham chiếu `entry_file.id` (D-SD04-003 (¶2.3)), không nhúng blob trực tiếp |
 | `content_plain_text` | text (nullable) | ⚠ Đề xuất bổ sung — bản trích xuất text thuần từ `content_blocks` (đoạn văn, chú thích...), do tầng ứng dụng đồng bộ mỗi khi `content_blocks` đổi; dùng làm nguồn cho chỉ mục full-text (R-PUB-004 (§2.6.2.1) đặc tả gốc: tìm theo tiêu đề + nội dung) — JSONB không tự đánh index full-text tốt. Cũng là nguồn dữ liệu để `/assistant` (module 05) cắt đoạn/sinh embedding cho RAG |
+| `cover_file_id` | UUID (nullable) | ⚠ Đề xuất bổ sung — ảnh đại diện của phiên bản, dùng cho card Mục từ và trích dẫn ở Web công khai. FK → `entry_file.id`. Chỉ dòng đã chốt mang giá trị: khi tạo dòng chốt ("Xuất bản"), lấy khối nhúng file **đầu tiên** trong `content_blocks` (theo thứ tự khối) tham chiếu tới `entry_file` có `file_type` là hình ảnh; không có thì `NULL`. Bản soạn thảo luôn `NULL`. Dòng chốt không đổi nội dung nên giá trị không phải tính lại |
 | `status` | text (nullable) | R-ENC-006 (§2.3.2.3) — chỉ bản soạn thảo mang giá trị, dòng đã chốt `status = NULL`, cùng cơ chế đã chốt ở module 03 (D-SD03-006 (¶2.6)). 7 mã, xem D-SD04-007 (¶3.1) |
 | `assignee_id` | UUID (nullable) | R-ENC-011 (§2.3.2.5) "Người phụ trách" — ⚠ Bổ sung. FK → `employee.id`. Ghi nhận đúng một Nhân viên đang chịu trách nhiệm chính tại thời điểm hiện tại, **xuyên suốt vòng đời** bản soạn thảo (mọi trạng thái ở D-SD04-007 (¶3.1)). Đối xứng hoàn toàn với `knowledge_object_version.assignee_id` ở module 03 (D-SD03-006 (¶2.6)) — đặt trực tiếp trên bản soạn thảo vì đây là **cùng một dòng ổn định** suốt vòng đời. **Không tự động bị xoá khi chuyển trạng thái** — ở các trạng thái chờ thuần tuý (`cho_xet_duyet`, `dat_xet_duyet`, `da_xuat_ban`, `khong_xuat_ban`) giữ nguyên giá trị của lần nhận gần nhất, chỉ mang tính hiển thị (R-ENC-015 (§2.3.2.5.4)). Chỉ bị xoá qua 2 thao tác tường minh `Release`/`ForceRelease` (D-SD04-014 (¶4.4)) |
 | `review_note` | text (nullable) | ⚠ Đề xuất bổ sung — nhận định tổng thể của vai trò Xét duyệt Mục từ khi chuyển `dat_xet_duyet` hoặc `khong_dat_xet_duyet` (module này không có cấu trúc claim để gắn ghi chú như module 03, nên cần 1 trường ghi chú tự do cấp Mục từ). Trả về ở `encyclopedia.getEntry` để vai trò Biên tập đọc khi Mục từ đang `khong_dat_xet_duyet` |
@@ -48,7 +50,7 @@ Quy ước chung theo `00-claude-instructions.md` mục 6 (UUID, `snake_case`, t
 **Cơ chế chốt phiên bản** (R-ENC-009 (§2.3.2.4), R-ENC-027 (§2.3.5.5)–R-ENC-030 (§2.3.5.8) — mô hình quyết định bắt buộc, giống hệt module 03):
 
 - Khi bản soạn thảo đạt `dat_xet_duyet`, vai trò Xuất bản Mục từ bắt buộc chọn đúng 1 trong 2:
-  - **"Xuất bản"**: sao chép bản soạn thảo (`content_blocks`, và toàn bộ `entry_file` liên quan — tái dùng nguyên `storage_key`, không upload lại, cùng nguyên tắc D-SD03-019 (¶4.4)) thành dòng mới `frozen_at = now()`, `frozen_by = <employee>`, `version_number` = số lớn nhất hiện có + 1, `status = NULL` (dòng chốt không có `assignee_id`). Bản soạn thảo (dòng gốc) chuyển `status → da_xuat_ban`, `assignee_id` giữ nguyên.
+  - **"Xuất bản"**: sao chép bản soạn thảo (`content_blocks`, và toàn bộ `entry_file` liên quan — tái dùng nguyên `storage_key`, không upload lại, cùng nguyên tắc D-SD03-019 (¶4.4)) thành dòng mới `frozen_at = now()`, `frozen_by = <employee>`, `version_number` = số lớn nhất hiện có + 1, `status = NULL` (dòng chốt không có `assignee_id`), `cover_file_id` tính theo quy tắc ở bảng trên. Bản soạn thảo (dòng gốc) chuyển `status → da_xuat_ban`, `assignee_id` giữ nguyên.
   - **"Không xuất bản"**: không sao chép; bản soạn thảo chuyển `status → khong_xuat_ban`, kèm cảnh báo xác nhận bắt buộc (R-ENC-009 (§2.3.2.4) đặc tả gốc).
 - Dòng đã chốt bất biến — không UPDATE/DELETE, chặn ở tầng ứng dụng (`/encyclopedia`).
 - **Khoá nội dung**: 4 trạng thái `dang_xet_duyet`, `dat_xet_duyet`, `da_xuat_ban`, `khong_xuat_ban` khoá `content_blocks`/`entry_file` trên chính bản soạn thảo — khác với module 03, đặc tả gốc **đã nêu rõ trực tiếp** cả 4 trạng thái này cho Mục từ (R-ENC-025 (§2.3.5.3), R-ENC-027 (§2.3.5.5), R-ENC-029 (§2.3.5.7), R-ENC-030 (§2.3.5.8) đều có câu "Nội dung bị khoá"), **không phải đề xuất ⚠** như trường hợp `dang_xet_duyet` ở module 03. Riêng `soan_thao` có thêm điều kiện khoá **theo người gọi** (chỉ `assignee_id` hiện tại được sửa, R-ENC-013 (§2.3.2.5.2)) — khác về bản chất với 4 trạng thái khoá hoàn toàn ở trên.
@@ -96,8 +98,10 @@ Quy ước chung theo `00-claude-instructions.md` mục 6 (UUID, `snake_case`, t
 |---|---|---|
 | `entry_id` | UUID | FK → `entry.id` |
 | `cultural_domain_id` | UUID | FK → `cultural_domain.id`, `ON DELETE RESTRICT` — chặn xoá Cương vực còn Mục từ đang gán (R-ENC-037 (§2.3.7.5)) |
+| `created_at` | timestamptz | Thời điểm gán. Thứ tự gán dùng làm thứ tự hiển thị Cương vực của Mục từ ở nhóm `public` (D-SD04-018 (¶5.4)) |
 
 - Khoá chính composite. Một Mục từ có thể thuộc nhiều Cương vực. Do **vai trò Biên tập gán thủ công** (R-ENC-031 (§2.3.6) — "có thể tự động hoá/gợi ý trong tương lai", ngoài phạm vi hiện tại).
+- Dòng có sẵn trước khi thêm cột `created_at`: migration đặt giá trị theo tên Cương vực tăng dần, để giữ thứ tự hiện có.
 
 ## 3. Luồng trạng thái / nghiệp vụ
 
@@ -167,6 +171,34 @@ Giống hệt cấu trúc D-SD03-013 (¶3.4):
 - **Không tự động** — vai trò Biên tập chủ động vào Mục từ, xem nội dung `used_version` hiện tại của (các) Hạng mục tri thức liên quan (đọc qua interface `/knowledge`, D-SD04-012 (¶4.2)), tự cập nhật `content_blocks` nếu cần, rồi cập nhật `last_synced_version_id` (D-SD04-004 (¶2.4)) để tắt cảnh báo "đã lỗi thời" (cờ `is_outdated` ở `encyclopedia.getEntry` — `GET /encyclopedia/entries/{id}`).
 - Việc đồng bộ này **không đổi `status`** của Mục từ — vẫn phải qua lại toàn bộ luồng xét duyệt (R-ENC-022 (§2.3.5)) nếu Mục từ đã `da_xuat_ban`/`khong_xuat_ban` và cần sửa nội dung (phải được vai trò Xét duyệt Mục từ mở lại trước).
 
+
+### 3.5. [D-SD04-019] Khởi tạo nội dung bằng AI (R-ENC-038 (§2.3.8))
+
+**Kích hoạt** (R-ENC-039 (§2.3.8.1)) — `encyclopedia.generateEntryContent`, thao tác thủ công, không tự chạy khi tạo Mục từ. Điều kiện:
+
+- `status = soan_thao` và người gọi là `assignee_id` hiện tại — cùng điều kiện với `UpdateDraftContent` (D-SD04-014 (¶4.4)).
+- Body `{confirmed: true}` — giao diện cảnh báo nội dung hiện tại sẽ bị ghi đè và chỉ gọi khi vai trò Biên tập xác nhận (R-ENC-041 (§2.3.8.3)). Thiếu hoặc `false` → HTTP 422 `overwrite_confirmation_required`.
+- Ít nhất một Hạng mục tri thức đã gán có phiên bản đang được sử dụng; không có → HTTP 422 `no_source_content`.
+- Không còn job `encyclopedia.generate_content` của Mục từ đang chờ/đang chạy (tính trùng như D-SD03-018 (¶4.3): `ByState` gồm `available`, `pending`, `scheduled`, `running`, `retryable`); nếu có → HTTP 409 `entry_content_generation_running`.
+- Hợp lệ thì enqueue job `encyclopedia.generate_content` payload `{entry_id, requested_by}` trong cùng transaction, trả HTTP 202 `{job_id}`. Kích hoạt lại được nhiều lần (R-ENC-040 (§2.3.8.2)).
+
+**Trong lúc xử lý** (R-ENC-042 (§2.3.8.4)) ⚠:
+
+- `encyclopedia.getEntry` trả `content_generation` (D-SD04-015 (¶5.1)) để giao diện hiện "Đang sinh nội dung bằng AI".
+- Khoá nội dung khi còn job đang chờ/đang chạy: `UpdateDraftContent`, `RequestEntryFileUpload`, `AddFile`, `RemoveFile`, `SubmitForReview` trả HTTP 409 `entry_content_generation_running`. Các thao tác khác (gán Cương vực, gộp/tách Hạng mục tri thức, đánh dấu đồng bộ, `Release`, `ForceRelease`) không bị chặn.
+- `Release`/`ForceRelease` huỷ job đang chờ (chưa chạy) của Mục từ; job đang chạy thì kết quả bị bỏ ở bước ghi (bước 3 dưới đây).
+
+**Job `encyclopedia.generate_content`** (D-SD04-020 (¶4.5)):
+
+1. Đọc nội dung phiên bản đang được sử dụng của từng Hạng mục tri thức đã gán qua `knowledge.GetUsedVersionContent` (D-SD04-012 (¶4.2)); bỏ qua Hạng mục chưa có phiên bản đang được sử dụng. Không còn nguồn nào → job kết thúc, không ghi nội dung, audit `entry.content_generation_discard` (`reason = no_source_content`).
+2. Gọi `gateway.generateEntryDraft` (D-SD06-014 (¶3.8)) với: tiêu đề Mục từ; với mỗi Hạng mục — `title`, danh sách `claim.text`, `transcript_storage_key` của file văn bản/âm thanh/phim (có transcript), `storage_key` của file hình ảnh.
+3. Ghi kết quả trong một transaction, chỉ khi bản soạn thảo vẫn `soan_thao` **và** `assignee_id = requested_by`; ngược lại bỏ kết quả, audit `entry.content_generation_discard` (`reason = status_changed | assignee_changed`). Khi ghi:
+   - Thay toàn bộ `content_blocks` bằng các khối sinh ra (đồng bộ `content_plain_text`); `title` không đổi. Nội dung không đánh dấu là do AI sinh (R-ENC-043 (§2.3.8.5)).
+   - Mỗi khối ảnh trong kết quả: tạo `entry_file` mới trên bản soạn thảo, `file_type` hình ảnh, **dùng lại `storage_key`** của `knowledge_object_file` (không sao chép object — cùng nguyên tắc D-SD03-019 (¶4.4)); khối nhúng tham chiếu `entry_file.id` mới. Chỉ ảnh được dùng trong kết quả mới tạo `entry_file`. `entry_file` có sẵn của bản soạn thảo giữ nguyên.
+   - ⚠ Cập nhật `last_synced_version_id` của từng Hạng mục đã dùng bằng `used_version_id` đã đọc ở bước 1 (tắt cờ `is_outdated`, D-SD04-004 (¶2.4)).
+   - Audit `entry.content_generation_complete`.
+4. Lỗi gọi AI Gateway: job thất bại và thử lại theo river (D-SD06-012 (¶6)); hết lượt thì `content_generation.status = failed`, nội dung không đổi. Vai trò Biên tập kích hoạt lại được. AI Gateway trả `source_content_too_long` (D-SD06-014 (¶3.8)) thì job dừng, không thử lại; `content_generation.status = failed`, `error_code = source_content_too_long`. Vai trò Biên tập tách bớt Hạng mục tri thức khỏi Mục từ rồi kích hoạt lại.
+
 ## 4. Kiến trúc riêng của module
 
 ### 4.1. [D-SD04-011] Sở hữu bảng
@@ -224,23 +256,36 @@ type EntryTitle struct {
     Title    string
     IsPublic bool
 }
+
+// Ảnh đại diện của phiên bản đang công khai, đã ký presigned GET URL — dùng cho sự kiện
+// citations của chat (D-SD05-012 (¶5.1)). Mục từ không có phiên bản công khai hoặc
+// cover_file_id = NULL thì không có trong map, không lỗi. Thời hạn URL theo D-SD04-018 (¶5.4).
+func GetPublicCoverImages(ctx context.Context, entryIDs []uuid.UUID) (map[uuid.UUID]SignedFile, error)
+
+type SignedFile struct {
+    FileID       uuid.UUID
+    URL          string
+    URLExpiresAt time.Time
+}
 ```
 
 ### 4.4. [D-SD04-014] Các hàm ghi chính trong `/encyclopedia`
 
 - `CreateEntry(ctx, tx, title, knowledgeObjectIDs []uuid.UUID, createdBy) (*Entry, error)` — vai trò Biên tập tạo mới (R-ENC-004 (§2.3.2.1), R-ENC-020 (§2.3.4.1)), tạo đồng thời bản soạn thảo (`status = soan_thao`, `assignee_id = createdBy` — R-ENC-012 (§2.3.2.5.1)) và các dòng `entry_knowledge_object` ban đầu.
-- `UpdateDraftContent(ctx, tx, entryID, contentBlocks, callerID) error` — cập nhật `content_blocks` (đồng bộ `content_plain_text`); từ chối nếu bản soạn thảo đang ở 1 trong 4 trạng thái khoá (D-SD04-007 (¶3.1)), **hoặc nếu `callerID` không phải `assignee_id` hiện tại khi `status = soan_thao`** (R-ENC-013 (§2.3.2.5.2)).
+- `UpdateDraftContent(ctx, tx, entryID, contentBlocks, callerID) error` — cập nhật `content_blocks` (đồng bộ `content_plain_text`); từ chối nếu bản soạn thảo đang ở 1 trong 4 trạng thái khoá (D-SD04-007 (¶3.1)), **hoặc nếu `callerID` không phải `assignee_id` hiện tại khi `status = soan_thao`** (R-ENC-013 (§2.3.2.5.2)). Từ chối khi còn job sinh nội dung đang chờ/đang chạy (D-SD04-019 (¶3.5)).
 - `AddKnowledgeObjectLink` / `RemoveKnowledgeObjectLink(ctx, tx, entryID, knowledgeObjectID) error` — gộp/tách (R-ENC-017 (§2.3.3)).
 - `MarkSynced(ctx, tx, entryID, knowledgeObjectID, syncedVersionID) error` — cập nhật `last_synced_version_id` (D-SD04-010 (¶3.4)).
-- `RequestEntryFileUpload(ctx, entryID, fileType, fileName, callerID) (*UploadTicket, error)` — ⚠ Bổ sung: bước 1 của quy ước 2 bước presigned upload (D-SD01-003 (¶3)) áp dụng cho `entry_file` — sinh `storage_key`, ký presigned PUT URL có thời hạn ngắn, trả `{upload_url, storage_key, expires_at}`, chưa tạo dòng DB; cùng điều kiện khoá nội dung/`assignee_id` như `AddFile` bên dưới. `UploadTicket`/`DownloadTicket` dùng chung định nghĩa đã có ở D-SD03-017 (¶4.2) (không định nghĩa lại).
+- `RequestContentGeneration(ctx, tx, entryID, callerID, confirmed bool) (jobID int64, error)` — kiểm điều kiện và enqueue job `encyclopedia.generate_content` theo D-SD04-019 (¶3.5).
+- `ApplyGeneratedContent(ctx, tx, entryID, requestedBy, blocks, images, syncedVersions) error` — bước 3 của job ở D-SD04-019 (¶3.5); chỉ gọi từ job.
+- `RequestEntryFileUpload(ctx, entryID, fileType, fileName, callerID) (*UploadTicket, error)` — ⚠ Bổ sung: bước 1 của quy ước 2 bước presigned upload (D-SD01-003 (¶3)) áp dụng cho `entry_file` — sinh `storage_key`, ký presigned PUT URL có thời hạn ngắn, trả `{upload_url, storage_key, expires_at}`, chưa tạo dòng DB; cùng điều kiện khoá nội dung/`assignee_id` như `AddFile` bên dưới. `UploadTicket`/`DownloadTicket` dùng chung định nghĩa đã có ở D-SD03-017 (¶4.2) (không định nghĩa lại). Từ chối khi còn job sinh nội dung đang chờ/đang chạy (D-SD04-019 (¶3.5)).
 - `GetEntryFileDownloadURL(ctx, fileID, callerID) (*DownloadTicket, error)` — ⚠ Bổ sung: ký presigned GET URL ngắn hạn cho 1 `entry_file` đã có, gọi theo yêu cầu (khi người dùng bấm xem/tải), không trả sẵn trong response danh sách/chi tiết — cùng cơ chế D-SD01-003 (¶3).
-- `AddFile` / `RemoveFile(ctx, tx, ..., callerID) error` — quản lý `entry_file`; `AddFile` là bước 3 của quy ước upload (xác nhận `storage_key` đã nhận từ `RequestEntryFileUpload`, tạo dòng bản ghi), cùng ràng buộc khoá nội dung và điều kiện `assignee_id` ở `soan_thao`.
+- `AddFile` / `RemoveFile(ctx, tx, ..., callerID) error` — quản lý `entry_file`; `AddFile` là bước 3 của quy ước upload (xác nhận `storage_key` đã nhận từ `RequestEntryFileUpload`, tạo dòng bản ghi), cùng ràng buộc khoá nội dung và điều kiện `assignee_id` ở `soan_thao`. Từ chối khi còn job sinh nội dung đang chờ/đang chạy (D-SD04-019 (¶3.5)).
 - `AssignCulturalDomain` / `UnassignCulturalDomain(ctx, tx, entryID, culturalDomainID) error` — R-ENC-031 (§2.3.6). ⚠ Bổ sung (phối hợp với D-SD05-009 (¶4.3)): sau khi ghi thay đổi trong cùng transaction, enqueue job `assistant.refresh_domain_tags` với payload `{entry_id}` — chỉ enqueue tên job + payload (river `InsertTx`, cùng transaction — D-SD01-001 (¶1)/D-SD01-004 (¶4)), không import package `/assistant`, giữ đúng chiều phụ thuộc một chiều 05 → 04 (¶1).
 - `CreateCulturalDomain` / `UpdateCulturalDomain` / `DeleteCulturalDomain(ctx, tx, ...) error` — quản lý danh mục Cương vực, chỉ vai trò Biên tập (R-ENC-037 (§2.3.7.5)). `DeleteCulturalDomain` chỉ thành công khi không còn dòng `entry_cultural_domain` nào gắn Cương vực đó; nếu còn thì trả lỗi `cultural_domain_in_use` kèm `entry_count` (ràng buộc `ON DELETE RESTRICT`, D-SD04-006 (¶2.6), là lớp chặn cuối). Không cần enqueue job cho `/assistant`: Cương vực không gán Mục từ nào thì không có trong `assistant_chunk.cultural_domain_ids`.
-- `SubmitForReview(ctx, tx, entryID) error` — `soan_thao → cho_xet_duyet`; `assignee_id` giữ nguyên (R-ENC-015 (§2.3.2.5.4)).
+- `SubmitForReview(ctx, tx, entryID) error` — `soan_thao → cho_xet_duyet`; `assignee_id` giữ nguyên (R-ENC-015 (§2.3.2.5.4)). Từ chối khi còn job sinh nội dung đang chờ/đang chạy (D-SD04-019 (¶3.5)).
 - `Claim(ctx, tx, entryID, employeeID) error` — ⚠ Tổng quát cho cả `soan_thao` và `dang_xet_duyet` (R-ENC-011 (§2.3.2.5)): validate `status ∈ {soan_thao, cho_xet_duyet}`. Nếu `status = soan_thao`: validate thêm `assignee_id IS NULL` (R-ENC-013 (§2.3.2.5.2)), rồi ghi `assignee_id = employeeID`, **không đổi `status`**. Nếu `status = cho_xet_duyet`: ghi đè `assignee_id = employeeID` (không yêu cầu `NULL` trước, R-ENC-014 (§2.3.2.5.3)) và đồng thời chuyển `status → dang_xet_duyet` (D-SD04-008 (¶3.2) bước (3)).
-- `Release(ctx, tx, entryID, employeeID) error` — ⚠ Bổ sung: validate `assignee_id = employeeID` và `status ∈ {soan_thao, dang_xet_duyet}`. Ghi `assignee_id = NULL`. Nếu `status = dang_xet_duyet`, đồng thời chuyển `status → cho_xet_duyet`; nếu `status = soan_thao`, không đổi `status`.
-- `ForceRelease(ctx, tx, entryID) error` — ⚠ Bổ sung (R-ENC-016 (§2.3.2.5.5)): cùng hành vi `Release` nhưng **không yêu cầu khớp `employeeID`** — chỉ gọi được bởi Nhân viên giữ role `quan_tri_he_thong` (route `admin`). Validate `assignee_id IS NOT NULL` và `status ∈ {soan_thao, dang_xet_duyet}`.
+- `Release(ctx, tx, entryID, employeeID) error` — ⚠ Bổ sung: validate `assignee_id = employeeID` và `status ∈ {soan_thao, dang_xet_duyet}`. Ghi `assignee_id = NULL`. Nếu `status = dang_xet_duyet`, đồng thời chuyển `status → cho_xet_duyet`; nếu `status = soan_thao`, không đổi `status`. Huỷ job `encyclopedia.generate_content` đang chờ của Mục từ (D-SD04-019 (¶3.5)).
+- `ForceRelease(ctx, tx, entryID) error` — ⚠ Bổ sung (R-ENC-016 (§2.3.2.5.5)): cùng hành vi `Release` nhưng **không yêu cầu khớp `employeeID`** — chỉ gọi được bởi Nhân viên giữ role `quan_tri_he_thong` (route `admin`). Validate `assignee_id IS NOT NULL` và `status ∈ {soan_thao, dang_xet_duyet}`. Huỷ job `encyclopedia.generate_content` đang chờ của Mục từ (D-SD04-019 (¶3.5)).
 - `RejectReview(ctx, tx, entryID, note) error` — `dang_xet_duyet → khong_dat_xet_duyet`, ghi `review_note`. `note` bắt buộc khác rỗng sau khi bỏ khoảng trắng; nếu rỗng thì trả lỗi `review_note_required` (R-ENC-025 (§2.3.5.3)).
 - `ResumeEditing(ctx, tx, entryID) error` — ⚠ Bổ sung: `khong_dat_xet_duyet → soan_thao` (R-ENC-026 (§2.3.5.4)) — vai trò Biên tập xem `review_note` rồi soạn thảo lại. Không giới hạn theo `assignee_id` (nhất quán với `SubmitForReview`); `assignee_id` giữ nguyên. Chỉ hợp lệ khi `status = khong_dat_xet_duyet`.
 - `ApproveReview(ctx, tx, entryID, note) error` — `dang_xet_duyet → dat_xet_duyet`, ghi `review_note`; `note` không bắt buộc (R-ENC-025 (§2.3.5.3)).
@@ -248,6 +293,12 @@ type EntryTitle struct {
 - `SkipPublish(ctx, tx, entryID, employeeID, confirmed bool) error` — quyết định "Không xuất bản".
 - `ReopenFromPublished(ctx, tx, entryID, targetStatus, employeeID) error` — chỉ vai trò Xét duyệt Mục từ; `targetStatus ∈ {soan_thao, cho_xet_duyet, dang_xet_duyet}`; `assignee_id` giữ nguyên (R-ENC-015 (§2.3.2.5.4)).
 - `SetPublicVersion(ctx, tx, entryID, versionID) error` — chỉ vai trò Xuất bản Mục từ; validate `frozen_at IS NOT NULL`. ⚠ Bổ sung (phối hợp với D-SD05-009 (¶4.3)): sau khi cập nhật `entry.current_public_version_id` trong cùng transaction, enqueue job `assistant.reindex_entry` với payload `{entry_id}` — cùng nguyên tắc enqueue thuần tuý như trên, không import `/assistant`.
+
+### 4.5. [D-SD04-020] Gọi AI Gateway sinh nội dung
+
+- `/encyclopedia` gọi trực tiếp AI Gateway từ `/cmd/worker`, cùng cách `/verification` (D-SD03-018 (¶4.3)): job `encyclopedia.generate_content`, `related_entity = entry`.
+- Ánh xạ kết quả `gateway.generateEntryDraft` sang `content_blocks`: `heading` → khối tiêu đề (cấp 2–3), `paragraph` → khối đoạn văn, `image` → khối nhúng ảnh. Tên kiểu khối cụ thể theo schema TipTap đang dùng cho `content_blocks` (do Code chọn).
+- `image_id` trong kết quả phải là một trong các ảnh đã gửi đi; giá trị lạ bị bỏ qua.
 
 ## 5. Thiết kế API
 
@@ -259,16 +310,17 @@ Nhóm `encyclopedia/*` chỉ mount ở `/api/v1/admin/encyclopedia/...` (đã ch
 |---|---|---|---|
 | GET | `/encyclopedia/entries` | `encyclopedia.listEntries` | Danh sách (filter `status`, `cultural_domain_id`, từ khoá) — cursor pagination; mỗi dòng trả `assignee: {id, display_name} \| null` (Người phụ trách bản soạn thảo) và `created_by: {id, display_name} \| null` — ⚠ bổ sung |
 | POST | `/encyclopedia/entries` | `encyclopedia.createEntry` | Tạo mới — body `{title, knowledge_object_ids[]}` |
-| GET | `/encyclopedia/entries/{id}` | `encyclopedia.getEntry` | Chi tiết bản soạn thảo (`status`, `title`, **`assignee: {id, display_name} \| null`**, **`created_by: {id, display_name} \| null`** — ⚠ bổ sung, **`review_note`** — ghi chú xét duyệt gần nhất, Biên tập cần đọc khi ở `khong_dat_xet_duyet`, D-SD04-008 (¶3.2) bước (4)) + danh sách phiên bản đã chốt + **danh sách Hạng mục tri thức đã gán, mỗi dòng kèm `last_synced_version_id` và cờ `is_outdated`** (⚠ bổ sung — so `last_synced_version_id` với `used_version_id` hiện tại lấy qua `knowledge.GetUsedVersionIDs`, D-SD04-004 (¶2.4)/D-SD04-010 (¶3.4)) |
-| PATCH | `/encyclopedia/entries/{id}/content` | `encyclopedia.updateEntryContent` | Cập nhật `content_blocks` (chặn nếu đang khoá, hoặc nếu người gọi không phải `assignee_id` hiện tại khi `status = soan_thao`) |
+| GET | `/encyclopedia/entries/{id}` | `encyclopedia.getEntry` | Chi tiết bản soạn thảo (`status`, `title`, **`assignee: {id, display_name} \| null`**, **`created_by: {id, display_name} \| null`** — ⚠ bổ sung, **`review_note`** — ghi chú xét duyệt gần nhất, Biên tập cần đọc khi ở `khong_dat_xet_duyet`, D-SD04-008 (¶3.2) bước (4)) + danh sách phiên bản đã chốt + **danh sách Hạng mục tri thức đã gán, mỗi dòng kèm `last_synced_version_id` và cờ `is_outdated`** (⚠ bổ sung — so `last_synced_version_id` với `used_version_id` hiện tại lấy qua `knowledge.GetUsedVersionIDs`, D-SD04-004 (¶2.4)/D-SD04-010 (¶3.4)) + `content_generation` — `{status: pending \| running \| failed, job_id, requested_at, error_code?, error_message?} \| null` của job `encyclopedia.generate_content` gần nhất; `null` khi chưa có job hoặc job gần nhất đã xong/đã huỷ (D-SD04-019 (¶3.5)) |
+| PATCH | `/encyclopedia/entries/{id}/content` | `encyclopedia.updateEntryContent` | Cập nhật `content_blocks` (chặn nếu đang khoá, hoặc nếu người gọi không phải `assignee_id` hiện tại khi `status = soan_thao`); 409 `entry_content_generation_running` khi đang sinh nội dung bằng AI |
 | POST | `/encyclopedia/entries/{id}/knowledge-objects` | `encyclopedia.addEntryKnowledgeObject` | Thêm ánh xạ tới 1 Hạng mục tri thức |
 | DELETE | `/encyclopedia/entries/{id}/knowledge-objects/{knowledge_object_id}` | `encyclopedia.removeEntryKnowledgeObject` | Gỡ ánh xạ |
 | GET | `/encyclopedia/entries/{id}/knowledge-objects/{knowledge_object_id}/source` | `encyclopedia.getEntryKnowledgeObjectSource` | Đọc nội dung `used_version` của Hạng mục tri thức nguồn (qua `GetUsedVersionContent`) để tham khảo/đồng bộ |
 | POST | `/encyclopedia/entries/{id}/knowledge-objects/{knowledge_object_id}/mark-synced` | `encyclopedia.markEntryKnowledgeObjectSynced` | Đánh dấu đã đồng bộ xong |
-| POST | `/encyclopedia/entries/{id}/files/upload-url` | `encyclopedia.createEntryFileUploadUrl` | ⚠ Bổ sung — bước 1 quy ước presigned upload (D-SD01-003 (¶3)): xin `{upload_url, storage_key, expires_at}` cho 1 `entry_file` mới, body tối thiểu `{file_type, file_name}` |
-| POST | `/encyclopedia/entries/{id}/files` | `encyclopedia.createEntryFile` | Xác nhận file đã upload qua presigned URL (bước 3, body gồm `storage_key`) — cùng điều kiện khoá/`assignee_id` |
+| POST | `/encyclopedia/entries/{id}/generate-content` | `encyclopedia.generateEntryContent` | Khởi tạo nội dung bằng AI (R-ENC-038 (§2.3.8)) — body `{confirmed}`; 202 `{job_id}`; lỗi 422 `overwrite_confirmation_required`/`no_source_content`, 409 `entry_content_generation_running` (D-SD04-019 (¶3.5)) |
+| POST | `/encyclopedia/entries/{id}/files/upload-url` | `encyclopedia.createEntryFileUploadUrl` | ⚠ Bổ sung — bước 1 quy ước presigned upload (D-SD01-003 (¶3)): xin `{upload_url, storage_key, expires_at}` cho 1 `entry_file` mới, body tối thiểu `{file_type, file_name}`; 409 `entry_content_generation_running` khi đang sinh nội dung bằng AI |
+| POST | `/encyclopedia/entries/{id}/files` | `encyclopedia.createEntryFile` | Xác nhận file đã upload qua presigned URL (bước 3, body gồm `storage_key`) — cùng điều kiện khoá/`assignee_id`; 409 `entry_content_generation_running` khi đang sinh nội dung bằng AI |
 | GET | `/encyclopedia/entries/{id}/files/{file_id}/download-url` | `encyclopedia.getEntryFileDownloadUrl` | ⚠ Bổ sung — URL tải/xem 1 `entry_file` đã có, ký presigned GET URL ngắn hạn, gọi theo yêu cầu |
-| DELETE | `/encyclopedia/entries/{id}/files/{file_id}` | `encyclopedia.deleteEntryFile` | Gỡ file đính kèm |
+| DELETE | `/encyclopedia/entries/{id}/files/{file_id}` | `encyclopedia.deleteEntryFile` | Gỡ file đính kèm; 409 `entry_content_generation_running` khi đang sinh nội dung bằng AI |
 | POST | `/encyclopedia/entries/{id}/cultural-domains` | `encyclopedia.addEntryCulturalDomain` | Gán Cương vực — body `{cultural_domain_id}` |
 | DELETE | `/encyclopedia/entries/{id}/cultural-domains/{cultural_domain_id}` | `encyclopedia.removeEntryCulturalDomain` | Gỡ Cương vực |
 
@@ -276,7 +328,7 @@ Nhóm `encyclopedia/*` chỉ mount ở `/api/v1/admin/encyclopedia/...` (đã ch
 
 | Method | Path | operationId | Mô tả |
 |---|---|---|---|
-| POST | `/encyclopedia/entries/{id}/submit-for-review` | `encyclopedia.submitEntryForReview` | `soan_thao → cho_xet_duyet` |
+| POST | `/encyclopedia/entries/{id}/submit-for-review` | `encyclopedia.submitEntryForReview` | `soan_thao → cho_xet_duyet`; 409 `entry_content_generation_running` khi đang sinh nội dung bằng AI |
 | POST | `/encyclopedia/entries/{id}/claim` | `encyclopedia.claimEntry` | Người phụ trách "nhận xử lý" (R-ENC-011 (§2.3.2.5)) — hợp lệ tại `soan_thao` (chỉ gán `assignee_id`) hoặc `cho_xet_duyet` (gán `assignee_id` **và** chuyển `status → dang_xet_duyet`, D-SD04-008 (¶3.2) bước (3)) |
 | POST | `/encyclopedia/entries/{id}/release` | `encyclopedia.releaseEntry` | Người phụ trách hiện tại tự "nhả" — hợp lệ tại `soan_thao` (chỉ xoá `assignee_id`) hoặc `dang_xet_duyet` (xoá `assignee_id` **và** lùi `status → cho_xet_duyet`) |
 | POST | `/encyclopedia/entries/{id}/force-release` | `encyclopedia.forceReleaseEntry` | Quản trị hệ thống cưỡng chế nhả (R-ENC-016 (§2.3.2.5.5)) — hợp lệ ở bất kỳ trạng thái nào đang có `assignee_id`, không cần khớp người gọi |
@@ -297,21 +349,32 @@ Nhóm `encyclopedia/*` chỉ mount ở `/api/v1/admin/encyclopedia/...` (đã ch
 | PATCH | `/encyclopedia/cultural-domains/{id}` | `encyclopedia.updateCulturalDomain` | Sửa tên/mã |
 | DELETE | `/encyclopedia/cultural-domains/{id}` | `encyclopedia.deleteCulturalDomain` | Xoá Cương vực (R-ENC-037 (§2.3.7.5)) — chỉ khi chưa gán Mục từ nào; còn Mục từ đang gán thì HTTP 409 `cultural_domain_in_use` kèm `entry_count`. Giao diện cảnh báo và yêu cầu xác nhận trước khi gọi |
 
-**Quyền** (R-ENC-037 (§2.3.7.5)): xem (`GET`) — mọi Nhân viên đã đăng nhập ở kênh `admin` (dùng cho bộ lọc Cương vực khi chat AI — R-AI-004 (§2.4.3), D-SD05-012 (¶5.1) — và màn hình rà soát nhật ký hỏi đáp); Người dùng công khai xem qua `public.listCulturalDomains` — `GET /public/cultural-domains`. Tạo/sửa/xoá (`POST`/`PATCH`/`DELETE`) — chỉ role `bien_tap`.
+**Quyền** (R-ENC-037 (§2.3.7.5)): xem (`GET`) — mọi Nhân viên đã đăng nhập ở kênh `admin` (dùng cho bộ lọc Cương vực khi chat AI — R-AI-004 (§2.4.3), D-SD05-012 (¶5.1) — và màn hình rà soát nhật ký hỏi đáp); Người dùng công khai xem qua `public.listCulturalDomains` (D-SD04-018 (¶5.4)). Tạo/sửa/xoá (`POST`/`PATCH`/`DELETE`) — chỉ role `bien_tap`.
 
-### 5.4. [D-SD04-018] Nhóm `public/*` — `/api/v1/public/...`, không xác thực (R-PUB-002 (§2.6.1))
+### 5.4. [D-SD04-018] Nhóm `public` — `/api/v1/public/...`, không xác thực (R-PUB-002 (§2.6.1))
 
 | Method | Path | operationId | Mô tả |
 |---|---|---|---|
-| GET | `/public/entries` | `public.listEntries` | Tìm kiếm/lọc — chỉ Mục từ có `current_public_version_id` khác NULL (R-PUB-006 (§2.6.2.3)); filter `cultural_domain_id`, `q` (từ khoá) |
-| GET | `/public/entries/{id}` | `public.getEntry` | Nội dung phiên bản công khai (R-PUB-007 (§2.6.3)) |
-| GET | `/public/cultural-domains` | `public.listCulturalDomains` | Danh sách Cương vực, cho bộ lọc |
+| GET | `/encyclopedia/entries` | `public.listEntries` | Tìm kiếm/lọc — chỉ Mục từ có `current_public_version_id` khác NULL (R-PUB-006 (§2.6.2.3)); filter `q` (từ khoá, R-PUB-004 (§2.6.2.1)), `cultural_domain_id` (R-PUB-005 (§2.6.2.2)) |
+| GET | `/encyclopedia/entries/{id}` | `public.getEntry` | Nội dung phiên bản công khai (R-PUB-007 (§2.6.3)) |
+| GET | `/encyclopedia/cultural-domains` | `public.listCulturalDomains` | Danh sách Cương vực, cho bộ lọc |
+
+- URL đầy đủ: `/api/v1/public/encyclopedia/...`. Path trùng với endpoint nhóm `admin` ở D-SD04-015 (¶5.1), D-SD04-017 (¶5.3) nhưng là endpoint riêng, operationId tiền tố `public` (`common/requirements-design-sync.md` mục 2.5): chỉ đọc phiên bản đang công khai, không trả bản soạn thảo hay trường nội bộ (`status`, `assignee_id`, `entry_count`…).
+- **Lọc Cương vực đa chọn**: `cultural_domain_id` lặp được nhiều lần (`?cultural_domain_id=a&cultural_domain_id=b`); trả Mục từ gắn **ít nhất một** Cương vực đã chọn (OR). Không truyền thì không lọc. ⚠
+- **Response `public.listEntries`** — mỗi phần tử: ⚠
+  - `id`, `title` (tiêu đề phiên bản công khai);
+  - `excerpt` — tối đa 200 ký tự đầu của `content_plain_text` phiên bản công khai, cắt ở ranh giới từ, thêm `…` nếu bị cắt; `null` khi không có nội dung text;
+  - `cover_image` — `{file_id, url, url_expires_at}` của `cover_file_id` (D-SD04-002 (¶2.2)), hoặc `null`;
+  - `cultural_domain_ids` — sắp theo thứ tự gán (`entry_cultural_domain.created_at`, D-SD04-006 (¶2.6)); phần tử đầu là "Cương vực đầu tiên" hiển thị trên card.
+- **Response `public.getEntry`**: `id`, `title`, `content_blocks`, `cultural_domain_ids` (cùng thứ tự như trên), `cover_image` (như trên), `files` — mỗi file `{id, file_type, url, url_expires_at}` của phiên bản công khai. Không trả `storage_key`. ⚠
+- **URL tệp ký sẵn** ⚠ (ngoại lệ của quy ước "ký theo yêu cầu" ở D-SD01-003 (¶3), chỉ áp dụng nhóm `public`): `url` là presigned GET URL, thời hạn 60 phút; `url_expires_at` là thời điểm hết hạn. Chỉ ký cho file thuộc phiên bản đang công khai. Web công khai không cache response hoặc trang dựng từ response lâu hơn thời hạn URL; ảnh/tệp tải lỗi do hết hạn thì gọi lại endpoint.
+- `public.listCulturalDomains`: `{id, name, code}` mỗi Cương vực, không có `entry_count`.
 
 Mọi endpoint ghi ở 5.1–5.3 có audit log — `action_type` và `detail` theo danh mục sự kiện audit ở D-SD01-002 (¶2).
 
 ## 6. Vấn đề mở / giả định
 
-- **R-ENC-038 (§2.3.8) "Khởi tạo nội dung Mục từ bằng AI" — chưa thiết kế.** Đặc tả giữ nguyên R-ENC-038 (§2.3.8) và đây là phạm vi phải thiết kế. Dự kiến ảnh hưởng: D-SD04-002 (¶2.2) (cờ tiến trình), ¶3 (luồng kích hoạt + quy tắc ghi đè), D-SD04-014 (¶4.4) (hàm ghi), D-SD04-015 (¶5.1) (endpoint), kéo theo `06-ai-gateway.md` (hợp đồng gọi AI) và D-SD01-004 (¶4)/D-SD01-006 (¶6) (job nền, điểm gọi AI). Sẽ thiết kế ở một đợt riêng.
+- **Khởi tạo nội dung bằng AI** (D-SD04-019 (¶3.5)) ⚠ các điểm do thiết kế chọn: khoá sửa nội dung khi job còn chạy; bỏ kết quả khi đổi trạng thái/Người phụ trách; tự cập nhật `last_synced_version_id`; ảnh của Hạng mục tri thức được gắn sẵn vào Mục từ.
 - **`content_plain_text`** (D-SD04-002 (¶2.2)) — ⚠ cột mirror phục vụ full-text search, đồng bộ ở tầng ứng dụng mỗi khi `content_blocks` đổi — chi tiết kỹ thuật, không ảnh hưởng nghiệp vụ. Nay cũng là nguồn dữ liệu cho `/assistant` (module 05) đánh chỉ mục RAG.
 - **`last_synced_version_id`** (D-SD04-004 (¶2.4)) và cờ **`is_outdated`** ở `encyclopedia.getEntry` — `GET /encyclopedia/entries/{id}` hiện thực cảnh báo nguồn lỗi thời R-ENC-018 (§2.3.3.1) — so với phiên bản đang được sử dụng của Hạng mục tri thức nguồn. Cờ tính tại chỗ qua `knowledge.GetUsedVersionIDs` (D-SD03-017 (¶4.2)), không thêm cột lưu trữ.
 - **`review_note`** (D-SD04-002 (¶2.2), D-SD04-014 (¶4.4), D-SD04-015 (¶5.1), D-SD04-016 (¶5.2)) hiện thực nhận xét tổng thể của vai trò Xét duyệt Mục từ (R-ENC-025 (§2.3.5.3)–R-ENC-026 (§2.3.5.4)): bắt buộc khi không đạt, tuỳ chọn khi đạt; trả về ở `encyclopedia.getEntry` — `GET /encyclopedia/entries/{id}` để vai trò Biên tập đọc.
@@ -324,5 +387,5 @@ Mọi endpoint ghi ở 5.1–5.3 có audit log — `action_type` và `detail` th
 - **Enqueue job cho `/assistant` ở `AssignCulturalDomain`/`UnassignCulturalDomain`/`SetPublicVersion` (D-SD04-014 (¶4.4))** — để module 05 biết khi nào cần re-index mà không phải phụ thuộc ngược vào `/encyclopedia`. Chi tiết cơ chế job (`assistant.reindex_entry`, `assistant.refresh_domain_tags`) xem D-SD05-004 (¶3.1) và D-SD05-009 (¶4.3).
 - **Endpoint `resume-editing` cho transition `khong_dat_xet_duyet → soan_thao`** (D-SD04-008 (¶3.2) bước (4), D-SD04-014 (¶4.4), D-SD04-016 (¶5.2)) — ⚠ bổ sung: hành vi nghiệp vụ có sẵn trong đặc tả gốc (R-ENC-026 (§2.3.5.4)), thực thi nhất quán với cách xử lý điểm tương tự ở module 03 (`resume-research`) — hàm không giới hạn quyền gọi theo `assignee_id`, bất kỳ Nhân viên nào giữ vai trò Biên tập đều gọi được, nhất quán với `submit-for-review`.
 - **Upload/download file qua presigned URL cho `entry_file`, tên hiển thị (`display_name`) kèm `assignee`/`created_by` trong response** (D-SD04-014 (¶4.4), D-SD04-015 (¶5.1)) — ⚠ bổ sung 2026-09-23: hoàn thiện kỹ thuật cho quy ước presigned URL đã chốt ở D-SD01-003 (¶3) (áp dụng cụ thể cho `entry_file`, song song `knowledge_object_file`/`source_file` ở module 03), và cho việc hiển thị tên người phụ trách/người tạo ở giao diện Admin nội bộ thay vì chỉ có UUID thô — không đổi hành vi nghiệp vụ nào.
-- **`entry_count` ở `encyclopedia.listCulturalDomains` — `GET /encyclopedia/cultural-domains`** (D-SD04-017 (¶5.3)) — ⚠ bổ sung 2026-09-23: hoàn thiện kỹ thuật cho màn hình Quản lý Cương vực (D-ADM-020 (¶4.20)) cần hiển thị số Mục từ đang gán mỗi Cương vực; trước đó endpoint danh sách chưa trả trường này. Đếm mọi dòng `entry_cultural_domain`, không phân biệt `status` (màn hình quản trị nội bộ, khác `public.listEntries` — `GET /public/entries` chỉ lọc Mục từ đã có phiên bản công khai, D-SD04-018 (¶5.4)).
+- **`entry_count` ở `encyclopedia.listCulturalDomains` — `GET /encyclopedia/cultural-domains`** (D-SD04-017 (¶5.3)) — ⚠ bổ sung 2026-09-23: hoàn thiện kỹ thuật cho màn hình Quản lý Cương vực (D-ADM-020 (¶4.20)) cần hiển thị số Mục từ đang gán mỗi Cương vực; trước đó endpoint danh sách chưa trả trường này. Đếm mọi dòng `entry_cultural_domain`, không phân biệt `status` (màn hình quản trị nội bộ, khác `public.listEntries` chỉ lọc Mục từ đã có phiên bản công khai, D-SD04-018 (¶5.4)).
 - **`GetEntryTitles`** (D-SD04-013 (¶4.3)) — ⚠ bổ sung: interface đọc hàng loạt tiêu đề Mục từ cho `/assistant` — D-SD06-004 (¶3.2) yêu cầu `title` trong `context_chunks` nhưng `assistant_chunk` không lưu tiêu đề, và API rà soát log cần tiêu đề cho cả lượt hỏi cũ. Fallback về phiên bản đã chốt mới nhất khi Mục từ không còn công khai, kèm cờ `IsPublic`.

@@ -1,13 +1,13 @@
 # Thiết Kế: AI Gateway (service Python riêng)
 
-> Trạng thái: đã chốt — đang được `03-cultural-knowledge-base.md` (D-SD03-017 (¶4.2)–D-SD03-019 (¶4.4)) và `05-ai-assistant.md` (D-SD05-011 (¶4.5)) tham chiếu tới các endpoint cụ thể.
+> Trạng thái: đã chốt — đang được `03-cultural-knowledge-base.md` (D-SD03-017 (¶4.2)–D-SD03-019 (¶4.4)) `05-ai-assistant.md` (D-SD05-011 (¶4.5)) và `04-encyclopedia.md` (D-SD04-020 (¶4.5)) tham chiếu tới các endpoint cụ thể.
 >
 > Tài liệu này **không theo cấu trúc chuẩn module 02–05** (`00-claude-instructions.md` mục 5), vì AI Gateway không phải một module nghiệp vụ ánh xạ 1-1 với đặc tả gốc — nó là service hạ tầng đã được quyết định kiến trúc ở D-SD01-006 (¶6) (self-host, GPU on-prem, vLLM + ASR riêng, 3 chế độ backend). Tài liệu này bổ sung phần D-SD01-006 (¶6) còn để ngỏ: **hợp đồng API cụ thể** giữa Go monolith (`/assistant` — tài liệu 05, `/verification` — tài liệu 03) và AI Gateway, cùng **kiến trúc nội bộ** của chính service Python này — đủ chi tiết để tự implement (không chỉ để Go gọi vào).
 
 ## 1. [D-SD06-001] Phạm vi & nguyên tắc
 
-- AI Gateway phục vụ đúng 2 năng lực nghiệp vụ đã chốt ở D-SD01-006 (¶6): **RAG cho AI Văn Minh Việt** (module 05) và **AI Verification đa phương thức** (module 03, R-KB-080 (§2.2.6.6)) — không phục vụ mục đích nào khác.
-- **Không tự quyết định nghiệp vụ** (verdict cuối cùng ghi vào `claim_reference`/`claim`, quyết định trạng thái workflow...) — AI Gateway chỉ trả kết quả thô (verdict/note/embedding/answer) cho Go monolith; Go monolith (`/verification`, `/assistant`) chịu trách nhiệm ghi dữ liệu, validate quyền, quản lý transaction. Đúng nguyên tắc "AI Gateway chỉ là lớp trừu tượng hoá phía gọi" đã nêu ở D-SD01-006 (¶6).
+- AI Gateway phục vụ đúng 3 năng lực nghiệp vụ đã chốt ở D-SD01-006 (¶6): **RAG cho AI Văn Minh Việt** (module 05), **AI Verification đa phương thức** (module 03, R-KB-080 (§2.2.6.6)) và **sinh bản nháp nội dung Mục từ** (module 04, R-ENC-038 (§2.3.8)) — không phục vụ mục đích nào khác.
+- **Không tự quyết định nghiệp vụ** (verdict cuối cùng ghi vào `claim_reference`/`claim`, quyết định trạng thái workflow...) — AI Gateway chỉ trả kết quả thô (verdict/note/embedding/answer) cho Go monolith; Go monolith (`/verification`, `/assistant`, `/encyclopedia`) chịu trách nhiệm ghi dữ liệu, validate quyền, quản lý transaction. Đúng nguyên tắc "AI Gateway chỉ là lớp trừu tượng hoá phía gọi" đã nêu ở D-SD01-006 (¶6).
 - **Không gọi trực tiếp tới CSDL Postgres của Go monolith** — nhận input qua request (text, URL file trong MinIO/S3 nếu cần đọc file), trả output qua response. Việc đọc file (Tư liệu gốc/Nội dung) từ MinIO/S3 do chính AI Gateway thực hiện khi cần (ví dụ ASR, VLM) — MinIO/S3 credentials cấp riêng cho AI Gateway (chỉ quyền đọc), không đi qua Go monolith để tránh proxy file nặng qua REST/JSON (nhất quán với nguyên tắc "không proxy file lớn" ở D-SD01-003 (¶3)).
 - Giao thức: **REST/JSON**, không dùng gRPC — dù D-SD01-006 (¶6) để ngỏ "gRPC/REST", chọn REST cho nhất quán với toàn bộ hệ thống (đã dùng REST/JSON cho mọi API khác — D-SD01-003 (¶3)), dễ debug/log, không cần thêm tooling codegen protobuf. ⚠ Quyết định bổ sung của tài liệu này — có thể đổi sang gRPC sau nếu đo được overhead JSON đáng kể ở tải cao.
 - Mạng nội bộ (internal network), **không** đi qua reverse proxy/route `/api/v1/...` công khai (D-SD01-001 (¶1), D-SD01-002 (¶2)) — chỉ Go monolith (`/cmd/api`, `/cmd/worker`) gọi được. Xác thực bằng shared secret header (`X-Internal-Secret`), cùng kiểu cơ chế đã dùng cho webhook nội bộ ở D-SD03-025 (¶5.5) — không cần JWT/OAuth vì không phải endpoint người dùng gọi.
@@ -24,6 +24,7 @@
 | 5 | Trích transcript ASR | `POST /v1/transcribe` | `gateway.transcribe` | `/knowledge`/`/shared` (job nền sinh `transcript_storage_key` cho audio/video — D-SD03-019 (¶4.4) ) | Đồng bộ, trong job nền |
 | 6 | So khớp ngữ nghĩa văn bản | `POST /v1/verify/text-match` | `gateway.verifyTextMatch` | `/verification` (AI Verification — văn bản, và âm thanh/phim sau khi có transcript, R-KB-081 (§2.2.6.6.1)) | Đồng bộ, trong job nền |
 | 7 | So khớp nội dung vùng ảnh | `POST /v1/verify/image-region` | `gateway.verifyImageRegion` | `/verification` (AI Verification — hình ảnh, và khung hình phim, R-KB-081 (§2.2.6.6.1)) | Đồng bộ, trong job nền |
+| 8 | Sinh bản nháp nội dung Mục từ | `POST /v1/generate-entry-draft` | `gateway.generateEntryDraft` | `/encyclopedia` (job `encyclopedia.generate_content`, D-SD04-019 (¶3.5)) | Đồng bộ, JSON một lần, trong job nền |
 
 **Không có endpoint riêng cho việc trích metadata file** (số trang, kích thước ảnh, độ dài audio/video — D-SD01-004 (¶4)) — đây là xử lý kỹ thuật thuần tuý (đọc header file), không cần model AI, thực hiện trực tiếp trong `/cmd/worker` bằng thư viện thông thường (ví dụ `ffprobe` cho audio/video, đọc thuộc tính ảnh, đếm trang PDF) — **không gọi AI Gateway**.
 
@@ -190,6 +191,40 @@ Response:
 - `bbox` optional — bỏ qua thì VLM đọc toàn bộ ảnh/khung hình (áp dụng khi phim không khai báo khung ảnh, R-KB-062 (§2.2.4.2.4) "khung ảnh không bắt buộc").
 - **⚠ Model đề xuất (ứng viên, chưa benchmark — xem ¶8)**: **Qwen3-VL** (đề xuất bản 32B làm điểm khởi đầu) — thế hệ mới hơn ví dụ Qwen2-VL/InternVL đã nêu ở D-SD01-006 (¶6), được vLLM hỗ trợ đầy đủ, đạt chất lượng gần ngang GPT-4o ở bản 72B trên benchmark MMBench-EN; bản 32B được chọn làm điểm khởi đầu vì cân bằng chất lượng/VRAM tốt hơn (không cần multi-GPU) so với việc phải lên thẳng 72B như họ Qwen2-VL.
 
+### 3.8. [D-SD06-014] `POST /v1/generate-entry-draft`
+
+Request:
+```json
+{
+  "entry_title": "Trống đồng Đông Sơn",
+  "sources": [
+    {
+      "title": "Hoa văn trống đồng Ngọc Lũ",
+      "claims": ["Mặt trống có ngôi sao 14 cánh ở tâm…"],
+      "transcript_storage_keys": ["knowledge/…/transcript.json"],
+      "images": [ { "image_id": "uuid", "storage_key": "knowledge/…/mat_trong.jpg" } ]
+    }
+  ]
+}
+```
+
+Response:
+```json
+{
+  "blocks": [
+    { "type": "heading", "level": 2, "text": "Hoa văn" },
+    { "type": "paragraph", "text": "…" },
+    { "type": "image", "image_id": "uuid", "caption": "Mặt trống đồng Ngọc Lũ" }
+  ]
+}
+```
+
+- AI Gateway tự đọc transcript và ảnh từ Object storage (D-SD06-001 (¶1)).
+- Chỉ dùng thông tin trong `sources`, không dùng kiến thức nền của model; văn phong bách khoa, tiếng Việt (R-NFR-020 (§3.3.5)). `level` chỉ nhận 2 hoặc 3.
+- Ảnh: ở `gpu-onprem`, VLM đọc ảnh để chọn vị trí chèn và viết `caption`; ở chế độ không có VLM, ảnh được xếp cuối, `caption` rỗng.
+- Tổng nội dung vượt giới hạn ngữ cảnh của model → HTTP 422 `source_content_too_long`, không sinh nội dung.
+- Model cấu hình riêng cho năng lực này (LLM và VLM); không cấu hình thì dùng LLM của `gateway.generate` và VLM của `gateway.verifyImageRegion`. ⚠ Model cụ thể chọn sau benchmark (¶8).
+
 ## 4. [D-SD06-010] Model & pipeline theo từng chế độ backend (`AI_GATEWAY_MODE`, D-SD01-006 (¶6))
 
 | Năng lực | `mock` | `cpu-small` | `gpu-onprem` |
@@ -201,6 +236,7 @@ Response:
 | `gateway.transcribe` | 1 segment giả, `text` = `"[mock transcript]"`, phủ toàn bộ độ dài file (đọc metadata qua `ffprobe` để biết độ dài) | `faster-whisper` model nhỏ (`base`/`small`), CPU — chậm | **EraX-WoW-Turbo** (ứng viên chính) / **PhoWhisper** (runner-up) self-host (⚠ ứng viên, benchmark trước khi pin — ¶8) |
 | `gateway.verifyTextMatch` | Luôn `verdict: "dat"` (⚠ có thể cấu hình để test đường "khong_dat" — ¶8) | Cùng LLM `generate` làm judge | LLM judge qua vLLM (cùng ứng viên `gateway.generate`) |
 | `gateway.verifyImageRegion` | Luôn `verdict: "dat"` | **Không hỗ trợ đầy đủ** — VLM không khả thi chạy tốt trên CPU nhỏ; trả `verdict: "dat"` kèm `note: "cpu-small mode: bỏ qua kiểm VLM"` (⚠ xem ¶8) | **Qwen3-VL** (đề xuất bản 32B, ⚠ ứng viên — ¶8) qua vLLM |
+| `gateway.generateEntryDraft` | Khối mẫu cố định: 1 heading + 1 paragraph ghép `entry_title`, kèm ảnh đầu tiên nếu có | LLM qua `llama.cpp`, không VLM (ảnh xếp cuối) | LLM của `gateway.generate` + Qwen3-VL cho ảnh, qua vLLM |
 
 Chọn backend qua factory pattern trong code Python — 1 interface chung (`AIBackend`) với 3 implementation (`MockBackend`, `CPUSmallBackend`, `GPUOnpremBackend`), khởi tạo theo biến môi trường `AI_GATEWAY_MODE` lúc service start — đúng nguyên tắc "đổi implementation không viết lại tầng gọi" đã chốt ở D-SD01-006 (¶6).
 
@@ -211,25 +247,26 @@ Chọn backend qua factory pattern trong code Python — 1 interface chung (`AIB
 - **`gateway.selfAudit`** — system prompt yêu cầu model liệt kê từng câu/mệnh đề trong `answer`, đối chiếu xem có được `context_chunks` hỗ trợ trực tiếp không, gắn cờ nếu không.
 - **`gateway.verifyTextMatch`** — system prompt đóng vai "chuyên gia đối chiếu tư liệu", yêu cầu trả lời đúng 1 trong 2 nhãn (`dat`/`khong_dat`) kèm giải thích ngắn — ép output có cấu trúc (JSON mode của LLM nếu backend hỗ trợ, hoặc parse từ text có định dạng cố định).
 - **`gateway.verifyImageRegion`** — tương tự nhưng input đa phương thức (ảnh + text) qua VLM, cùng yêu cầu output có cấu trúc.
+- **`gateway.generateEntryDraft`** — system prompt ép chỉ dùng `sources`, không suy diễn; tổ chức nội dung theo mục có tiêu đề; mỗi ảnh dùng tối đa một lần; output JSON đúng schema D-SD06-014 (¶3.8).
 - ⚠ Nội dung prompt cụ thể (câu chữ, few-shot example...) để lại cho lúc implement + benchmark thực tế (cùng tinh thần "chốt sau khi có số liệu thực tế" ở `01` ¶9) — mục này chỉ chốt khung/yêu cầu, không chốt câu chữ.
 
 ## 6. [D-SD06-012] Xử lý lỗi, timeout, retry
 
 - Response lỗi chuẩn hoá, nhất quán với quy ước chung D-SD01-003 (¶3): `{ "error_code": "...", "message": "...", "trace_id": "..." }`.
-- **Job nền** (`gateway.embed`, `gateway.transcribe`, `/v1/verify/*`, gọi từ `/cmd/worker`): lỗi/timeout để job tự thất bại và dựa vào cơ chế retry/dead-letter sẵn có của river (D-SD01-001 (¶1), D-SD01-004 (¶4)) — không tự implement retry riêng trong AI Gateway hay trong code gọi.
+- **Job nền** (`gateway.embed`, `gateway.transcribe`, `/v1/verify/*`, `gateway.generateEntryDraft`, gọi từ `/cmd/worker`): lỗi/timeout để job tự thất bại và dựa vào cơ chế retry/dead-letter sẵn có của river (D-SD01-001 (¶1), D-SD01-004 (¶4)) — không tự implement retry riêng trong AI Gateway hay trong code gọi.
 - **Request đồng bộ từ người dùng** (`gateway.generate`, `gateway.rewriteQuery`, `gateway.selfAudit`, gọi từ `/cmd/api` khi chat): lỗi/timeout trả thẳng lỗi cho người dùng qua endpoint `assistant.chat` (không retry ở tầng này vì người dùng đang chờ trực tiếp) — Go trả mã lỗi rõ ràng ("AI Văn Minh Việt tạm thời không phản hồi được, thử lại sau") thay vì để timeout im lặng. Ngoại lệ: lỗi/timeout của `gateway.selfAudit` không trả lỗi cho người dùng, vì câu trả lời đã được stream xong trước đó — xem D-SD06-006 (¶3.4).
-- Timeout cụ thể theo từng endpoint (đề xuất, điều chỉnh khi có số liệu thực tế): `gateway.embed` 5s, `gateway.rewriteQuery` 5s (nằm trên đường tương tác, phải rất nhanh — xem rủi ro độ trễ ở `05` ¶6), `gateway.generate` không đặt timeout cứng (stream tới khi xong, nhưng có timeout tổng ứng với NFR ≤15s p95 — D-SD01-008 (¶8)/R-NFR-011 (§3.2.2)), `gateway.selfAudit` 10s, `gateway.transcribe` theo độ dài file (ví dụ 2× độ dài audio, vì không cần real-time — D-SD01-008 (¶8)), `/v1/verify/*` 15s.
+- Timeout cụ thể theo từng endpoint (đề xuất, điều chỉnh khi có số liệu thực tế): `gateway.embed` 5s, `gateway.rewriteQuery` 5s (nằm trên đường tương tác, phải rất nhanh — xem rủi ro độ trễ ở `05` ¶6), `gateway.generate` không đặt timeout cứng (stream tới khi xong, nhưng có timeout tổng ứng với NFR ≤15s p95 — D-SD01-008 (¶8)/R-NFR-011 (§3.2.2)), `gateway.selfAudit` 10s, `gateway.transcribe` theo độ dài file (ví dụ 2× độ dài audio, vì không cần real-time — D-SD01-008 (¶8)), `/v1/verify/*` 15s, `gateway.generateEntryDraft` 300s ⚠.
 - **Tải chồng lấn giữa chat (tương tác) và job nền (AI Verification)** trên cùng GPU on-prem — ⚠ vấn đề mở, xem D-SD06-013 (¶7).
 
 ## 7. [D-SD06-013] Cấu hình & vận hành
 
-- Biến môi trường chính: `AI_GATEWAY_MODE` (`mock`/`cpu-small`/`gpu-onprem`, đã chốt ở D-SD01-006 (¶6)), `AI_GATEWAY_INTERNAL_SECRET` (shared secret xác thực từ Go), `MINIO_ENDPOINT`/`MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` (quyền đọc riêng cho AI Gateway, D-SD06-001 (¶1)), model path/tên model theo từng năng lực (pin version cụ thể khi benchmark xong — `01` ¶9).
+- Biến môi trường chính: `AI_GATEWAY_MODE` (`mock`/`cpu-small`/`gpu-onprem`, đã chốt ở D-SD01-006 (¶6)), `AI_GATEWAY_INTERNAL_SECRET` (shared secret xác thực từ Go), `ENTRY_DRAFT_LLM_MODEL`/`ENTRY_DRAFT_VLM_MODEL` (tuỳ chọn — model riêng cho `gateway.generateEntryDraft`, mặc định như D-SD06-014 (¶3.8)), `MINIO_ENDPOINT`/`MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` (quyền đọc riêng cho AI Gateway, D-SD06-001 (¶1)), model path/tên model theo từng năng lực (pin version cụ thể khi benchmark xong — `01` ¶9).
 - `GET /v1/health` (operationId `gateway.getHealth`) — health check cho container orchestration (D-SD01-001 (¶1)); trả kèm `mode` đang chạy (`mock`/`cpu-small`/`gpu-onprem`) để dễ debug môi trường nào đang gọi backend nào.
 - Đóng gói Docker riêng, deploy độc lập với Go monolith (đã chốt D-SD01-001 (¶1)/D-SD01-002 (¶2)) — cùng container hoặc tách container theo từng năng lực (RAG vs. Verification vs. ASR) là quyết định vận hành, không ảnh hưởng hợp đồng API ở tài liệu này.
 
 ## 8. Vấn đề mở / giả định
 
-- **Ưu tiên tải GPU giữa chat tương tác và AI Verification nền** — ⚠ đặc tả chỉ cho biết 2 NFR khác nhau (chat ≤3s/≤15s, Verification "vài phút chấp nhận được" — D-SD01-008 (¶8)/R-NFR-011 (§3.2.2)) nhưng không có cơ chế admission-control/priority queue cụ thể ở tầng AI Gateway khi cả hai cùng tranh chấp GPU. Đề xuất: request queue riêng ưu tiên `gateway.generate`/`gateway.rewriteQuery`/`gateway.selfAudit` (đường chat) hơn `gateway.embed`/`gateway.transcribe`/`/v1/verify/*` (đường nền) — cần benchmark thực tế trước khi chốt cơ chế cụ thể (cùng tinh thần "chốt sau khi có số liệu" — `01` ¶9).
+- **Ưu tiên tải GPU giữa chat tương tác và AI Verification nền** — ⚠ đặc tả chỉ cho biết 2 NFR khác nhau (chat ≤3s/≤15s, Verification "vài phút chấp nhận được" — D-SD01-008 (¶8)/R-NFR-011 (§3.2.2)) nhưng không có cơ chế admission-control/priority queue cụ thể ở tầng AI Gateway khi cả hai cùng tranh chấp GPU. Đề xuất: request queue riêng ưu tiên `gateway.generate`/`gateway.rewriteQuery`/`gateway.selfAudit` (đường chat) hơn `gateway.embed`/`gateway.transcribe`/`/v1/verify/*`/`gateway.generateEntryDraft` (đường nền) — cần benchmark thực tế trước khi chốt cơ chế cụ thể (cùng tinh thần "chốt sau khi có số liệu" — `01` ¶9).
 - **`cpu-small` không hỗ trợ đầy đủ VLM** (`gateway.verifyImageRegion`, D-SD06-010 (¶4)) — môi trường dev local không GPU sẽ luôn trả `dat` cho tiêu chí hình ảnh, nghĩa là **không test được đường "khong_dat" của tiêu chí này** khi phát triển local. Chấp nhận được cho giai đoạn dev (mục đích `cpu-small` chỉ để test luồng nghiệp vụ, không cần chất lượng AI thật — D-SD01-006 (¶6)), nhưng cần lưu ý khi viết test tự động.
 - **Cách truyền frame video đã trích xuất tới `gateway.verifyImageRegion`** (D-SD06-009 (¶3.7)) — 2 phương án: (a) Go/`worker` tự trích frame bằng `ffmpeg`, ghi tạm vào Object storage rồi truyền `image_storage_key`; (b) Go/`worker` trích frame rồi truyền thẳng `image_bytes` (base64) trong request, không ghi Object storage. Tài liệu này tạm chọn phương án (a) cho nhất quán với cách các endpoint khác đều truyền `storage_key` thay vì bytes — nhưng đây là chi tiết kỹ thuật có thể đổi khi implement, không ảnh hưởng ai_verdict/nghiệp vụ.
 - **Cần cấu hình khả năng "trả lời giả để test đường không đạt" cho `mock` mode** (D-SD06-010 (¶4), dòng `gateway.verifyTextMatch`/`image-region`) — ví dụ qua query param hoặc theo nội dung `claim_text` chứa từ khoá đặc biệt (`"__mock_fail__"`) — chi tiết cụ thể để lại cho lúc viết test, chỉ ghi nhận nhu cầu ở đây.

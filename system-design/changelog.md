@@ -73,3 +73,22 @@
   - `common/requirements-design-sync.md`: mục 2.5 dạng chuẩn chỉ ghi operationId, trích mục hành vi thì ghi riêng theo mục 2.4, không ghi ID trần ngay sau operationId; mục 5 đổi lỗi tương ứng; mục 7 Code trích endpoint chỉ bằng operationId.
   - `common/tools/check-requirement-refs.py`: kiểm tra mọi operationId được trích; báo lỗi khi có ID mục trần ngay sau operationId.
   - **01**–**07**, `index.md`: bỏ ID mục đi kèm operationId ở 215 chỗ.
+
+## 2026-10-01
+
+- DC-20261001-01: API nhóm `public` của Bách khoa toàn thư (theo câu hỏi của Code ở PUBLICWEB-14, PUBLICWEB-17).
+  - **04-encyclopedia.md** ¶5.4 (D-SD04-018): path `/encyclopedia/entries`, `/encyclopedia/entries/{id}`, `/encyclopedia/cultural-domains` dưới `/api/v1/public`, operationId giữ `public.*`; lọc `cultural_domain_id` lặp nhiều lần (OR); `public.listEntries` trả `excerpt` (200 ký tự), `cover_image`, `cultural_domain_ids` sắp theo tên; `public.getEntry` trả `cover_image`, `files[].url`/`url_expires_at` ký sẵn 60 phút, bỏ `storage_key`. ¶2.2 (D-SD04-002): cột `entry_version.cover_file_id` tính khi tạo dòng chốt. ¶4.3 (D-SD04-013): hàm `GetPublicCoverImages`. ¶5.3, ¶6: bỏ trích path `/public/...` cũ.
+  - **05-ai-assistant.md** ¶5.1 (D-SD05-012): sự kiện `citations` thêm `cover_image`; bỏ trích path `/public/cultural-domains` cũ.
+  - **01-architecture-and-tech-stack.md** ¶3 (D-SD01-003): ngoại lệ trả sẵn presigned GET URL cho nhóm `public`.
+  - `common/requirements-design-sync.md` mục 2.5: ngoại lệ tiền tố `public` cho endpoint riêng nhóm `public`. `common/tools/check-requirement-refs.py`: chấp nhận tiền tố `public` với mọi path, endpoint `public.*` không đè endpoint cùng path ở bảng tra.
+
+- DC-20261001-02: thiết kế R-ENC-038 (§2.3.8) "Khởi tạo nội dung Mục từ bằng AI".
+  - **04-encyclopedia.md**: ¶3.5 mới (D-SD04-019) — kích hoạt thủ công `encyclopedia.generateEntryContent` (soan_thao, đúng Người phụ trách, xác nhận ghi đè, có nguồn, không trùng job), khoá sửa nội dung/file/gửi xét duyệt khi còn job, Release/ForceRelease huỷ job đang chờ, job `encyclopedia.generate_content` đọc phiên bản đang được sử dụng của Hạng mục tri thức, gọi `gateway.generateEntryDraft`, ghi khi vẫn soan_thao và đúng Người phụ trách (ngược lại bỏ kết quả), ảnh tạo `entry_file` dùng lại `storage_key`, cập nhật `last_synced_version_id`. ¶4.5 mới (D-SD04-020) — gọi AI Gateway, ánh xạ khối. ¶1: thêm gạch gọi AI Gateway. ¶4.4: hàm `RequestContentGeneration`, `ApplyGeneratedContent`, điều kiện khoá ở các hàm ghi nội dung/file/gửi xét duyệt, Release/ForceRelease huỷ job. ¶5.1, ¶5.2: endpoint mới, `content_generation` ở `encyclopedia.getEntry`, lỗi 409 `entry_content_generation_running`. ¶6: thay bullet "chưa thiết kế". Dòng trạng thái: đã chốt ¶1–6.
+  - **06-ai-gateway.md**: ¶3.8 mới (D-SD06-014) `gateway.generateEntryDraft` — `POST /v1/generate-entry-draft`. ¶1: 3 năng lực. ¶2, ¶4, ¶5, ¶6, ¶8: thêm năng lực mới (timeout 300s, thuộc đường nền).
+  - **01-architecture-and-tech-stack.md**: ¶6 (D-SD01-006) 3 năng lực, điểm gọi `/internal/encyclopedia`; ¶4 (D-SD01-004) loại job `encyclopedia.generate_content`; ¶2 (D-SD01-002) 3 sự kiện audit `entry.content_generation_request`/`_complete`/`_discard`.
+  - `index.md`: `04` phụ thuộc thêm 06, trạng thái đã chốt ¶1–6; 06 được gọi bởi 04.
+
+- DC-20261001-03: chốt các điểm còn mở của DC-20261001-01 và DC-20261001-02.
+  - **04-encyclopedia.md** ¶2.6 (D-SD04-006): `entry_cultural_domain` thêm `created_at` (thời điểm gán), migration đặt giá trị cho dòng có sẵn theo tên Cương vực. ¶5.4 (D-SD04-018): `cultural_domain_ids` ở nhóm `public` sắp theo thứ tự gán. ¶3.5 (D-SD04-019) bước 4: lỗi `source_content_too_long` dừng job, không thử lại. ¶5.1: `content_generation` thêm `error_code`.
+  - **06-ai-gateway.md** ¶3.8 (D-SD06-014): nguồn vượt giới hạn ngữ cảnh → HTTP 422 `source_content_too_long`, không cắt bớt; model LLM/VLM cấu hình riêng, mặc định dùng model của `gateway.generate`/`gateway.verifyImageRegion`. ¶7: biến môi trường `ENTRY_DRAFT_LLM_MODEL`, `ENTRY_DRAFT_VLM_MODEL`.
+  - Giữ nguyên, đã chốt: thời hạn URL tệp công khai 60 phút; kích hoạt lại khi đang chạy trả 409; Release/ForceRelease huỷ job đang chờ; timeout `gateway.generateEntryDraft` 300 giây; ảnh xếp cuối khi không có VLM; tự cập nhật `last_synced_version_id` sau khi sinh nội dung.

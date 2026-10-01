@@ -176,7 +176,7 @@ Cả 4 qua cùng AI Gateway (API nội bộ REST, D-SD06-001 (¶1)), hỗ trợ 
 | `event` | `data` | Thời điểm |
 |---|---|---|
 | `token` | `{text}` | Lặp lại trong lúc Generate stream (relay từ `delta` của `gateway.generate`) |
-| `citations` | `{items: [{entry_id, title}]}` | Một lần, khi Generate xong. `title` là tiêu đề phiên bản đang công khai (`GetEntryTitles`) |
+| `citations` | `{items: [{entry_id, title, cover_image}]}` | Một lần, khi Generate xong. `title` là tiêu đề phiên bản đang công khai (`GetEntryTitles`). ⚠ `cover_image` — `{file_id, url, url_expires_at}` ảnh đại diện phiên bản công khai (`GetPublicCoverImages`, D-SD04-013 (¶4.3)) hoặc `null`; dùng cho dải ảnh minh hoạ dưới câu trả lời ở Web công khai. Cùng dữ liệu ở cả 2 kênh |
 | `self_audit` | `{flags: [{claim_text, reason}] \| null}` | Một lần, sau bước Self-audit. Cùng schema `flags` của `gateway.selfAudit` (D-SD06-006 (¶3.4)). `[]` = không có cờ; `null` = không kiểm được (lỗi/timeout) |
 | `done` | `{query_log_id, turn_index}` | Một lần, sau khi ghi `assistant_query_log` (D-SD05-005 (¶3.2) bước 6) — sự kiện cuối của lượt hỏi thành công |
 | `error` | `{error_code, message, trace_id}` | Bất kỳ lúc nào; stream kết thúc ngay sau sự kiện này. Định dạng theo quy ước lỗi chung (D-SD01-003 (¶3), D-SD06-012 (¶6)) |
@@ -188,7 +188,7 @@ Nếu lỗi xảy ra sau khi đã gửi `citations`, client giữ nguyên phần
 
 - Cùng 1 path `/assistant/chat`, mount riêng dưới `/api/v1/admin/...` và `/api/v1/public/...` — handler dùng chung logic (D-SD05-005 (¶3.2)), chỉ khác `channel`/`asked_by_employee_id` gắn theo nhóm route gọi vào.
 - **Không mount ở `/api/v1/partner/...`**: Nhân viên Tổ chức khác dùng AI Văn Minh Việt qua route `public` như người dùng thường, không có trải nghiệm chat xác thực riêng theo tổ chức.
-- Danh sách Cương vực để hiển thị bộ lọc: dùng lại `encyclopedia.listCulturalDomains` — `GET /encyclopedia/cultural-domains` (admin — mở cho mọi Nhân viên đã đăng nhập, D-SD04-017 (¶5.3)) / `public.listCulturalDomains` — `GET /public/cultural-domains` (public) đã có ở D-SD04-017 (¶5.3)/D-SD04-018 (¶5.4) — không tạo endpoint trùng.
+- Danh sách Cương vực để hiển thị bộ lọc: dùng lại `encyclopedia.listCulturalDomains` — `GET /encyclopedia/cultural-domains` (admin — mở cho mọi Nhân viên đã đăng nhập, D-SD04-017 (¶5.3)) / `public.listCulturalDomains` (public) đã có ở D-SD04-017 (¶5.3)/D-SD04-018 (¶5.4) — không tạo endpoint trùng.
 - **`conversation_id`** (UUID) do client tự sinh và tự quản lý (không do server cấp phát) — bắt buộc trong body ở mọi request, kể cả lượt hỏi đầu tiên của một hội thoại mới (client tự sinh UUID mới cho hội thoại mới). Server dùng để nhóm các lượt hỏi thành 1 hội thoại (D-SD05-002 (¶2.2)), đọc lịch sử N lượt gần nhất phục vụ bước Rewrite/Generate (D-SD05-005 (¶3.2)). Hỗ trợ hội thoại nhiều lượt (multi-turn) — xem ¶6. Một `conversation_id` gắn cố định với kênh và người hỏi của lượt đầu tiên. Nếu dùng lại ở kênh khác, hoặc bởi Nhân viên khác, server trả `error` `conversation_mismatch` (D-SD05-005 (¶3.2) bước 0).
 
 ### 5.2. [D-SD05-013] Nhóm `assistant/*` — chỉ mount `admin` (rà soát chất lượng, role `quan_tri_he_thong`)

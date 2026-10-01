@@ -172,7 +172,7 @@ def load_endpoints():
                 op = cm.group(1)
                 if not OP_FMT_RE.fullmatch(op):
                     errors.append(f"{where}: operationId {op} sai định dạng <tiền tố>.<tênCamelCase>")
-                elif epath and op.split(".")[0] != op_prefix(epath):
+                elif epath and op.split(".")[0] not in (op_prefix(epath), "public"):
                     errors.append(f"{where}: operationId {op} sai tiền tố — path {epath} dùng tiền tố {op_prefix(epath)}")
                 if op in ops:
                     errors.append(f"{where}: operationId {op} bị trùng (đã khai báo ở {ops[op][1]})")
@@ -180,7 +180,10 @@ def load_endpoints():
                     errors.append(f"{where}: endpoint {op} nằm trong mục chưa có ID thiết kế")
                 ops.setdefault(op, (did, where))
                 if epath:
-                    paths.setdefault((method, norm_path(epath)), op)
+                    key = norm_path(epath)
+                    if op.startswith("public.") and op_prefix(epath) != "public":
+                        key = "public:" + key  # endpoint riêng nhóm public, không đè endpoint cùng path
+                    paths.setdefault((method, key), op)
     return ops, paths, errors
 
 
