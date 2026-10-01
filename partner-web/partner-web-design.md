@@ -8,7 +8,7 @@
 - Thực hiện 3 vai trò theo phạm vi Đề tài nghiên cứu được gán: **vai trò Nghiên cứu** (`nghien_cuu`), **vai trò Xét duyệt** (`xet_duyet`) (R-PTN-003 (§2.7.2) đặc tả gốc), và **vai trò Chủ nhiệm đề tài** (`chu_nhiem_de_tai`, R-KB-073 (§2.2.5.5)/R-PTN-008 (§2.7.3.4)–R-PTN-009 (§2.7.3.5) — có thể thuộc Tổ chức khác, không chỉ Văn Minh Việt) — không có Nhập liệu, Xuất bản, Biên tập, Xét duyệt Mục từ, Quản trị hệ thống. Không có màn hình quản lý người dùng/phân quyền/Tổ chức dù giữ vai trò gì (R-PTN-010 (§2.7.4)); riêng việc Chủ nhiệm đề tài quản lý nhân sự Nghiên cứu/Xét duyệt **trong đúng đề tài mình phụ trách** không thuộc phạm vi cấm này (R-KB-073 (§2.2.5.5) — khác quản lý người dùng toàn hệ thống).
 - **Phạm vi xem khác nhau theo vai trò**: Nghiên cứu/Xét duyệt xem được Nội dung/Phát biểu/Tham chiếu/kết quả xét duyệt (D-PRT-005 (¶4.5)–D-PRT-009 (¶4.9)). Chủ nhiệm đề tài — khi **không** đồng thời giữ Nghiên cứu/Xét duyệt của đề tài đó — chỉ xem được tiến độ (Tiêu đề/Trạng thái/Người phụ trách/Người tạo) và quản lý nhân sự đề tài, **không** xem được Nội dung/Phát biểu/Tham chiếu/kết quả xét duyệt (D-SD03-021 (¶5.1)) — xem màn hình riêng D-PRT-010 (¶4.10).
 - Ranh giới route đã chốt ở D-SD01-002 (¶2): nhóm `/api/v1/partner/...` chỉ mount phần Nghiên cứu/Xét duyệt/quản lý nhân sự đề tài trong `knowledge`/`gate` (chi tiết endpoint ở `03` ¶5), cùng nhóm `auth/*` (mọi Nhân viên tự xác thực, D-SD02-009 (¶5.1)) — **không mount** `identity`, `ingestion`, `encyclopedia`.
-- Mức độ đặc tả: wireframe/mô tả bố cục đủ dùng cho dev, không mockup chi tiết layout/spacing như `public-web/` (theo `00-claude-instructions.md` mục 1) — cùng mức với `admin-web/`. Riêng bảng màu (xem D-PRT-013 (¶3)) được định nghĩa để đảm bảo nhất quán nhận diện thương hiệu với `public-web/`.
+- Mức độ đặc tả: wireframe/mô tả bố cục đủ dùng cho dev, không mockup chi tiết layout/spacing như `public-web/` (theo `00-claude-instructions.md` mục 1) — cùng mức với `admin-web/`. Riêng bảng màu, font và bo góc (xem D-PRT-013 (¶3)) được định nghĩa để đảm bảo nhất quán nhận diện thương hiệu với `public-web/` và landing vanminhviet.org.
 - Một Nhân viên có thể giữ role `chu_nhiem_de_tai`/`nghien_cuu`/`xet_duyet` của **nhiều Đề tài nghiên cứu khác nhau** cùng lúc (R-KB-006 (§2.2.1.4), R-KB-070 (§2.2.5.2)–R-KB-071 (§2.2.5.3), R-KB-073 (§2.2.5.5)) → mọi danh sách/thao tác trong tài liệu này đều giới hạn theo đúng phạm vi đề tài mà Nhân viên đang đăng nhập được gán, không có khái niệm "xem toàn bộ" như Quản trị hệ thống ở Admin nội bộ (D-SD03-014 (¶3.5) nêu rõ ngoại lệ xem toàn bộ **không áp dụng** cho nhóm route `partner`).
 - **Nguyên tắc giao diện**: giao diện cần giúp người dùng luôn thấy được bức tranh tổng thể (cấu trúc điều hướng/phân cấp dữ liệu của Cổng này) và vị trí chức năng hiện tại nằm ở đâu trong đó — thực hiện qua Breadcrumb, Stepper trạng thái, Sidebar/Topbar, và màn hình Dashboard (chi tiết ở D-PRT-013 (¶3) và D-PRT-011 (¶4.11); quyết định ở `00-claude-instructions.md` mục 6).
 
@@ -37,18 +37,26 @@
 ## 3. [D-PRT-013] Quy ước chung — khung ứng dụng & điều hướng
 
 - **Bố cục sau đăng nhập**: Sidebar cố định bên trái + Topbar trên cùng + khu vực nội dung chính — cùng khung với Admin nội bộ (D-ADM-029 (¶3)), khác app/deploy.
-- **Bảng màu (Color Palette)** (bổ sung 2026-09-24): kế thừa từ bảng màu D-PUB-011 (¶2.1), cùng logic với D-ADM-029 (¶3) (accent + chữ + viền dùng chung, vùng nội dung chính dùng nền trung tính) — nhưng ấm hơn Admin nội bộ một mức, vì Cổng này là giao diện Nhân viên Tổ chức khác nhìn thấy (đối tác bên ngoài), phạm vi/tần suất thao tác cũng hẹp hơn Admin:
+- **Bảng màu (Color Palette)**: kế thừa bảng màu D-PUB-011 (¶2.1) (nhận diện dùng chung với landing vanminhviet.org), cùng logic với D-ADM-029 (¶3) (accent + chữ + viền dùng chung, vùng nội dung chính dùng nền trung tính) — riêng nền vùng nội dung ấm hơn Admin nội bộ một mức, vì Cổng này là giao diện Nhân viên Tổ chức khác nhìn thấy (đối tác bên ngoài), phạm vi/tần suất thao tác cũng hẹp hơn Admin:
 
   | Vai trò | Mã màu | Áp dụng |
   |---|---|---|
-  | Nền vùng nội dung chính (bảng, form, khu làm việc) | `#FDFBF6` | Toàn bộ khu vực nội dung của các màn hình — kem rất nhạt, ấm hơn nền trắng/xám của `admin-web/` nhưng nhạt hơn nhiều so với `public-web/` |
-  | Nền Sidebar / Topbar | `#FAF6EE` | Khung điều hướng (mục này) — giống `public-web/` và `admin-web/` |
-  | Accent (màu nhấn chính) | `#A6192E` | Nút hành động chính (CTA), trạng thái active trên Sidebar, logo, link văn bản (hyperlink) trong toàn ứng dụng (vd. breadcrumb, link "Đề tài nghiên cứu cha" ở D-PRT-006 (¶4.6)/D-PRT-007 (¶4.7)/D-PRT-008 (¶4.8)/D-PRT-009 (¶4.9), link "Quên mật khẩu?" ở D-PRT-001 (¶4.1)) |
-  | Chữ chính | `#241C15` | Toàn bộ văn bản chính |
-  | Chữ phụ | `#7A7166` | Văn bản phụ/mô tả |
-  | Viền / divider | `#E7DECD` | Toàn bộ khung ứng dụng |
+  | Nền vùng nội dung chính (bảng, form, khu làm việc) | `#FDFBF6` | Toàn bộ khu vực nội dung của các màn hình — kem rất nhạt, ấm hơn nền trắng/xám của `admin-web/` nhưng nhạt hơn nền chính `#F7F2EA` của `public-web/` |
+  | Nền Sidebar / Topbar | `#F7F2EA` | Khung điều hướng (mục này) — trùng nền chính của D-PUB-011 (¶2.1) |
+  | Accent (màu nhấn chính) | `#C4171D` | Nút hành động chính (CTA), trạng thái active trên Sidebar, logo, link văn bản (hyperlink) trong toàn ứng dụng (vd. breadcrumb, link "Đề tài nghiên cứu cha" ở D-PRT-006 (¶4.6)/D-PRT-007 (¶4.7)/D-PRT-008 (¶4.8)/D-PRT-009 (¶4.9), link "Quên mật khẩu?" ở D-PRT-001 (¶4.1)) |
+  | Accent đậm | `#9C2B2B` | Trạng thái hover/pressed của phần tử dùng Accent (nút CTA, link) |
+  | Chữ trên nền Accent | `#FFFFFF` | Mọi chữ/icon đặt trên nền Accent hoặc Accent đậm |
+  | Chữ chính | `#252421` | Toàn bộ văn bản chính |
+  | Chữ phụ | `#6D6A64` | Văn bản phụ/mô tả |
+  | Viền / divider | `#E6E0D7` | Toàn bộ khung ứng dụng |
+
+  Hai màu phụ vàng đồng `#C8944A` và xanh rêu `#2F4B3F` của D-PUB-011 (¶2.1) không dùng ở Cổng này.
+
+  **Quy tắc tương phản chữ/nền**: trên nền `#FDFBF6`/`#F7F2EA` chỉ dùng Chữ chính/Chữ phụ/Accent, **không dùng `#FFFFFF`**; trên nền Accent/Accent đậm chỉ dùng `#FFFFFF`. Các cặp màu phát sinh ngoài bảng trên đạt tối thiểu 4.5:1 (WCAG 2.1 AA) với chữ thường, 3:1 với chữ ≥ 18px hoặc đậm ≥ 14px và icon. Với component Quasar có sẵn cặp màu nền/chữ mặc định (`QHeader` mặc định `bg-primary text-white`…), khi đổi màu nền thì phải đặt lại cả màu chữ theo quy tắc này.
 
   Badge trạng thái (xem bullet "Thành phần dùng lại nhiều nơi" bên dưới) dùng bảng màu ngữ nghĩa chuẩn (xanh lá/vàng/đỏ/xanh dương theo convention Quasar) — không theo bảng màu thương hiệu ở trên, cùng nguyên tắc với `admin-web/`.
+- **Typography**: sans-serif **Be Vietnam Pro** (400/500/600/700) cho toàn bộ giao diện (Sidebar, Topbar, Breadcrumb, bảng, form, nút, nội dung), dự phòng `system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif`; serif **Lora** (600) chỉ cho logo/chữ "VĂN MINH VIỆT" và tiêu đề màn hình (H1), dự phòng `Georgia, "Times New Roman", serif`. Nạp kèm subset `vietnamese`. Cùng bộ font với `public-web/`.
+- **Bo góc & hình ảnh**: card, dialog, ô nhập liệu, nút bo góc 8px; chip và badge trạng thái dạng pill. Không dùng ảnh minh hoạ trang trí. Logo dùng logo của landing vanminhviet.org.
 - **Topbar**: tên Nhân viên, tên Tổ chức trực thuộc (Tổ chức khác — để phân biệt khi một Đề tài có Nhân viên từ nhiều Tổ chức cùng tham gia, R-KB-006 (§2.2.1.4)), **tên nhóm/màn hình hiện tại** (ví dụ "Nghiên cứu & Xét duyệt" hoặc "Tổng quan" — đồng bộ với mục đang highlight ở Sidebar), avatar/dropdown mở **menu tài khoản** gồm: "Đổi mật khẩu" → dialog D-PRT-012 (¶4.12); "Đăng xuất" (`auth.logout`). Menu tài khoản hiện cho mọi Nhân viên đã đăng nhập, không phụ thuộc role.
 - **Phiên đăng nhập** (D-SD02-004 (¶3.2) bước 6, D-SD02-007 (¶3.5), D-SD02-009 (¶5.1)):
   - Access token hết hạn (HTTP 401 thông thường): client tự gọi `auth.refresh`, rồi gửi lại request ban đầu. Người dùng không thấy gián đoạn.

@@ -34,3 +34,9 @@
 - DC-20260930-04: đổi toàn bộ trích dẫn endpoint sang operationId, dạng `` `op` `` (giữ ` — METHOD /path` ở route đọc file Tư liệu gốc vì đang nói về nhóm mount), không kèm ID mục. Không đổi nội dung thiết kế. File: **partner-web-design.md** (mục 3, 4.1–4.10, 4.12, 6), **00-claude-instructions.md** (mục 6).
 - DC-20260930-06: bổ sung vào danh sách API các endpoint đã có ở system-design, mount `partner`: 4.7 thêm `knowledge.createKnowledgeObjectFileUploadUrl`, `knowledge.getKnowledgeObjectFileDownloadUrl`, `knowledge.getResearchTopicSourceFileDownloadUrl`; 4.8 thêm 2 op download-url; 4.9 thêm `knowledge.listClaims` và 2 op download-url; 4.10 thêm `knowledge.searchResearchTopicEmployees`. File: **partner-web-design.md**.
 - `00-claude-instructions.md` mục 7: gỡ ghi chú về lỗi ghi nhầm cột ở dòng DC-20260930-03, vì luồng admin-web đã sửa sổ theo dõi. Mốc đồng bộ partner-web: DC-20260930-06.
+
+## 2026-10-01
+
+- DC-20261001-04: căn nhận diện theo D-PUB-011 (¶2.1). File **partner-web-design.md**:
+  - Mục 3: bảng màu mới — Accent `#C4171D`, Accent đậm `#9C2B2B` (hover/pressed), Chữ trên nền Accent `#FFFFFF`, chữ `#252421`/`#6D6A64`, viền `#E6E0D7`, Sidebar/Topbar `#F7F2EA`, nền nội dung giữ `#FDFBF6`; không dùng 2 màu phụ vàng đồng/xanh rêu; thêm quy tắc tương phản chữ/nền. Thêm bullet Typography (Be Vietnam Pro; Lora cho logo/H1, subset `vietnamese`) và bullet Bo góc & hình ảnh (8px, chip/badge pill, không ảnh trang trí, logo của landing vanminhviet.org).
+  - Mục 1: bullet "Mức độ đặc tả" nhắc thêm font, bo góc và landing vanminhviet.org.
