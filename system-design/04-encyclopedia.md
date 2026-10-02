@@ -21,6 +21,7 @@ Quy ước chung theo `00-claude-instructions.md` mục 6 (UUID, `snake_case`, t
 |---|---|---|
 | `id` | UUID | R-ENC-004 (§2.3.2.1) |
 | `current_public_version_id` | UUID (nullable) | R-ENC-010 (§2.3.2.4.1) "Phiên bản đang công khai" — FK → `entry_version.id`, chỉ trỏ tới dòng đã chốt (`frozen_at IS NOT NULL`); do **vai trò Xuất bản Mục từ** chọn/đổi (R-ENC-021 (§2.3.4.2)b), độc lập với workflow; mặc định `NULL` |
+| `first_public_at` | timestamptz (nullable) | ⚠ Đề xuất bổ sung — thời điểm Mục từ được chọn phiên bản công khai **lần đầu** (R-ENC-010 (§2.3.2.4.1)); `NULL` khi chưa từng có phiên bản công khai. `SetPublicVersion` (D-SD04-014 (¶4.4)) đặt `now()` khi `current_public_version_id` đang `NULL`; đổi sang phiên bản khác không đổi giá trị này. Dùng để sắp xếp "mới công khai" ở `public.listEntries` (D-SD04-018 (¶5.4)). Migration đặt giá trị cho dòng có sẵn bằng thời điểm của sự kiện audit `entry.set_public_version` sớm nhất của Mục từ; không có thì dùng `frozen_at` của phiên bản đang công khai |
 | `created_by` | UUID (nullable) | ⚠ Bổ sung — FK → `employee.id`, Nhân viên giữ vai trò Biên tập đã tạo Mục từ này |
 | `created_at` | timestamptz | |
 
@@ -292,7 +293,7 @@ type SignedFile struct {
 - `PublishVersion(ctx, tx, entryID, employeeID) (*EntryVersion, error)` — quyết định "Xuất bản" (D-SD04-002 (¶2.2)), chỉ vai trò Xuất bản Mục từ.
 - `SkipPublish(ctx, tx, entryID, employeeID, confirmed bool) error` — quyết định "Không xuất bản".
 - `ReopenFromPublished(ctx, tx, entryID, targetStatus, employeeID) error` — chỉ vai trò Xét duyệt Mục từ; `targetStatus ∈ {soan_thao, cho_xet_duyet, dang_xet_duyet}`; `assignee_id` giữ nguyên (R-ENC-015 (§2.3.2.5.4)).
-- `SetPublicVersion(ctx, tx, entryID, versionID) error` — chỉ vai trò Xuất bản Mục từ; validate `frozen_at IS NOT NULL`. ⚠ Bổ sung (phối hợp với D-SD05-009 (¶4.3)): sau khi cập nhật `entry.current_public_version_id` trong cùng transaction, enqueue job `assistant.reindex_entry` với payload `{entry_id}` — cùng nguyên tắc enqueue thuần tuý như trên, không import `/assistant`.
+- `SetPublicVersion(ctx, tx, entryID, versionID) error` — chỉ vai trò Xuất bản Mục từ; validate `frozen_at IS NOT NULL`. ⚠ Bổ sung (phối hợp với D-SD05-009 (¶4.3)): sau khi cập nhật `entry.current_public_version_id` (và đặt `entry.first_public_at = now()` nếu đang `NULL`) trong cùng transaction, enqueue job `assistant.reindex_entry` với payload `{entry_id}` — cùng nguyên tắc enqueue thuần tuý như trên, không import `/assistant`.
 
 ### 4.5. [D-SD04-020] Gọi AI Gateway sinh nội dung
 
@@ -355,12 +356,20 @@ Nhóm `encyclopedia/*` chỉ mount ở `/api/v1/admin/encyclopedia/...` (đã ch
 
 | Method | Path | operationId | Mô tả |
 |---|---|---|---|
-| GET | `/encyclopedia/entries` | `public.listEntries` | Tìm kiếm/lọc — chỉ Mục từ có `current_public_version_id` khác NULL (R-PUB-006 (§2.6.2.3)); filter `q` (từ khoá, R-PUB-004 (§2.6.2.1)), `cultural_domain_id` (R-PUB-005 (§2.6.2.2)) |
+| GET | `/encyclopedia/entries` | `public.listEntries` | Tìm kiếm/lọc — chỉ Mục từ có `current_public_version_id` khác NULL (R-PUB-006 (§2.6.2.3)); filter `q` (từ khoá, R-PUB-004 (§2.6.2.1)), `cultural_domain_id` (R-PUB-005 (§2.6.2.2)); sắp xếp `sort`, phân trang `limit`/`cursor` |
 | GET | `/encyclopedia/entries/{id}` | `public.getEntry` | Nội dung phiên bản công khai (R-PUB-007 (§2.6.3)) |
 | GET | `/encyclopedia/cultural-domains` | `public.listCulturalDomains` | Danh sách Cương vực, cho bộ lọc |
 
 - URL đầy đủ: `/api/v1/public/encyclopedia/...`. Path trùng với endpoint nhóm `admin` ở D-SD04-015 (¶5.1), D-SD04-017 (¶5.3) nhưng là endpoint riêng, operationId tiền tố `public` (`common/requirements-design-sync.md` mục 2.5): chỉ đọc phiên bản đang công khai, không trả bản soạn thảo hay trường nội bộ (`status`, `assignee_id`, `entry_count`…).
 - **Lọc Cương vực đa chọn**: `cultural_domain_id` lặp được nhiều lần (`?cultural_domain_id=a&cultural_domain_id=b`); trả Mục từ gắn **ít nhất một** Cương vực đã chọn (OR). Không truyền thì không lọc. ⚠
+- **Sắp xếp và phân trang `public.listEntries`** ⚠:
+  - `sort`:
+    - `latest`: theo `entry.first_public_at` giảm dần, Mục từ được công khai lần đầu gần nhất đứng trước; đổi phiên bản công khai không làm thay đổi thứ tự. Cùng thời điểm thì theo `id`.
+    - `relevance`: theo mức khớp từ khoá, chỉ dùng khi có `q`.
+    - Không truyền `sort`: có `q` thì dùng `relevance`, không có `q` thì dùng `latest`. Truyền `relevance` mà không có `q` thì trả 400.
+  - `limit`: số phần tử mỗi trang, 1–50, mặc định 20.
+  - `cursor`: cursor pagination (D-SD01-003 (¶3)). Cursor gắn với `sort` của lượt gọi đầu; dùng cursor với `sort` khác thì trả 400.
+  - Section "Mục từ nổi bật" ở Trang chủ (D-PUB-001 (¶4.1)) gọi `sort=latest&limit=4`.
 - **Response `public.listEntries`** — mỗi phần tử: ⚠
   - `id`, `title` (tiêu đề phiên bản công khai);
   - `excerpt` — tối đa 200 ký tự đầu của `content_plain_text` phiên bản công khai, cắt ở ranh giới từ, thêm `…` nếu bị cắt; `null` khi không có nội dung text;
