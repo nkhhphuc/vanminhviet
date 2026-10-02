@@ -24,6 +24,7 @@
 
 - Nguyên tắc bắt buộc, áp dụng cho mọi luồng: trước khi ghi bất kỳ thay đổi nào vào file nguồn của một luồng, luôn trình bày bản preview đầy đủ nội dung sẽ thay đổi, chỉ ghi vào file sau khi người dùng xác nhận (ví dụ gõ "duyệt").
 - Với các mục còn mơ hồ, thiếu quan hệ/quy tắc nghiệp vụ, hoặc là quyết định thiết kế có nhiều lựa chọn: đặt câu hỏi làm rõ trước (có thể qua nhiều vòng hỏi–đáp), không tự suy đoán rồi ghi thẳng.
+- Cách đặt câu hỏi cho người dùng: hỏi từng câu một, chờ trả lời rồi mới hỏi câu tiếp theo, không gộp nhiều câu vào một lần. Mỗi câu kèm phần giải thích đủ để người dùng hiểu: vì sao cần hỏi, bối cảnh liên quan trong tài liệu (kèm số mục hoặc ID), mỗi lựa chọn dẫn tới điều gì, ảnh hưởng tới phần nào của đặc tả hoặc thiết kế, và lựa chọn được khuyến nghị (nếu có) kèm lý do.
 - Ngay trước khi soạn preview và ngay trước khi ghi, luôn đọc lại bản mới nhất của file từ thư mục trên máy — tránh ghi đè thay đổi mà session khác hoặc người dùng vừa thêm vào. Nếu file đã đổi so với lúc soạn preview, báo người dùng và soạn lại preview. Khi ghi, sửa tại chỗ đúng phần đã duyệt (bằng lệnh/script đọc chính file đó), không gõ lại toàn bộ nội dung file.
 
 ## 4. Đồng bộ nhận biết giữa các session
