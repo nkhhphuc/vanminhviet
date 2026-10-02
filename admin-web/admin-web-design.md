@@ -60,25 +60,27 @@
 ## 3. [D-ADM-029] Quy ước chung — khung ứng dụng & điều hướng
 
 - **Bố cục sau đăng nhập**: Sidebar cố định bên trái + Topbar trên cùng + khu vực nội dung chính.
-- **Bảng màu (Color Palette)** (bổ sung 2026-09-24): kế thừa vừa phải từ bảng màu D-PUB-011 (¶2.1) — dùng chung màu nhận diện thương hiệu, nhưng vùng nội dung/bảng dữ liệu chính dùng nền trung tính để ưu tiên tốc độ đọc/thao tác (đúng nguyên tắc ¶1):
+- **Bảng màu & font chữ**: dùng chung màu nhận diện thương hiệu và font chữ thường với D-PUB-011 (¶2.1) và Typography của Web công khai; vùng nội dung/bảng dữ liệu chính dùng nền trung tính để ưu tiên tốc độ đọc/thao tác (đúng nguyên tắc ¶1). Không dùng font serif Lora, màu phụ trang trí (vàng đồng, xanh rêu), ảnh minh hoạ thuỷ mặc và thang bo góc của Web công khai — bo góc theo mặc định Quasar.
 
   | Vai trò | Mã màu | Áp dụng |
   |---|---|---|
   | Nền vùng nội dung chính (bảng, form, khu làm việc) | `#FFFFFF` / `#FAFAFA` | Toàn bộ khu vực nội dung các màn hình |
-  | Nền Sidebar / Topbar | `#FAF6EE` | Khung điều hướng (mục này) |
-  | Accent (màu nhấn chính) | `#A6192E` | Nút hành động chính (CTA), trạng thái active trên Sidebar, logo, link văn bản (hyperlink) trong toàn ứng dụng (vd. "Quên mật khẩu?" ở D-ADM-001 (¶4.1)) |
-  | Chữ chính | `#241C15` | Toàn bộ văn bản chính |
-  | Chữ phụ | `#7A7166` | Văn bản phụ/mô tả |
-  | Chữ trên nền Accent | `#FFFFFF` | Mọi chữ/icon đặt trên nền `#A6192E` (nút CTA, mục active trên Sidebar nếu dùng nền Accent, badge thương hiệu…) — không dùng Chữ chính/Chữ phụ trên nền Accent |
-  | Viền / divider | `#E7DECD` (trên nền kem) hoặc xám nhạt trung tính (trên nền trắng) | Sidebar/Topbar vs. vùng nội dung |
+  | Nền Sidebar / Topbar | `#F7F2EA` | Khung điều hướng (mục này) |
+  | Accent (màu nhấn chính) | `#C4171D` | Nút hành động chính (CTA), trạng thái active trên Sidebar, logo, link văn bản (hyperlink) trong toàn ứng dụng (vd. "Quên mật khẩu?" ở D-ADM-001 (¶4.1)) |
+  | Accent đậm | `#9C2B2B` | Trạng thái hover/pressed của phần tử dùng Accent (nút CTA, link) |
+  | Chữ chính | `#252421` | Toàn bộ văn bản chính |
+  | Chữ phụ | `#6D6A64` | Văn bản phụ/mô tả |
+  | Chữ trên nền Accent | `#FFFFFF` | Mọi chữ/icon đặt trên nền `#C4171D`/`#9C2B2B` (nút CTA, mục active trên Sidebar nếu dùng nền Accent, badge thương hiệu…) — không dùng Chữ chính/Chữ phụ trên nền Accent |
+  | Viền / divider | `#E6E0D7` (trên nền kem) hoặc xám nhạt trung tính (trên nền trắng) | Sidebar/Topbar vs. vùng nội dung |
+  | Font chữ | Be Vietnam Pro (400/500/600/700) | Toàn ứng dụng, kể cả tiêu đề; dự phòng `system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif`; nạp từ Google Fonts, subset `vietnamese`; thay font mặc định Roboto của Quasar |
 
   Badge trạng thái (xem bullet "Thành phần dùng lại nhiều nơi" bên dưới) dùng bảng màu ngữ nghĩa chuẩn (xanh lá/vàng/đỏ/xanh dương theo convention Quasar) — không theo bảng màu thương hiệu ở trên, để đảm bảo nhận diện mức độ trạng thái rõ ràng, nhất quán.
 
-  **Quy tắc tương phản chữ/nền**: trên nền `#FAF6EE`/`#FFFFFF`/`#FAFAFA` chỉ dùng Chữ chính/Chữ phụ/Accent, **không dùng `#FFFFFF`**; trên nền `#A6192E` chỉ dùng `#FFFFFF`. Các cặp màu phát sinh ngoài bảng trên đạt tối thiểu 4.5:1 (WCAG 2.1 AA) với chữ thường, 3:1 với chữ ≥ 18px hoặc đậm ≥ 14px và icon. Với component Quasar có sẵn cặp màu nền/chữ mặc định (`QHeader`/`QToolbar` mặc định `bg-primary text-white`, `QBtn` unelevated…), khi đổi màu nền thì phải đặt lại cả màu chữ theo quy tắc này, không để giá trị mặc định.
+  **Quy tắc tương phản chữ/nền**: trên nền `#F7F2EA`/`#FFFFFF`/`#FAFAFA` chỉ dùng Chữ chính/Chữ phụ/Accent, **không dùng `#FFFFFF`**; trên nền `#C4171D`/`#9C2B2B` chỉ dùng `#FFFFFF`. Các cặp màu phát sinh ngoài bảng trên đạt tối thiểu 4.5:1 (WCAG 2.1 AA) với chữ thường, 3:1 với chữ ≥ 18px hoặc đậm ≥ 14px và icon. Với component Quasar có sẵn cặp màu nền/chữ mặc định (`QHeader`/`QToolbar` mặc định `bg-primary text-white`, `QBtn` unelevated…), khi đổi màu nền thì phải đặt lại cả màu chữ theo quy tắc này, không để giá trị mặc định.
 - **Topbar**:
-  - Màu: nền `#FAF6EE`, viền dưới `#E7DECD`. Tên nhóm/module hiện tại và tên Nhân viên dùng Chữ chính `#241C15`, tên Tổ chức dùng Chữ phụ, logo và icon dùng Accent. **Không dùng chữ/icon `#FFFFFF` trên Topbar**: phải đặt lại cả màu chữ mặc định `text-white` lẫn màu nền mặc định `bg-primary` của `QHeader` (quy tắc tương phản ở Bảng màu).
+  - Màu: nền `#F7F2EA`, viền dưới `#E6E0D7`. Tên nhóm/module hiện tại và tên Nhân viên dùng Chữ chính `#252421`, tên Tổ chức dùng Chữ phụ, logo và icon dùng Accent. **Không dùng chữ/icon `#FFFFFF` trên Topbar**: phải đặt lại cả màu chữ mặc định `text-white` lẫn màu nền mặc định `bg-primary` của `QHeader` (quy tắc tương phản ở Bảng màu).
   - Bên trái: **tên nhóm/module hiện tại** (ví dụ "Cơ sở dữ liệu văn hóa", cập nhật theo màn hình đang xem, giúp biết đang ở module nào trong tổng thể hệ thống dù đã cuộn sâu vào một màn hình chi tiết).
-  - **Chip "DEV · Hộp thư"** (chỉ khi `dev_mailbox_url` khác `null` — lấy từ `auth.login`/`auth.getMe`, D-SD01-009 (¶9)): nằm bên phải, ngay trước nút tài khoản; hiện cho mọi Nhân viên; nền vàng cảnh báo (`warning` của Quasar), chữ và icon thư dùng Chữ chính `#241C15`; bấm mở `dev_mailbox_url` ở tab mới. Vừa là lối tắt tới hộp thư Mailpit vừa là dấu hiệu nhận biết đang ở môi trường DEV.
+  - **Chip "DEV · Hộp thư"** (chỉ khi `dev_mailbox_url` khác `null` — lấy từ `auth.login`/`auth.getMe`, D-SD01-009 (¶9)): nằm bên phải, ngay trước nút tài khoản; hiện cho mọi Nhân viên; nền vàng cảnh báo (`warning` của Quasar), chữ và icon thư dùng Chữ chính `#252421`; bấm mở `dev_mailbox_url` ở tab mới. Vừa là lối tắt tới hộp thư Mailpit vừa là dấu hiệu nhận biết đang ở môi trường DEV.
   - Bên phải: **nút tài khoản** — avatar (chữ cái đầu của tên) + tên Nhân viên + tên Tổ chức trực thuộc, kèm icon mũi tên xuống. Bấm mở **menu tài khoản** gồm:
     - Phần đầu (không bấm được): tên Nhân viên, email, tên Tổ chức.
     - "Đổi mật khẩu" (icon khoá) → mở dialog D-ADM-027 (¶4.27).
@@ -429,7 +431,7 @@
 - Hội thoại: chỉ giữ một hội thoại hiện tại, không có danh sách hội thoại cũ. Client tự sinh `conversation_id` (UUID) khi bắt đầu hội thoại mới (lần đầu vào màn hình, bấm "Hội thoại mới", hoặc hội thoại đã lưu hết hạn).
 - Lưu tạm hội thoại hiện tại trong localStorage của trình duyệt để tải lại trang/quay lại màn hình vẫn chat tiếp được:
   - Khoá lưu gắn theo id Nhân viên đăng nhập (nhiều tài khoản trên cùng trình duyệt không thấy hội thoại của nhau).
-  - Nội dung lưu: `conversation_id`, Cương vực đang chọn, các lượt đã hoàn tất (câu hỏi, câu trả lời, trích dẫn, cờ self-audit), thời điểm lượt hỏi cuối.
+  - Nội dung lưu: `conversation_id`, Cương vực đang chọn, các lượt đã hoàn tất (câu hỏi, câu trả lời, trích dẫn, cờ self-audit), thời điểm lượt hỏi cuối. Trích dẫn lưu kèm `cover_image` (gồm `url_expires_at`); khi khôi phục, ảnh có `url_expires_at` đã qua không hiện, cả dải không còn ảnh thì ẩn dải, chỉ giữ chip.
   - Chỉ lưu lượt sau khi nhận `done`; lượt đang stream dở hoặc lỗi không được lưu.
   - Hết hạn sau `assistant.conversation_ttl_hours` giờ (mặc định 6, đọc từ `clientSettings.getSettings` — D-SD07-013 (¶5.2)) tính từ lượt hỏi cuối — khi vào màn hình mà hội thoại đã lưu quá hạn thì xoá và bắt đầu hội thoại mới.
   - Xoá khi bấm "Hội thoại mới" và khi Đăng xuất.
@@ -438,7 +440,9 @@
 - Câu miễn trừ trách nhiệm (R-AI-009 (§2.4.8)): `assistant.disclaimer_text` từ `clientSettings.getSettings`, hiện dạng chú thích Chữ phụ cố định ngay dưới ô nhập; chuỗi rỗng thì không hiện.
 - Hiển thị một lượt hỏi theo hợp đồng SSE (D-SD05-012 (¶5.1)):
   - `token`: bong bóng trả lời hiện chữ dần; trong lúc stream khoá ô nhập/nút gửi (một lượt hỏi tại một thời điểm).
-  - `citations`: dải chip "Nguồn: …" dưới câu trả lời; mỗi chip mở Trang chi tiết Mục từ của Web công khai (D-PUB-004 (¶4.4)) trong tab mới — không mở màn hình biên tập D-ADM-017 (¶4.17)–D-ADM-019 (¶4.19).
+  - `citations`: dưới câu trả lời hiện:
+    - Dải ảnh minh hoạ ngang (như Web công khai): tối đa 3 ảnh nhỏ bo góc 8px theo thứ tự trích dẫn, lấy từ `cover_image` của từng Mục từ; Mục từ có `cover_image = null` thì bỏ qua; không có ảnh nào thì không hiện dải. Bấm ảnh mở Trang chi tiết Mục từ của Web công khai (D-PUB-004 (¶4.4)) trong tab mới. Ảnh tải lỗi thì ẩn ảnh đó.
+    - Dải chip "Nguồn: …": mỗi chip mở Trang chi tiết Mục từ của Web công khai (D-PUB-004 (¶4.4)) trong tab mới — không mở màn hình biên tập D-ADM-017 (¶4.17)–D-ADM-019 (¶4.19).
   - `self_audit`: `flags` có phần tử → banner cảnh báo màu vàng dưới câu trả lời: "Một số phát biểu trong câu trả lời chưa được chứng thực bởi nguồn trích dẫn", mở rộng để xem từng `claim_text` kèm `reason`; `flags = null` → dòng chú thích xám "Chưa kiểm tra được độ tin cậy của câu trả lời này"; `[]` → không hiện gì.
   - `done`: mở lại ô nhập.
   - `error`: giữ nguyên phần câu trả lời đã hiện (nếu có), hiện thông báo lỗi kèm `trace_id` và nút "Hỏi lại" (gửi lại cùng câu hỏi, cùng `conversation_id`).
