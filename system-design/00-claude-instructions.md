@@ -62,3 +62,9 @@ Mỗi file `system-design/0X-<tên module tiếng Anh>.md` nên theo cấu trúc
 - Quy ước đặt tên file: `system-design/0X-<tên phần theo thứ tự build ở mục 4, tiếng Anh, gạch ngang>.md`. File này là `00-claude-instructions.md`; lịch sử thay đổi chung của cả thư mục nằm ở `system-design/changelog.md`.
 - `system-design/index.md` — mục lục bộ tài liệu thiết kế (file ↔ package/route ↔ phụ thuộc ↔ trạng thái), dành cho người đọc và Team Code. Khi thêm file mới, đổi tên file, hoặc trạng thái/phụ thuộc của một tài liệu thay đổi: cập nhật `index.md` trong cùng lần ghi.
 - Nguyên tắc lưu trữ và preview trước khi ghi: xem `common/00-claude-instructions.md` mục 1 và 3.
+
+## 8. Việc tồn đọng
+
+Việc thiết kế đã biết nhưng chưa làm. Khi làm xong một việc, xoá dòng đó và ghi DC tương ứng vào sổ theo dõi.
+
+- **Phần quản lý section "Hôm nay"** (CR-20261002-01, R-PUB-013 (§2.6.6)–R-PUB-018 (§2.6.6.5), R-CFG-010 (§2.8.4.5)). Đã có hợp đồng `public.listTodayItems` (D-SD04-018 (¶5.4)). Còn: nơi đặt module (tài liệu riêng hay trong `04`), dữ liệu nguồn tin và tin, đọc tin định kỳ, agent AI gợi ý Mục từ (hướng đang cân nhắc: agent ở AI Gateway, dữ liệu và duyệt ở Go), duyệt và gỡ tin, tham số cấu hình, audit, thời hạn tin theo R-NFR-042 (§3.7.5), `actions` cho tin. Khi thiết kế xong, tạo DC; `public.listTodayItems` thôi trả rỗng.

@@ -485,6 +485,7 @@ Các mục kỹ thuật bổ sung (không phải chỉ số chính thức của 
 - Tài khoản Quản trị hệ thống gốc được đặt lại theo `ROOT_ADMIN_*` mỗi lần `/cmd/api` khởi động (D-SD02-002 (¶3.0)).
 - Các luồng nghiệp vụ khác giữ nguyên: mời Nhân viên, quên/đặt lại mật khẩu, chính sách mật khẩu. Email gửi tới Mailpit (bên dưới).
 - `auth.getEnvironment` (không xác thực, mount `admin` và `partner`) trả `dev_mailbox_url` theo `DEV_MAILBOX_URL` (D-SD02-009 (¶5.1)). Khi `DEV_MODE=false` trường này là `null`.
+- `public.listTodayItems` trả tin "Hôm nay" mẫu (D-SD04-018 (¶5.4)).
 - `/cmd/api` và `/cmd/worker` ghi log cảnh báo đang chạy `DEV_MODE` mỗi lần khởi động.
 
 `DEV_RESET_ON_START=true` khi `DEV_MODE=false`: `/cmd/api` từ chối khởi động, báo lỗi cấu hình.
