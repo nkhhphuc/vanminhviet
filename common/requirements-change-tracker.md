@@ -18,13 +18,13 @@
 | GEN | R-GEN-016 |
 | ID | R-ID-039 |
 | KB | R-KB-094 |
-| ENC | R-ENC-043 |
+| ENC | R-ENC-044 |
 | AI | R-AI-014 |
 | OOS | R-OOS-009 |
-| PUB | R-PUB-012 |
+| PUB | R-PUB-018 |
 | PTN | R-PTN-011 |
 | CFG | R-CFG-011 |
-| NFR | R-NFR-025 |
+| NFR | R-NFR-036 |
 
 ## ID thiết kế lớn nhất đã cấp
 
@@ -69,3 +69,4 @@
 | CR-20261001-07 | 2026-10-01 | Tài khoản gốc: tài khoản Quản trị hệ thống đầu tiên tạo lúc triển khai (§2.1.5.2.1) không thể bị vô hiệu hoá, gỡ vai trò Quản trị hệ thống hay chuyển sang Tổ chức khác, kể cả do Quản trị hệ thống khác thực hiện; thông tin đăng nhập do đơn vị triển khai quản lý. §2.1.5.7 thêm ngoại lệ không vô hiệu hoá được tài khoản gốc. Tạm khoá đăng nhập (§2.1.5.9) vẫn áp dụng. Đặc tả hoá phần đã thiết kế ở DC-20261001-05. | R-ID-019 sửa, R-ID-024 sửa | ⏳ | ⏳ | ⏳ | ⏳ |
 | DC-20261002-01 | 2026-10-02 | Mailpit ở DEV (D-SD01-009 (¶9)): người dùng không phải đăng nhập. Mailpit vẫn bật basic auth, reverse proxy DEV tự gắn header `Authorization: Basic …` (kể cả request upgrade WebSocket, ghi đè header của trình duyệt) khi chuyển request tới `/mailpit/`; loại proxy do Code chọn; thông tin đăng nhập chỉ nằm trong cấu hình Mailpit và proxy DEV. Cổng web Mailpit không publish, chỉ qua proxy. Ai vào được domain DEV đều xem được hộp thư. Thay cho "bắt buộc basic auth" của DC-20261001-05. Không đổi API. Code: proxy DEV chèn header (kể cả WebSocket), bỏ publish cổng web Mailpit. | — | ✅ `01`: 1, 9 | — | — | — |
 | DC-20261002-02 | 2026-10-02 | Hộp thư DEV trước đăng nhập (đề xuất của admin-web). Thêm endpoint `auth.getEnvironment` — `GET /auth/environment`, không xác thực, mount `admin` và `partner`, trả `{dev_mailbox_url}` theo `DEV_MAILBOX_URL` (`null` khi `DEV_MODE=false`), không ghi audit. Bỏ `dev_mailbox_url` khỏi response `auth.login`/`auth.getMe` để chỉ còn một nguồn. admin-web: 4.1–4.3 và Topbar lấy `dev_mailbox_url` từ `auth.getEnvironment`, đóng điểm mở Hộp thư DEV trước đăng nhập. partner-web: có thể hiện link Hộp thư DEV theo cùng endpoint. Code: thêm endpoint ở 2 nhóm route, bỏ trường khỏi `auth.login`/`auth.getMe`, cập nhật `admin.yaml`/`partner.yaml` và sinh lại client. | — | ✅ `01`: 9 · `02`: 5.1 | ⏳ | ⏳ | — |
+| CR-20261002-01 | 2026-10-02 | Tăng truy cập từ Internet cho website công khai. §3.6 mới (SEO & lan toả): nội dung đọc được khi tải trang, trang AI/kết quả tìm kiếm không lập chỉ mục; URL dễ đọc từ Tiêu đề/tên Cương vực, đổi thì chuyển hướng vĩnh viễn; tiêu đề/mô tả/hình chia sẻ tự sinh, vai trò Xuất bản Mục từ sửa đè bất kỳ lúc nào, không tạo phiên bản, không qua xét duyệt; dữ liệu có cấu trúc schema.org; sitemap tự cập nhật, robots.txt; Core Web Vitals mức "Tốt" (⚠); Open Graph và nút chia sẻ Facebook/Zalo/sao chép; liên kết nội bộ và Mục từ liên quan; đo lường truy cập (công cụ do thiết kế chọn, không thu định danh, tuân thủ §3.1.1/§3.1.3). §2.3.2.6 mới: thông tin SEO gắn với Mục từ, không thuộc phiên bản. §2.6.6 mới: section "Hôm nay" — vai trò Xuất bản Mục từ quản lý nguồn tin, hệ thống đọc tin (chỉ tiêu đề/link/nguồn/thời gian/tóm tắt), AI gợi ý Mục từ liên quan, người duyệt và đặt thời gian hiển thị; hiển thị tiêu đề tin + link bài gốc + Mục từ; tự dọn tin chưa duyệt (⚠); ngày lễ theo lịch chưa thuộc phạm vi (chờ §2.5.5). §2.6.1 nêu ngoại lệ dữ liệu "Hôm nay"; §2.3.4.2 thêm quyền SEO và "Hôm nay"; §2.8.4.5 thêm chu kỳ đọc nguồn tin, thời hạn giữ tin gợi ý; §3.1.2 audit thêm thao tác SEO và "Hôm nay". | R-NFR-026–R-NFR-036 thêm, R-PUB-013–R-PUB-018 thêm, R-ENC-044 thêm, R-PUB-002 sửa, R-ENC-021 sửa, R-CFG-010 sửa, R-NFR-004 sửa | ⏳ | ⏳ | ⏳ | ⏳ |
