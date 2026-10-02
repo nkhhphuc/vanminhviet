@@ -119,6 +119,7 @@ func GetPublicVersion(ctx context.Context, entryID uuid.UUID) (*EntryVersion, er
 func ListPublicByScope(ctx context.Context, culturalDomainID *uuid.UUID, cursor string) ([]EntrySummary, string, error)
 func ListCulturalDomainsByEntry(ctx context.Context, entryID uuid.UUID) ([]CulturalDomain, error)
 func GetEntryTitles(ctx context.Context, entryIDs []uuid.UUID) (map[uuid.UUID]EntryTitle, error)
+func GetPublicCoverImages(ctx context.Context, entryIDs []uuid.UUID) (map[uuid.UUID]PublicFile, error)
 ```
 
 `ListPublicByScope` dùng cho job quét toàn bộ Mục từ đang công khai khi cần tái đánh chỉ mục hàng loạt (ví dụ đổi model embedding — ¶6). `ListCulturalDomainsByEntry` dùng cho job `refresh_domain_tags` (D-SD05-004 (¶3.1) bước 4) — ⚠ bổ sung 2026-09-23, trước đó D-SD05-004 (¶3.1) đã mô tả job này "đọc lại Cương vực qua interface đọc của `/encyclopedia`" nhưng D-SD04-013 (¶4.3) chưa có hàm tương ứng. `GetEntryTitles` dùng ở bước Retrieve (D-SD05-005 (¶3.2) bước 2) và khi ghép `cited_entries` cho API rà soát (D-SD05-013 (¶5.2)).
@@ -146,6 +147,10 @@ func Retrieve(ctx context.Context, question string, culturalDomainID *uuid.UUID,
 func GenerateAnswer(ctx context.Context, question string, chunks []ChunkResult, history []Turn) (answer string, citedEntryIDs []uuid.UUID, err error)
 func SelfAudit(ctx context.Context, answer string, chunks []ChunkResult) ([]UnverifiedClaim, error)
 func LogQuery(ctx context.Context, tx pgx.Tx, log AssistantQueryLog) error
+
+// Mục từ liên quan theo độ gần nội dung (D-SD04-023 (¶3.7)) — chỉ đọc assistant_chunk is_active,
+// trả id Mục từ khác theo điểm giảm dần, tối đa limit. Mục từ gốc chưa có đoạn nào thì trả rỗng.
+func FindRelatedEntryIDs(ctx context.Context, entryID uuid.UUID, limit int) ([]uuid.UUID, error)
 ```
 
 `Turn` = 1 cặp câu hỏi-trả lời trong lịch sử hội thoại (đọc từ `assistant_query_log`, sắp theo `turn_index`).
@@ -176,7 +181,7 @@ Cả 4 qua cùng AI Gateway (API nội bộ REST, D-SD06-001 (¶1)), hỗ trợ 
 | `event` | `data` | Thời điểm |
 |---|---|---|
 | `token` | `{text}` | Lặp lại trong lúc Generate stream (relay từ `delta` của `gateway.generate`) |
-| `citations` | `{items: [{entry_id, title, cover_image}]}` | Một lần, khi Generate xong. `title` là tiêu đề phiên bản đang công khai (`GetEntryTitles`). ⚠ `cover_image` — `{file_id, url, url_expires_at}` ảnh đại diện phiên bản công khai (`GetPublicCoverImages`, D-SD04-013 (¶4.3)) hoặc `null`; dùng cho dải ảnh minh hoạ dưới câu trả lời ở Web công khai. Cùng dữ liệu ở cả 2 kênh |
+| `citations` | `{items: [{entry_id, slug, title, cover_image}]}` | Một lần, khi Generate xong. `title` là tiêu đề phiên bản đang công khai (`GetEntryTitles`). `slug` — slug hiện hành để dựng liên kết tới trang Mục từ (D-SD04-023 (¶3.7)). ⚠ `cover_image` — `{file_id, url}` ảnh đại diện phiên bản công khai, `url` ổn định theo D-SD04-018 (¶5.4) (`GetPublicCoverImages`, D-SD04-013 (¶4.3)) hoặc `null`; dùng cho dải ảnh minh hoạ dưới câu trả lời ở Web công khai. Cùng dữ liệu ở cả 2 kênh |
 | `self_audit` | `{flags: [{claim_text, reason}] \| null}` | Một lần, sau bước Self-audit. Cùng schema `flags` của `gateway.selfAudit` (D-SD06-006 (¶3.4)). `[]` = không có cờ; `null` = không kiểm được (lỗi/timeout). **Chỉ kênh `admin`.** Kênh `public` không gửi sự kiện này; Self-audit vẫn chạy và kết quả vẫn ghi vào `assistant_query_log` |
 | `done` | `{query_log_id, turn_index}` (`admin`) / `{turn_index}` (`public`) | Một lần, sau khi ghi `assistant_query_log` (D-SD05-005 (¶3.2) bước 6) — sự kiện cuối của lượt hỏi thành công |
 | `error` | `{error_code, message, trace_id}` | Bất kỳ lúc nào; stream kết thúc ngay sau sự kiện này. Định dạng theo quy ước lỗi chung (D-SD01-003 (¶3), D-SD06-012 (¶6)) |
@@ -195,7 +200,7 @@ Nếu lỗi xảy ra sau khi đã gửi `citations`, client giữ nguyên phần
 
 | Method | Path | operationId | Mô tả |
 |---|---|---|---|
-| GET | `/assistant/query-logs` | `assistant.listQueryLogs` | Danh sách log hỏi–đáp (filter `channel`, `cultural_domain_id`, `conversation_id`, `asked_by_employee_id`, `has_self_audit_flags`, khoảng thời gian) — cursor pagination |
+| GET | `/assistant/query-logs` | `assistant.listQueryLogs` | Danh sách log hỏi–đáp (filter `channel`, `cultural_domain_id`, `conversation_id`, `asked_by_employee_id`, `has_self_audit_flags`, khoảng thời gian; `sort` = mặc định hoặc `due_at`) — cursor pagination |
 | GET | `/assistant/query-logs/{id}` | `assistant.getQueryLog` | Chi tiết 1 lượt hỏi–đáp (câu hỏi/trả lời/trích dẫn/cờ self-audit) |
 | GET | `/assistant/conversations/{id}` | `assistant.getConversation` | ⚠ Đề xuất bổ sung — xem toàn bộ các lượt hỏi–đáp trong 1 hội thoại, sắp theo `turn_index`, phục vụ rà soát ngữ cảnh multi-turn |
 | POST | `/assistant/reindex/{entry_id}` | `assistant.reindexEntry` | ⚠ Đề xuất bổ sung — kích hoạt lại thủ công job `reindex_entry` cho 1 Mục từ (khắc phục sự cố/đổi model embedding) |
@@ -205,6 +210,7 @@ Nếu lỗi xảy ra sau khi đã gửi `citations`, client giữ nguyên phần
 - Mỗi lượt hỏi–đáp (ở cả 3 endpoint `GET`) trả thêm `asked_by: {id, display_name, email} | null` (`null` với kênh `public`) và `cited_entries: [{entry_id, title, is_public}]` (qua `GetEntryTitles`; `is_public = false` khi Mục từ không còn công khai — `title` khi đó là tiêu đề phiên bản đã chốt mới nhất).
 - Filter `channel` và `asked_by_employee_id` ở `assistant.listQueryLogs` — `GET /assistant/query-logs` lọc qua JOIN `assistant_query_log.conversation_id → assistant_conversation` (D-SD05-003 (¶2.3)). `asked_by` của mỗi lượt lấy theo hội thoại chứa lượt đó.
 - Riêng `assistant.listQueryLogs` — `GET /assistant/query-logs` (danh sách) trả thêm `self_audit_flag_count` (int, `null` nếu `self_audit_flags` là `NULL`).
+- Thời hạn lưu (R-NFR-042 (§3.7.5), quy ước ở D-SD01-003 (¶3)): mỗi lượt hỏi–đáp ở `assistant.listQueryLogs` và `assistant.getQueryLog` trả `expires_at` — `last_message_at` của hội thoại cộng `assistant.query_log_retention_days`, là thời điểm cả hội thoại bị xoá (D-SD05-006 (¶3.3)) — và `due_soon`, với tổng thời hạn bằng `assistant.query_log_retention_days`. `assistant.getConversation` trả hai trường này ở cấp hội thoại. `expires_at` tính theo giá trị cấu hình hiện hành nên thay đổi khi tham số đổi.
 - `assistant.getConversation` — `GET /assistant/conversations/{id}`: `asked_by` trả một lần ở cấp hội thoại.
 - Tên/email Nhân viên ghép ở **tầng handler HTTP** (`/cmd/api`) bằng `identity.GetEmployeeSummaries` (D-SD02-008 (¶4)), tiêu đề Mục từ bằng `encyclopedia.GetEntryTitles` — cùng cách đã áp dụng cho `shared.listAuditLogs` — `GET /shared/audit-logs`. Không đổi schema `assistant_query_log`, không JOIN chéo, không phát sinh import cycle.
 
@@ -225,3 +231,4 @@ Nếu lỗi xảy ra sau khi đã gửi `citations`, client giữ nguyên phần
 - **Hợp đồng sự kiện SSE của `assistant.chat`** (D-SD05-005 (¶3.2), D-SD05-012 (¶5.1)) — ⚠ bổ sung: thứ tự `token` → `citations` → `self_audit` → `done`, cùng `error`; self-audit chạy sau khi đã stream câu trả lời; lỗi self-audit không làm hỏng lượt hỏi (`NULL` = chưa kiểm được); lỗi trước khi Generate xong thì không ghi log.
 - **`asked_by`, `cited_entries`, `self_audit_flag_count` và 2 filter mới ở API rà soát** (D-SD05-003 (¶2.3), D-SD05-013 (¶5.2)) — ⚠ bổ sung: hoàn thiện kỹ thuật cho màn hình rà soát của Admin nội bộ; ghép dữ liệu ở tầng handler. Không đổi schema, không đổi hành vi nghiệp vụ.
 - **Thời hạn lưu nhật ký hỏi đáp** (D-SD05-003 (¶2.3), D-SD05-006 (¶3.3)) hiện thực R-AI-014 (§2.4.9.4). ⚠ Mặc định 180 ngày và cách dọn theo cả hội thoại (không theo từng lượt) là quyết định của thiết kế.
+- **`FindRelatedEntryIDs`** (D-SD05-010 (¶4.4)) phục vụ Mục từ liên quan trên Web công khai (R-NFR-035 (§3.6.9), D-SD04-023 (¶3.7)), dùng lại embedding sẵn có, không gọi AI Gateway. Handler `public.listRelatedEntries` ở `/cmd/api` ghép kết quả với `/encyclopedia`, giữ chiều phụ thuộc 05 → 04.

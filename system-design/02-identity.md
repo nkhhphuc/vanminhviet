@@ -32,6 +32,7 @@ Văn Minh Việt là một Tổ chức bình thường trong bảng này, không
 - `status` — `invited` / `active` / `disabled`: Nhân viên ở trạng thái `invited` cho tới khi tự đặt mật khẩu lần đầu qua email mời thì chuyển `active` (R-ID-018 (§2.1.5.2)–R-ID-020 (§2.1.5.3) đặc tả gốc: tài khoản chỉ do Quản trị hệ thống tạo, kích hoạt sau khi hoàn tất đặt mật khẩu qua link mời)
 - `failed_login_count` — int, mặc định 0. Số lần nhập sai mật khẩu liên tiếp, gồm cả lúc đăng nhập (D-SD02-004 (¶3.2)) và lúc đổi mật khẩu (D-SD02-006 (¶3.4)) — tạm khoá đăng nhập R-ID-030 (§2.1.5.9), R-ID-036 (§2.1.5.10.1)
 - `locked_until` — timestamptz, nullable. Tạm khoá đăng nhập tới thời điểm này (R-ID-030 (§2.1.5.9)); khác `status = disabled` (vô hiệu hoá bởi Quản trị hệ thống, không tự hết hạn — R-ID-024 (§2.1.5.7), R-ID-033 (§2.1.5.9.3))
+- `locked_at` — timestamptz, nullable. Thời điểm bắt đầu tạm khoá đăng nhập hiện tại; luôn được đặt và xoá cùng lúc với `locked_until`. Dùng để tính `login_lock_due_soon` (D-SD01-003 (¶3), D-SD02-010 (¶5.2))
 - `sessions_invalidated_at` — timestamptz, nullable. ⚠ Mốc vô hiệu hoá phiên: mọi access token có thời điểm cấp (`iat`) trước mốc này bị từ chối ngay (D-SD02-007 (¶3.5)). Đặt khi vô hiệu hoá tài khoản, đặt lại mật khẩu, đổi mật khẩu, hoặc bị tạm khoá trong lúc đổi mật khẩu
 - `created_at`, `updated_at`
 
@@ -360,14 +361,20 @@ Yêu cầu JWT hợp lệ + role `quan_tri_he_thong` cho mọi endpoint dưới 
 
 | Method | Path | operationId | Mô tả |
 |---|---|---|---|
-| GET | `/identity/employees` | `identity.listEmployees` | Danh sách Nhân viên — cursor pagination, filter `organization_id`, `status`; mỗi dòng trả kèm `roles: [{id, name, scope_type, scope_id}]` (toàn bộ role đang giữ — chức năng lẫn phạm vi, cùng cấu trúc `auth.login` D-SD02-009 (¶5.1)) — ⚠ bổ sung; kèm `is_root_admin` (⚠ bổ sung — `true` với tài khoản gốc, D-SD02-002 (¶3.0)) |
+| GET | `/identity/employees` | `identity.listEmployees` | Danh sách Nhân viên — cursor pagination, filter `organization_id`, `status`; `sort` = mặc định hoặc `due_at` (theo `invite_expires_at`/`locked_until` gần nhất, D-SD01-003 (¶3)); mỗi dòng trả kèm `roles: [{id, name, scope_type, scope_id}]` (toàn bộ role đang giữ — chức năng lẫn phạm vi, cùng cấu trúc `auth.login` D-SD02-009 (¶5.1)) — ⚠ bổ sung; kèm `is_root_admin` (⚠ bổ sung — `true` với tài khoản gốc, D-SD02-002 (¶3.0)); kèm các trường thời hạn ở ghi chú dưới bảng |
 | POST | `/identity/employees` | `identity.createEmployee` | Tạo Nhân viên mới → trạng thái `invited`, gửi email mời (D-SD02-003 (¶3.1) bước 1–2) |
-| GET | `/identity/employees/{id}` | `identity.getEmployee` | Chi tiết 1 Nhân viên, kèm danh sách role đang giữ và `is_root_admin` (⚠ bổ sung, D-SD02-002 (¶3.0)) |
+| GET | `/identity/employees/{id}` | `identity.getEmployee` | Chi tiết 1 Nhân viên, kèm danh sách role đang giữ, `is_root_admin` (⚠ bổ sung, D-SD02-002 (¶3.0)) và các trường thời hạn ở ghi chú dưới bảng |
 | PATCH | `/identity/employees/{id}` | `identity.updateEmployee` | Cập nhật `display_name`/`phone`/`organization_id` — đổi `organization_id` của tài khoản gốc trả 422 `root_admin_protected` (R-ID-019 (§2.1.5.2.1), D-SD02-002 (¶3.0)). Đổi `organization_id` thu hồi mọi phiên của Nhân viên (D-SD02-007 (¶3.5)) |
 | POST | `/identity/employees/{id}/disable` | `identity.disableEmployee` | Vô hiệu hoá tài khoản (R-ID-024 (§2.1.5.7)): chuyển `status` → `disabled`; trong cùng transaction thu hồi toàn bộ refresh token và đặt `sessions_invalidated_at = now()` — đăng xuất ngay mọi phiên (R-ID-025 (§2.1.5.7.1), D-SD02-007 (¶3.5)). Không gỡ role, không nhả các Hạng mục tri thức/Mục từ đang phụ trách (R-ID-026 (§2.1.5.7.2)–R-ID-027 (§2.1.5.7.3)). Tài khoản gốc: trả 422 `root_admin_protected` (R-ID-024 (§2.1.5.7), D-SD02-002 (¶3.0)) |
 | POST | `/identity/employees/{id}/enable` | `identity.enableEmployee` | Kích hoạt lại tài khoản (R-ID-024 (§2.1.5.7)): chuyển `status` → `active`; giữ nguyên mật khẩu và role (R-ID-026 (§2.1.5.7.2)) |
 | POST | `/identity/employees/{id}/clear-login-lock` | `identity.clearEmployeeLoginLock` | Quản trị hệ thống gỡ tạm khoá đăng nhập trước thời hạn (R-ID-032 (§2.1.5.9.2); `failed_login_count = 0`, `locked_until = NULL`); chỉ hợp lệ khi `locked_until > now()`. `identity.listEmployees` và chi tiết Nhân viên trả thêm `locked_until` (null nếu không bị tạm khoá) để hiển thị trạng thái tạm khoá |
 | POST | `/identity/employees/{id}/resend-invite` | `identity.resendEmployeeInvite` | Gửi lại lời mời (D-SD02-003 (¶3.1) bước 6) — chỉ hợp lệ khi `status = invited` |
+
+Trường thời hạn ở `identity.listEmployees` và `identity.getEmployee` (R-NFR-042 (§3.7.5), quy ước ở D-SD01-003 (¶3)):
+
+- `invite_expires_at` — `expires_at` của token `invite` mới nhất chưa dùng, khi `status = invited`; `null` ở trạng thái khác. Giá trị trong quá khứ nghĩa là lời mời đã hết hạn, cần gửi lại.
+- `invite_due_soon` — tổng thời hạn tính từ `created_at` tới `expires_at` của token đó.
+- `locked_until` (đã có) và `login_lock_due_soon` — tổng thời hạn tính từ `locked_at` tới `locked_until`; `false` khi không bị tạm khoá.
 
 **Role & gán role**
 
@@ -412,3 +419,4 @@ Mọi endpoint ghi ở D-SD02-010 (¶5.2) có audit log — `action_type` và `d
 - **Phiên gắn với kênh và cờ `organization.is_internal`** (D-SD02-001 (¶2), D-SD02-004 (¶3.2), D-SD02-007 (¶3.5)) ⚠: hiện thực ranh giới R-GEN-009 (§1.2.3.1)/R-GEN-010 (§1.2.3.2) ở tầng xác thực. Nhân viên Tổ chức khác chỉ đăng nhập ở Cổng Tổ chức khác. Nhân viên Tổ chức nội bộ đăng nhập ở Admin nội bộ, và có thể đăng nhập riêng ở Cổng Tổ chức khác; ở đó chỉ role theo phạm vi Đề tài có hiệu lực. Việc cho Nhân viên nội bộ dùng Cổng Tổ chức khác vượt ngoài R-GEN-010 (§1.2.3.2).
 - **Đổi mật khẩu khi đang đăng nhập, `auth.changePassword` — `POST /auth/change-password`** (D-SD02-001 (¶2), D-SD02-006 (¶3.4), D-SD02-009 (¶5.1)) hiện thực R-ID-035 (§2.1.5.10). Audit `auth.password_change` ghi cùng transaction theo quy ước chung. Mã lỗi và thứ tự kiểm tra (tạm khoá → mật khẩu hiện tại → trùng → chính sách) là quyết định kỹ thuật.
 - ⚠ **Vô hiệu hoá phiên ngay bằng `sessions_invalidated_at` + kiểm tra ở middleware** (D-SD02-001 (¶2), D-SD02-007 (¶3.5), D-SD02-009 (¶5.1), D-SD02-010 (¶5.2)) — cách hiện thực yêu cầu "đăng xuất ngay" của R-ID-025 (§2.1.5.7.1), R-ID-034 (§2.1.5.9.4), R-ID-036 (§2.1.5.10.1), R-ID-038 (§2.1.5.10.3). Đánh đổi: thêm 1 truy vấn theo khoá chính mỗi request có xác thực. Không áp dụng cho lần đăng nhập bị tạm khoá ở luồng đăng nhập (D-SD02-004 (¶3.2) bước 3): đặc tả không yêu cầu đăng xuất các phiên khác trong trường hợp này.
+- **Thời hạn lời mời và tạm khoá trong danh sách Nhân viên** (D-SD02-001 (¶2), D-SD02-010 (¶5.2)) hiện thực R-NFR-042 (§3.7.5). Cột `locked_at` chỉ phục vụ tính "sắp đến hạn".
