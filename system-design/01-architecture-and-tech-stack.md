@@ -19,7 +19,7 @@ Ghi lại các quyết định kiến trúc/tech stack dùng chung cho cả 4 mo
 | CDN | Chưa dùng — phục vụ trực tiếp (local/origin) | Để chọn công nghệ cụ thể (Cloudflare/CloudFront...) ở giai đoạn sau khi lưu lượng thực tế yêu cầu; hiện tại phục vụ trực tiếp từ Object storage/Next.js là đủ cho quy mô ra mắt (R-NFR-010 (§3.2.1)) |
 | Containerization & Orchestration | Docker (đóng gói); orchestration để mở | Mọi service (Go monolith, 2 app Nhân viên, Next.js, AI service) đóng gói bằng Docker. Công cụ orchestration (Kubernetes/Nomad/docker-compose cho production...) chưa chốt — do đội triển khai (deployer) quyết định theo hạ tầng thực tế lúc đó |
 | Reverse proxy / Routing | Dev: Docker Compose · Production: Traefik | Định tuyến giữa các app (Admin nội bộ, Cổng Tổ chức khác, Web công khai, API) theo domain/path — khớp ranh giới route/API đã chốt ở D-SD01-002 (¶2) |
-| Email / SMTP | Dev: Mailpit (container) · Production: Amazon SES (giao thức SMTP) | Phục vụ gửi email dùng chung cho nhiều module (mời/tạo tài khoản, đặt lại mật khẩu ở module 02; thông báo trạng thái xét duyệt ở module 03...) — xem `/shared` ở D-SD01-002 (¶2). ⚠ **Email không thuộc phạm vi R-NFR-005 (§3.1.3)** (data residency) — đặc tả gốc liệt kê rõ phạm vi là dữ liệu lưu trữ lâu dài (dữ liệu cá nhân Nhân viên, Tư liệu gốc, nội dung Hạng mục tri thức và Mục từ trong DB/Object storage), không bao gồm hạ tầng truyền tải/chuyển tiếp như SMTP relay — giữ nguyên Amazon SES, không cần đổi nhà cung cấp. Dev: giao diện web Mailpit mở qua reverse proxy, có basic auth — D-SD01-009 (¶9) |
+| Email / SMTP | Dev: Mailpit (container) · Production: Amazon SES (giao thức SMTP) | Phục vụ gửi email dùng chung cho nhiều module (mời/tạo tài khoản, đặt lại mật khẩu ở module 02; thông báo trạng thái xét duyệt ở module 03...) — xem `/shared` ở D-SD01-002 (¶2). ⚠ **Email không thuộc phạm vi R-NFR-005 (§3.1.3)** (data residency) — đặc tả gốc liệt kê rõ phạm vi là dữ liệu lưu trữ lâu dài (dữ liệu cá nhân Nhân viên, Tư liệu gốc, nội dung Hạng mục tri thức và Mục từ trong DB/Object storage), không bao gồm hạ tầng truyền tải/chuyển tiếp như SMTP relay — giữ nguyên Amazon SES, không cần đổi nhà cung cấp. Dev: giao diện web Mailpit mở qua reverse proxy, proxy tự chèn thông tin đăng nhập — D-SD01-009 (¶9) |
 | Admin nội bộ (backend UI) | Quasar (Vue 3) + Pinia | Cho Nhân viên thuộc Tổ chức Văn Minh Việt (R-GEN-009 (§1.2.3.1) đặc tả gốc) — đầy đủ chức năng, gồm quản lý người dùng/phân quyền/Tổ chức |
 | Trình soạn thảo nội dung Mục từ | TipTap (Vue 3) | Dùng trong Admin nội bộ cho vai trò Biên tập (R-ENC-019 (§2.3.4) đặc tả gốc) soạn nội dung Mục từ dạng JSON block (R-ENC-007 (§2.3.2.3.1) đặc tả gốc). Core mã nguồn mở (MIT), tự host, không dùng gói Cloud trả phí của TipTap. Dựng trên ProseMirror nên định nghĩa được các loại khối (Node) tuỳ biến cho từng loại nhúng file (ảnh/audio/phim) đúng vị trí, khớp mô hình block đã chốt |
 | Cổng Nhân viên Tổ chức khác | Quasar (Vue 3) + Pinia, **app/deploy riêng** khỏi Admin nội bộ | Cho Nhân viên thuộc Tổ chức khác (R-GEN-010 (§1.2.3.2), module 2.7 đặc tả gốc) — chỉ vai trò Nghiên cứu/Xét duyệt theo Đề tài được gán, không có màn hình quản lý người dùng/Tổ chức. Tách app riêng (không chỉ ẩn UI trong cùng app Admin) để ranh giới bảo mật rõ ràng ở cả tầng route/API — xem D-SD01-002 (¶2) |
@@ -453,7 +453,7 @@ Các mục kỹ thuật bổ sung (không phải chỉ số chính thức của 
 
 - Tài khoản Quản trị hệ thống gốc được đặt lại theo `ROOT_ADMIN_*` mỗi lần `/cmd/api` khởi động (D-SD02-002 (¶3.0)).
 - Các luồng nghiệp vụ khác giữ nguyên: mời Nhân viên, quên/đặt lại mật khẩu, chính sách mật khẩu. Email gửi tới Mailpit (bên dưới).
-- `auth.login` và `auth.getMe` trả `dev_mailbox_url` theo `DEV_MAILBOX_URL` (D-SD02-009 (¶5.1)). Khi `DEV_MODE=false` trường này là `null`.
+- `auth.getEnvironment` (không xác thực, mount `admin` và `partner`) trả `dev_mailbox_url` theo `DEV_MAILBOX_URL` (D-SD02-009 (¶5.1)). Khi `DEV_MODE=false` trường này là `null`.
 - `/cmd/api` và `/cmd/worker` ghi log cảnh báo đang chạy `DEV_MODE` mỗi lần khởi động.
 
 `DEV_RESET_ON_START=true` khi `DEV_MODE=false`: `/cmd/api` từ chối khởi động, báo lỗi cấu hình.
@@ -476,10 +476,12 @@ Các mục kỹ thuật bổ sung (không phải chỉ số chính thức của 
 **Xem email ở DEV (Mailpit, D-SD01-001 (¶1)):**
 
 - Reverse proxy mở giao diện web Mailpit tại `https://<domain-dev>/mailpit/` (`MP_WEBROOT=/mailpit`).
-- Bắt buộc đăng nhập bằng basic auth (`MP_UI_AUTH`/`MP_UI_AUTH_FILE` của Mailpit, hoặc basic auth của Traefik), vì email chứa link mời và link đặt lại mật khẩu dùng được thật.
+- Người dùng không phải đăng nhập Mailpit. Mailpit bật basic auth (`MP_UI_AUTH`/`MP_UI_AUTH_FILE`). Reverse proxy của môi trường DEV tự gắn header `Authorization: Basic …` vào mọi request chuyển tới `/mailpit/`, kể cả request upgrade WebSocket, và ghi đè header `Authorization` do trình duyệt gửi. Loại proxy do Code chọn. Thông tin đăng nhập chỉ nằm trong cấu hình Mailpit và proxy DEV, không cấp cho người dùng.
+- ⚠ Ai mở được domain DEV đều xem được hộp thư, gồm cả link mời và link đặt lại mật khẩu dùng được thật. Chấp nhận vì DEV chỉ chứa dữ liệu thử.
+- Cổng giao diện web của Mailpit không publish ra ngoài, chỉ truy cập được qua reverse proxy.
 - Cổng SMTP của Mailpit chỉ mở trong mạng nội bộ Docker.
 - Khi `DEV_MODE=true` mà SMTP trỏ tới host khác Mailpit: `/cmd/api` ghi log cảnh báo, không chặn khởi động.
-- admin-web hiện link "Hộp thư DEV" ở topbar khi `dev_mailbox_url` khác `null`.
+- Giao diện Nhân viên hiện link "Hộp thư DEV" khi `dev_mailbox_url` khác `null`, kể cả ở các màn hình trước đăng nhập.
 
 ## 10. Vấn đề mở
 

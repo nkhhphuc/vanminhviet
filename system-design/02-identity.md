@@ -284,6 +284,7 @@ Ranh giới mount đã chốt ở D-SD01-002 (¶2): nhóm `auth/*` là ngoại l
 | POST | `/auth/accept-invite` | `auth.acceptInvite` | Đặt mật khẩu lần đầu, kích hoạt tài khoản — D-SD02-003 (¶3.1) bước 4 | Không (token trong body) |
 | GET | `/auth/me` | `auth.getMe` | ⚠ Bổ sung — trả thông tin Nhân viên hiện tại + role đang giữ dựa trên access token; dùng để FE khôi phục trạng thái đăng nhập khi tải lại trang | Access token |
 | GET | `/auth/password-policy` | `auth.getPasswordPolicy` | ⚠ Bổ sung — trả chính sách mật khẩu đang cấu hình `{min_length, require_letter_and_digit, require_special_char}` (`07-system-settings.md`) để màn hình đặt mật khẩu lần đầu/đặt lại mật khẩu hiển thị yêu cầu và kiểm tra trước khi gửi | Không |
+| GET | `/auth/environment` | `auth.getEnvironment` | ⚠ Bổ sung — trả thông tin môi trường chạy `{dev_mailbox_url}` cho giao diện Nhân viên, dùng được cả trước khi đăng nhập (D-SD01-009 (¶9)) | Không |
 | POST | `/auth/change-password` | `auth.changePassword` | ⚠ Bổ sung — Nhân viên đang đăng nhập tự đổi mật khẩu của mình, body `{current_password, new_password}`, D-SD02-006 (¶3.4) | Access token |
 
 `auth.changePassword` — `POST /auth/change-password` (⚠ bổ sung, D-SD02-006 (¶3.4)) trả `204 No Content` khi thành công. Các lỗi theo quy ước lỗi chung (D-SD01-003 (¶3)):
@@ -312,14 +313,20 @@ Response body của `auth.login` — `POST /auth/login` và `auth.getMe` — `GE
     { "id": "uuid", "name": "nghien_cuu", "scope_type": "research_topic", "scope_id": "uuid" },
     { "id": "uuid", "name": "quan_tri_he_thong", "scope_type": "function", "scope_id": null }
   ],
-  "dev_mailbox_url": null,
   "access_token": "string",
   "refresh_token": "string"
 }
 // GET /auth/me (200) — giống hệt trên, bỏ access_token/refresh_token
 ```
 
-`dev_mailbox_url` (⚠ bổ sung, D-SD01-009 (¶9)): địa chỉ giao diện Mailpit khi `DEV_MODE=true`, `null` khi tắt. admin-web hiện link "Hộp thư DEV" khi trường này khác `null`.
+`auth.getEnvironment` — `GET /auth/environment` (⚠ bổ sung, D-SD01-009 (¶9)):
+
+```json
+// GET /auth/environment (200)
+{ "dev_mailbox_url": "string | null" }
+```
+
+`dev_mailbox_url` là địa chỉ giao diện Mailpit theo `DEV_MAILBOX_URL` khi `DEV_MODE=true`, và là `null` khi tắt. Endpoint không yêu cầu xác thực và không ghi audit log. Giao diện Nhân viên gọi endpoint này khi tải app, rồi hiện link "Hộp thư DEV" nếu trường khác `null`, kể cả ở màn hình đăng nhập, quên mật khẩu và đặt mật khẩu lần đầu.
 
 `roles` trả toàn bộ role Nhân viên đang giữ (không rút gọn) — dùng `GetEmployeeWithRoles` (D-SD02-008 (¶4)). `auth.getMe` — `GET /auth/me` mount ở cả `admin`/`partner`, cùng nhóm ngoại lệ `auth/*` (D-SD01-002 (¶2) ) — không ghi audit log cho `auth.getMe` — `GET /auth/me` (request đọc).
 
