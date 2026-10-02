@@ -53,11 +53,13 @@ Khi phát hiện một điểm trong `admin-web-design.md` không có cơ sở (
 - **Menu tài khoản & Đăng xuất (D-ADM-029 (¶3))**: Topbar nền kem `#FAF6EE`, chữ `#241C15`/Chữ phụ, không dùng chữ trắng; chữ trắng `#FFFFFF` chỉ dùng trên nền Accent; giữ nguyên bảng màu hiện hành. Menu tài khoản gồm "Đổi mật khẩu" và "Đăng xuất"; Đăng xuất không hỏi xác nhận (trừ khi có form chỉnh sửa dở), luôn xoá phiên cục bộ kể cả khi API lỗi; hết phiên ngoài ý muốn xử lý như Đăng xuất kèm thông báo và quay lại màn hình trước sau khi đăng nhập lại; 401 `session_revoked` → không làm mới phiên, về thẳng 4.1.
 - **Đổi mật khẩu (4.27)**: dialog từ menu tài khoản, mọi Nhân viên; theo D-SD02-006 (¶3.4) (`auth.changePassword`); kiểm tra chính sách mật khẩu theo `auth.getPasswordPolicy`; `login_locked` → xử lý như phiên bị thu hồi; đổi thành công → đăng xuất mọi thiết bị (kể cả thiết bị đang dùng), về 4.1.
 - **Cấu hình hệ thống (4.28)**: theo `system-design/07-system-settings.md`; nhóm Sidebar riêng "Hệ thống", chỉ `quan_tri_he_thong`; lưu theo từng nhóm (nguyên khối), khôi phục mặc định từng tham số; xác nhận khi giảm thời hạn lưu.
+- **Khởi tạo nội dung Mục từ bằng AI (4.17)**: theo D-SD04-019 (¶3.5). Nút ở đầu khối Nội dung, chỉ Người phụ trách khi `soan_thao`; cảnh báo ghi đè gộp cảnh báo thay đổi chưa lưu trong một hộp thoại; polling `encyclopedia.getEntry` cố định 5 giây khi đang xử lý; khi `content_generation` về `null`, UI tự suy ra thành công hay bị bỏ theo trạng thái, Người phụ trách và danh sách nguồn (không đổi API); lỗi `source_content_too_long` hiện thông báo gợi ý gỡ bớt nguồn.
+- **Tài khoản gốc & Hộp thư DEV (DC-20261001-05)**: 4.4/4.5 chip "Tài khoản gốc" theo `is_root_admin`; thao tác bị chặn (Vô hiệu hoá, gỡ role `quan_tri_he_thong`, đổi Tổ chức) vẫn hiện nhưng vô hiệu kèm tooltip. Topbar: chip vàng "DEV · Hộp thư" khi `dev_mailbox_url` khác `null`, mọi Nhân viên, mở tab mới.
 
 ## 7. Trạng thái hiện tại
 
 - 28 màn hình (4.1–4.28) đã thiết kế xong: Nhóm Tổng quan (4.22), Nhóm Xác thực (4.1–4.3, 4.27), Nhóm Quản lý người dùng & Tổ chức (4.4–4.7), Nhóm Cơ sở dữ liệu văn hóa (4.8–4.15), Nhóm Bách khoa toàn thư (4.16–4.20), Nhóm Trợ lý AI (4.23–4.25), Nhóm Giám sát (4.21, 4.26), Nhóm Hệ thống (4.28).
-- Điểm lệch đang mở: không còn. Toàn bộ màn hình khớp `business-requirements.md`/`system-design/01–05, 07`.
+- Điểm lệch đang mở: **Hộp thư DEV trước đăng nhập (4.1–4.3)** — `dev_mailbox_url` hiện chỉ có sau đăng nhập; đã chọn hướng (d): đề xuất system-design trả trường này qua một endpoint không cần xác thực (soạn đề xuất ở luồng system-design). Các màn hình còn lại khớp `business-requirements.md`/`system-design/01–05, 07`.
 
 ## 8. Đồng bộ với session khác
 
