@@ -16,9 +16,10 @@ Phạm vi: quản lý Nhân viên (R-ID-002 (§2.1.1)–R-ID-005 (§2.1.3.1)), T
 - `name` — tên tổ chức (R-ID-011 (§2.1.4.2))
 - `address` (R-ID-012 (§2.1.4.3))
 - `contact_email`, `contact_phone` (R-ID-013 (§2.1.4.4))
+- `is_internal` — boolean, nullable. ⚠ Chỉ giá trị `true` có ý nghĩa: đánh dấu đúng một Tổ chức là Tổ chức Văn Minh Việt (partial unique index `WHERE is_internal`). `NULL` và `false` đều là Tổ chức khác. Dùng để xác định kênh đăng nhập hợp lệ của Nhân viên (D-SD02-004 (¶3.2)). Không sửa được qua API. Migration chỉ thêm cột, không đặt giá trị. Việc đánh dấu Tổ chức nội bộ do `/cmd/api` làm khi khởi động (D-SD02-002 (¶3.0)).
 - `created_at`
 
-Văn Minh Việt là một Tổ chức bình thường trong bảng này, không phải trường hợp đặc biệt (R-ID-014 (§2.1.4.5)).
+Văn Minh Việt là một Tổ chức bình thường trong bảng này, không phải trường hợp đặc biệt (R-ID-014 (§2.1.4.5)). Cờ `is_internal` chỉ quyết định giao diện Nhân viên đăng nhập, không tạo khác biệt nghiệp vụ.
 
 **`employee`** (R-ID-002 (§2.1.1)–R-ID-003 (§2.1.2))
 
@@ -75,6 +76,7 @@ Quy tắc ai được gán role theo phạm vi cho Nhân viên khác — logic n
 - `id` (UUID)
 - `employee_id` → `employee.id`
 - `token_hash`
+- `channel` — `admin` / `partner`, kênh đã cấp token (D-SD02-004 (¶3.2))
 - `expires_at` — theo `identity.refresh_token_ttl_days` (mặc định 7 ngày, `07-system-settings.md`)
 - `revoked_at` — nullable, phục vụ đăng xuất/thu hồi
 - `created_at`
@@ -87,10 +89,20 @@ Hiện thực R-ID-019 (§2.1.5.2.1): tài khoản Quản trị hệ thống đ�
 
 ⚠ `/cmd/api` xử lý tài khoản gốc mỗi lần khởi động, sau migration và seed, trước khi nhận request (D-SD01-009 (¶9)). Không nằm trong migration. Dữ liệu đọc từ biến môi trường `ROOT_ADMIN_EMAIL`, `ROOT_ADMIN_PASSWORD` (bản rõ, băm bằng cùng cơ chế của `employee.password_hash`), `ROOT_ADMIN_DISPLAY_NAME`. Không hard-code giá trị mặc định. Nhân viên có email trùng `ROOT_ADMIN_EMAIL` là **tài khoản gốc**; không có cột đánh dấu riêng trong DB.
 
+**Xác định Tổ chức nội bộ** — chạy mỗi lần `/cmd/api` khởi động, trước bước tài khoản gốc, **kể cả khi thiếu biến `ROOT_ADMIN_*`**. Chạy chung transaction và advisory lock với bước tài khoản gốc. Lấy kết quả đầu tiên khớp, theo thứ tự:
+
+1. Đã có Tổ chức `is_internal = true`: dùng Tổ chức đó, không đổi gì.
+2. Có Nhân viên theo `ROOT_ADMIN_EMAIL`: đặt `is_internal = true` cho Tổ chức của Nhân viên đó.
+3. Có đúng một Tổ chức tên "Văn Minh Việt" (so khớp không phân biệt hoa thường, bỏ khoảng trắng đầu cuối): đặt `is_internal = true` cho Tổ chức đó.
+4. Không có Tổ chức nào tên "Văn Minh Việt": tạo Tổ chức "Văn Minh Việt" với `is_internal = true`.
+5. Có từ 2 Tổ chức tên "Văn Minh Việt" trở lên: không đánh dấu, ghi log lỗi, `/cmd/api` vẫn khởi động. Lúc này không ai đăng nhập được `admin` cho tới khi đơn vị triển khai xử lý dữ liệu trùng.
+
+Ghi log thông tin khi đặt cờ hoặc tạo Tổ chức. Không ghi `audit_log`.
+
 **Chung cho hai chế độ:**
 
 - Thiếu một trong 3 biến: ghi log cảnh báo, `/cmd/api` vẫn khởi động.
-- Tổ chức "Văn Minh Việt": tìm theo `name`; chưa có thì tạo, có rồi thì dùng lại (R-ID-014 (§2.1.4.5)).
+- Tài khoản gốc thuộc Tổ chức nội bộ đã xác định ở trên (R-ID-014 (§2.1.4.5)). Không xác định được (trường hợp 5) thì bỏ qua bước tài khoản gốc và ghi log lỗi.
 - Khi tạo mới: insert `employee` với `status = active`, bỏ qua luồng mời D-SD02-003 (¶3.1); gán role `quan_tri_he_thong` (seed, D-SD02-001 (¶2)) qua `employee_role`.
 - Chạy trong một transaction, giữ advisory lock riêng.
 - Không ghi `audit_log` — chưa có Nhân viên làm actor (D-SD01-003 (¶3)).
@@ -129,13 +141,14 @@ Các tài khoản khác tạo qua luồng mời (D-SD02-003 (¶3.1), `identity.c
    - `active` → tiếp tục bước 2a.
 
    2a. Tạm khoá đăng nhập (R-ID-031 (§2.1.5.9.1)): nếu `locked_until > now()` → từ chối, báo tài khoản đang tạm khoá do đăng nhập sai nhiều lần, thử lại sau thời điểm `locked_until` (không so khớp mật khẩu).
+   2b. ⚠ Kênh đăng nhập: `auth.login` gọi ở `admin` chỉ tiếp tục khi Tổ chức của Nhân viên có `is_internal = true`; gọi ở `partner` thì nhận mọi Nhân viên. Không khớp thì trả lỗi chung như bước 4, không so khớp mật khẩu và không đếm sai.
 3. So khớp mật khẩu nhập vào với `password_hash`.
    - Sai: tăng `failed_login_count`. Nếu `identity.login_max_failed_attempts > 0` và `failed_login_count` đạt ngưỡng này → đặt `locked_until = now() + identity.login_lockout_minutes`, đặt lại `failed_login_count = 0`, gọi `shared.RecordAudit` ghi sự kiện `auth.login_locked` với actor là hệ thống (`actor_type = system`, `entity_type = employee`) trong cùng transaction cập nhật bộ đếm (D-SD01-002 (¶2)).
    - Đúng: đặt lại `failed_login_count = 0`, `locked_until = NULL`.
    - Chỉ đếm sai cho `employee` tồn tại và đang `active`; email không tồn tại không đếm (không có bản ghi để đếm).
 4. ⚠ Nếu email không tồn tại, hoặc `status` không hợp lệ, hoặc sai mật khẩu — trả về cùng một thông báo lỗi chung ("Email hoặc mật khẩu không đúng"), không phân biệt rõ lý do — thực hành bảo mật chuẩn để tránh lộ thông tin email nào đã có tài khoản trong hệ thống. Đây là bổ sung của thiết kế, không phải yêu cầu đặc tả gốc.
-5. Đăng nhập thành công: sinh access token JWT (ngắn hạn) + refresh token (dài hạn, lưu `token_hash` vào bảng `refresh_token` — D-SD01-007 (¶7)), trả về client. Ngay sau khi xử lý xong, gọi `shared.RecordAudit` ghi nhận sự kiện đăng nhập (`employee_id`, thời điểm) — theo phạm vi audit log đã chốt ở D-SD01-002 (¶2) (R-NFR-004 (§3.1.2) đặc tả gốc); đây là **ngoại lệ duy nhất** không ghi cùng transaction DB với một thao tác nghiệp vụ khác, vì đăng nhập không có bản ghi nghiệp vụ nào khác đi kèm để dùng chung transaction (đã giải thích ở D-SD01-002 (¶2)). Thời hạn access token theo `identity.access_token_ttl_minutes` (mặc định 15 phút), refresh token theo `identity.refresh_token_ttl_days` (`07-system-settings.md`).
-6. Làm mới phiên: khi access token hết hạn, client gọi endpoint refresh kèm refresh token hiện có → hệ thống kiểm tra `refresh_token` còn hợp lệ (chưa `revoked_at`, chưa hết hạn) **và** Nhân viên sở hữu đang `status = active` → cấp access token mới. Không thoả thì trả 401 `session_revoked`. Không ghi audit log cho bước làm mới phiên (danh mục sự kiện audit, D-SD01-002 (¶2)).
+5. Đăng nhập thành công: sinh access token JWT (ngắn hạn) + refresh token (dài hạn, lưu `token_hash` vào bảng `refresh_token` — D-SD01-007 (¶7)), trả về client. Access token có claim `aud` bằng kênh gọi `auth.login` (`admin`/`partner`); `refresh_token.channel` lưu cùng giá trị. Ngay sau khi xử lý xong, gọi `shared.RecordAudit` ghi nhận sự kiện đăng nhập (`employee_id`, thời điểm) — theo phạm vi audit log đã chốt ở D-SD01-002 (¶2) (R-NFR-004 (§3.1.2) đặc tả gốc); đây là **ngoại lệ duy nhất** không ghi cùng transaction DB với một thao tác nghiệp vụ khác, vì đăng nhập không có bản ghi nghiệp vụ nào khác đi kèm để dùng chung transaction (đã giải thích ở D-SD01-002 (¶2)). Thời hạn access token theo `identity.access_token_ttl_minutes` (mặc định 15 phút), refresh token theo `identity.refresh_token_ttl_days` (`07-system-settings.md`).
+6. Làm mới phiên: khi access token hết hạn, client gọi endpoint refresh kèm refresh token hiện có → hệ thống kiểm tra `refresh_token` còn hợp lệ (chưa `revoked_at`, chưa hết hạn) **và** Nhân viên sở hữu đang `status = active` **và** `refresh_token.channel` khớp nhóm route gọi `auth.refresh` **và** Tổ chức của Nhân viên vẫn hợp lệ với kênh đó (bước 2b) → cấp access token mới. Không thoả thì trả 401 `session_revoked`. Không ghi audit log cho bước làm mới phiên (danh mục sự kiện audit, D-SD01-002 (¶2)).
 7. Đăng xuất: đánh dấu `revoked_at = now()` trên `refresh_token` hiện tại của phiên đó. Ngay sau khi xử lý xong, gọi `shared.RecordAudit` ghi nhận sự kiện đăng xuất — cùng cơ chế (không cùng transaction, gọi ngay sau khi xử lý xong) như bước 5.
 
 ### 3.3 [D-SD02-005] Luồng quên mật khẩu (R-ID-021 (§2.1.5.4))
@@ -163,12 +176,13 @@ Hiện thực R-ID-035 (§2.1.5.10): Nhân viên đang đăng nhập tự đổi
 
 ### 3.5 [D-SD02-007] Vô hiệu hoá phiên ngay lập tức
 
-Hiện thực yêu cầu đăng xuất ngay ở R-ID-025 (§2.1.5.7.1) (vô hiệu hoá tài khoản), R-ID-034 (§2.1.5.9.4) (đặt lại mật khẩu), R-ID-036 (§2.1.5.10.1) (tạm khoá khi đổi mật khẩu) và R-ID-038 (§2.1.5.10.3) (đổi mật khẩu). Chỉ thu hồi refresh token là chưa đủ, vì access token JWT đã cấp vẫn còn hiệu lực tới khi hết hạn.
+Hiện thực yêu cầu đăng xuất ngay ở R-ID-025 (§2.1.5.7.1) (vô hiệu hoá tài khoản), R-ID-034 (§2.1.5.9.4) (đặt lại mật khẩu), R-ID-036 (§2.1.5.10.1) (tạm khoá khi đổi mật khẩu), R-ID-038 (§2.1.5.10.3) (đổi mật khẩu), và đổi Tổ chức của Nhân viên (`identity.updateEmployee`). Chỉ thu hồi refresh token là chưa đủ, vì access token JWT đã cấp vẫn còn hiệu lực tới khi hết hạn.
 
-1. Các thao tác trên, trong cùng transaction nghiệp vụ, đều: thu hồi toàn bộ `refresh_token` đang hoạt động của Nhân viên, và đặt `employee.sessions_invalidated_at = now()`.
+1. Các thao tác trên, trong cùng transaction nghiệp vụ, đều: thu hồi toàn bộ `refresh_token` đang hoạt động của Nhân viên, và đặt `employee.sessions_invalidated_at = now()`. Đổi `organization_id` (khác giá trị cũ) cũng thu hồi phiên như trên, vì kênh hợp lệ của Nhân viên có thể đã đổi.
 2. ⚠ Middleware xác thực của `/cmd/api` (mọi route yêu cầu access token, ở cả `admin` và `partner`), sau khi kiểm chữ ký và hạn của JWT, đọc `status` và `sessions_invalidated_at` của Nhân viên theo `employee_id` trong token (truy vấn theo khoá chính, không cache). Từ chối với HTTP 401 `session_revoked` nếu:
    - `status <> active`, hoặc
-   - `sessions_invalidated_at IS NOT NULL` và `iat` của token < `sessions_invalidated_at`.
+   - `sessions_invalidated_at IS NOT NULL` và `iat` của token < `sessions_invalidated_at`, hoặc
+   - claim `aud` của token khác nhóm route đang gọi — trả HTTP 401 `session_revoked`.
 3. Client xử lý `session_revoked` như hết phiên: xoá token, chuyển về màn hình đăng nhập. Client không thử làm mới phiên, vì refresh token cũng đã bị thu hồi.
 4. Kích hoạt lại tài khoản (`enable`) không xoá `sessions_invalidated_at`: token cũ vẫn bị từ chối, Nhân viên đăng nhập lại để lấy token mới (R-ID-026 (§2.1.5.7.2)).
 5. Chi phí: thêm 1 truy vấn theo khoá chính mỗi request. Tải Nhân viên đồng thời ≤ 200 (R-NFR-013 (§3.2.4)), nên chấp nhận được. Nếu cần, có thể thêm bộ đệm trong tiến trình, làm mới qua `LISTEN/NOTIFY` (cùng cơ chế D-SD07-008 (¶4.2)), mà không đổi hợp đồng API.
@@ -287,6 +301,8 @@ Ranh giới mount đã chốt ở D-SD01-002 (¶2): nhóm `auth/*` là ngoại l
 | GET | `/auth/environment` | `auth.getEnvironment` | ⚠ Bổ sung — trả thông tin môi trường chạy `{dev_mailbox_url}` cho giao diện Nhân viên, dùng được cả trước khi đăng nhập (D-SD01-009 (¶9)) | Không |
 | POST | `/auth/change-password` | `auth.changePassword` | ⚠ Bổ sung — Nhân viên đang đăng nhập tự đổi mật khẩu của mình, body `{current_password, new_password}`, D-SD02-006 (¶3.4) | Access token |
 
+`auth.login`, `auth.refresh` gắn phiên với nhóm route gọi vào (D-SD02-004 (¶3.2) bước 2b, 5, 6). Token cấp ở `partner` không dùng được ở `admin` và ngược lại. Ở `partner`, `roles` trong response `auth.login`/`auth.getMe` chỉ gồm role theo phạm vi Đề tài (D-SD01-007 (¶7)).
+
 `auth.changePassword` — `POST /auth/change-password` (⚠ bổ sung, D-SD02-006 (¶3.4)) trả `204 No Content` khi thành công. Các lỗi theo quy ước lỗi chung (D-SD01-003 (¶3)):
 
 | HTTP | `error_code` | Khi nào |
@@ -347,7 +363,7 @@ Yêu cầu JWT hợp lệ + role `quan_tri_he_thong` cho mọi endpoint dưới 
 | GET | `/identity/employees` | `identity.listEmployees` | Danh sách Nhân viên — cursor pagination, filter `organization_id`, `status`; mỗi dòng trả kèm `roles: [{id, name, scope_type, scope_id}]` (toàn bộ role đang giữ — chức năng lẫn phạm vi, cùng cấu trúc `auth.login` D-SD02-009 (¶5.1)) — ⚠ bổ sung; kèm `is_root_admin` (⚠ bổ sung — `true` với tài khoản gốc, D-SD02-002 (¶3.0)) |
 | POST | `/identity/employees` | `identity.createEmployee` | Tạo Nhân viên mới → trạng thái `invited`, gửi email mời (D-SD02-003 (¶3.1) bước 1–2) |
 | GET | `/identity/employees/{id}` | `identity.getEmployee` | Chi tiết 1 Nhân viên, kèm danh sách role đang giữ và `is_root_admin` (⚠ bổ sung, D-SD02-002 (¶3.0)) |
-| PATCH | `/identity/employees/{id}` | `identity.updateEmployee` | Cập nhật `display_name`/`phone`/`organization_id` — đổi `organization_id` của tài khoản gốc trả 422 `root_admin_protected` (R-ID-019 (§2.1.5.2.1), D-SD02-002 (¶3.0)) |
+| PATCH | `/identity/employees/{id}` | `identity.updateEmployee` | Cập nhật `display_name`/`phone`/`organization_id` — đổi `organization_id` của tài khoản gốc trả 422 `root_admin_protected` (R-ID-019 (§2.1.5.2.1), D-SD02-002 (¶3.0)). Đổi `organization_id` thu hồi mọi phiên của Nhân viên (D-SD02-007 (¶3.5)) |
 | POST | `/identity/employees/{id}/disable` | `identity.disableEmployee` | Vô hiệu hoá tài khoản (R-ID-024 (§2.1.5.7)): chuyển `status` → `disabled`; trong cùng transaction thu hồi toàn bộ refresh token và đặt `sessions_invalidated_at = now()` — đăng xuất ngay mọi phiên (R-ID-025 (§2.1.5.7.1), D-SD02-007 (¶3.5)). Không gỡ role, không nhả các Hạng mục tri thức/Mục từ đang phụ trách (R-ID-026 (§2.1.5.7.2)–R-ID-027 (§2.1.5.7.3)). Tài khoản gốc: trả 422 `root_admin_protected` (R-ID-024 (§2.1.5.7), D-SD02-002 (¶3.0)) |
 | POST | `/identity/employees/{id}/enable` | `identity.enableEmployee` | Kích hoạt lại tài khoản (R-ID-024 (§2.1.5.7)): chuyển `status` → `active`; giữ nguyên mật khẩu và role (R-ID-026 (§2.1.5.7.2)) |
 | POST | `/identity/employees/{id}/clear-login-lock` | `identity.clearEmployeeLoginLock` | Quản trị hệ thống gỡ tạm khoá đăng nhập trước thời hạn (R-ID-032 (§2.1.5.9.2); `failed_login_count = 0`, `locked_until = NULL`); chỉ hợp lệ khi `locked_until > now()`. `identity.listEmployees` và chi tiết Nhân viên trả thêm `locked_until` (null nếu không bị tạm khoá) để hiển thị trạng thái tạm khoá |
@@ -393,5 +409,6 @@ Mọi endpoint ghi ở D-SD02-010 (¶5.2) có audit log — `action_type` và `d
 - **`organization_name` trong response `auth.login` — `POST /auth/login`/`auth.getMe` — `GET /auth/me`** (D-SD02-008 (¶4), D-SD02-009 (¶5.1)) — ⚠ đề xuất bổ sung: hoàn thiện kỹ thuật thuần tuý, phục vụ Cổng Nhân viên Tổ chức khác (partner-web) hiển thị tên Tổ chức mà không cần gọi `identity.getOrganization` (chỉ mount ở admin, D-SD02-010 (¶5.2)). Không đổi hành vi nghiệp vụ, không phát sinh mô hình phân quyền mới.
 - **Tài khoản Quản trị hệ thống gốc** (D-SD02-002 (¶3.0)) hiện thực R-ID-019 (§2.1.5.2.1), R-ID-024 (§2.1.5.7). Cách làm cụ thể là quyết định kỹ thuật: `/cmd/api` tạo khi khởi động theo `ROOT_ADMIN_*`; ở `DEV_MODE` (D-SD01-009 (¶9)) tài khoản được đặt lại mỗi lần khởi động và không áp dụng chính sách mật khẩu. ⚠ Tài khoản gốc được nhận diện theo `ROOT_ADMIN_EMAIL`, không có cột đánh dấu riêng. Khi đổi biến này, tài khoản theo email mới (tạo nếu chưa có, kể cả khi hệ thống đã có Nhân viên khác) trở thành tài khoản gốc, còn tài khoản cũ thành Nhân viên bình thường. Đặc tả chỉ mô tả tài khoản gốc là tài khoản đầu tiên, tạo khi chưa có Nhân viên nào.
 - **Chính sách mật khẩu, tạm khoá đăng nhập, thời hạn đường dẫn và mẫu email** (D-SD02-001 (¶2), D-SD02-003 (¶3.1)–D-SD02-006 (¶3.4), D-SD02-009 (¶5.1), D-SD02-010 (¶5.2)) hiện thực R-ID-022 (§2.1.5.5), R-ID-029 (§2.1.5.8), R-ID-030 (§2.1.5.9); tham số đọc từ cấu hình hệ thống (R-CFG-007 (§2.8.4.2)–R-CFG-008 (§2.8.4.3), `07-system-settings.md`). Thông báo tạm khoá (D-SD02-004 (¶3.2) bước 2a) cho biết email đó có tài khoản — chấp nhận theo R-ID-031 (§2.1.5.9.1). ⚠ Thời hạn access token/refresh token là tham số kỹ thuật của thiết kế (R-CFG-007 (§2.8.4.2) chỉ nêu "thời hạn phiên đăng nhập").
+- **Phiên gắn với kênh và cờ `organization.is_internal`** (D-SD02-001 (¶2), D-SD02-004 (¶3.2), D-SD02-007 (¶3.5)) ⚠: hiện thực ranh giới R-GEN-009 (§1.2.3.1)/R-GEN-010 (§1.2.3.2) ở tầng xác thực. Nhân viên Tổ chức khác chỉ đăng nhập ở Cổng Tổ chức khác. Nhân viên Tổ chức nội bộ đăng nhập ở Admin nội bộ, và có thể đăng nhập riêng ở Cổng Tổ chức khác; ở đó chỉ role theo phạm vi Đề tài có hiệu lực. Việc cho Nhân viên nội bộ dùng Cổng Tổ chức khác vượt ngoài R-GEN-010 (§1.2.3.2).
 - **Đổi mật khẩu khi đang đăng nhập, `auth.changePassword` — `POST /auth/change-password`** (D-SD02-001 (¶2), D-SD02-006 (¶3.4), D-SD02-009 (¶5.1)) hiện thực R-ID-035 (§2.1.5.10). Audit `auth.password_change` ghi cùng transaction theo quy ước chung. Mã lỗi và thứ tự kiểm tra (tạm khoá → mật khẩu hiện tại → trùng → chính sách) là quyết định kỹ thuật.
 - ⚠ **Vô hiệu hoá phiên ngay bằng `sessions_invalidated_at` + kiểm tra ở middleware** (D-SD02-001 (¶2), D-SD02-007 (¶3.5), D-SD02-009 (¶5.1), D-SD02-010 (¶5.2)) — cách hiện thực yêu cầu "đăng xuất ngay" của R-ID-025 (§2.1.5.7.1), R-ID-034 (§2.1.5.9.4), R-ID-036 (§2.1.5.10.1), R-ID-038 (§2.1.5.10.3). Đánh đổi: thêm 1 truy vấn theo khoá chính mỗi request có xác thực. Không áp dụng cho lần đăng nhập bị tạm khoá ở luồng đăng nhập (D-SD02-004 (¶3.2) bước 3): đặc tả không yêu cầu đăng xuất các phiên khác trong trường hợp này.

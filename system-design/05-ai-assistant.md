@@ -171,14 +171,14 @@ Cả 4 qua cùng AI Gateway (API nội bộ REST, D-SD06-001 (¶1)), hỗ trợ 
 |---|---|---|---|---|
 | POST | `/assistant/chat` | `assistant.chat` | Đặt câu hỏi — body `{question, conversation_id, cultural_domain_id?}`. Response: SSE gồm các sự kiện có tên (bảng dưới) — chốt ở D-SD01-003 (¶3) | Admin: JWT (ghi `asked_by_employee_id`). Public: không |
 
-**Hợp đồng sự kiện SSE** (⚠ Bổ sung — dùng chung cho kênh `admin` và `public`):
+**Hợp đồng sự kiện SSE** (⚠ Bổ sung — khác nhau theo kênh ở `self_audit`, `done`):
 
 | `event` | `data` | Thời điểm |
 |---|---|---|
 | `token` | `{text}` | Lặp lại trong lúc Generate stream (relay từ `delta` của `gateway.generate`) |
 | `citations` | `{items: [{entry_id, title, cover_image}]}` | Một lần, khi Generate xong. `title` là tiêu đề phiên bản đang công khai (`GetEntryTitles`). ⚠ `cover_image` — `{file_id, url, url_expires_at}` ảnh đại diện phiên bản công khai (`GetPublicCoverImages`, D-SD04-013 (¶4.3)) hoặc `null`; dùng cho dải ảnh minh hoạ dưới câu trả lời ở Web công khai. Cùng dữ liệu ở cả 2 kênh |
-| `self_audit` | `{flags: [{claim_text, reason}] \| null}` | Một lần, sau bước Self-audit. Cùng schema `flags` của `gateway.selfAudit` (D-SD06-006 (¶3.4)). `[]` = không có cờ; `null` = không kiểm được (lỗi/timeout) |
-| `done` | `{query_log_id, turn_index}` | Một lần, sau khi ghi `assistant_query_log` (D-SD05-005 (¶3.2) bước 6) — sự kiện cuối của lượt hỏi thành công |
+| `self_audit` | `{flags: [{claim_text, reason}] \| null}` | Một lần, sau bước Self-audit. Cùng schema `flags` của `gateway.selfAudit` (D-SD06-006 (¶3.4)). `[]` = không có cờ; `null` = không kiểm được (lỗi/timeout). **Chỉ kênh `admin`.** Kênh `public` không gửi sự kiện này; Self-audit vẫn chạy và kết quả vẫn ghi vào `assistant_query_log` |
+| `done` | `{query_log_id, turn_index}` (`admin`) / `{turn_index}` (`public`) | Một lần, sau khi ghi `assistant_query_log` (D-SD05-005 (¶3.2) bước 6) — sự kiện cuối của lượt hỏi thành công |
 | `error` | `{error_code, message, trace_id}` | Bất kỳ lúc nào; stream kết thúc ngay sau sự kiện này. Định dạng theo quy ước lỗi chung (D-SD01-003 (¶3), D-SD06-012 (¶6)) |
 
 Nếu lỗi xảy ra sau khi đã gửi `citations`, client giữ nguyên phần câu trả lời đã hiển thị và thông báo lỗi.
