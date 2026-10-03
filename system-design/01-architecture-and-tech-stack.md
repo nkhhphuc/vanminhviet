@@ -20,6 +20,7 @@ Ghi lại các quyết định kiến trúc/tech stack dùng chung cho cả 4 mo
 | Containerization & Orchestration | Docker (đóng gói); orchestration để mở | Mọi service (Go monolith, 2 app Nhân viên, Next.js, AI service) đóng gói bằng Docker. Công cụ orchestration (Kubernetes/Nomad/docker-compose cho production...) chưa chốt — do đội triển khai (deployer) quyết định theo hạ tầng thực tế lúc đó |
 | Reverse proxy / Routing | Dev: Docker Compose · Production: Traefik | Định tuyến giữa các app (Admin nội bộ, Cổng Tổ chức khác, Web công khai, API) theo domain/path — khớp ranh giới route/API đã chốt ở D-SD01-002 (¶2) |
 | Email / SMTP | Dev: Mailpit (container) · Production: Amazon SES (giao thức SMTP) | Phục vụ gửi email dùng chung cho nhiều module (mời/tạo tài khoản, đặt lại mật khẩu ở module 02; thông báo trạng thái xét duyệt ở module 03...) — xem `/shared` ở D-SD01-002 (¶2). ⚠ **Email không thuộc phạm vi R-NFR-005 (§3.1.3)** (data residency) — đặc tả gốc liệt kê rõ phạm vi là dữ liệu lưu trữ lâu dài (dữ liệu cá nhân Nhân viên, Tư liệu gốc, nội dung Hạng mục tri thức và Mục từ trong DB/Object storage), không bao gồm hạ tầng truyền tải/chuyển tiếp như SMTP relay — giữ nguyên Amazon SES, không cần đổi nhà cung cấp. Dev: giao diện web Mailpit mở qua reverse proxy, proxy tự chèn thông tin đăng nhập — D-SD01-009 (¶9) |
+| Console dữ liệu (chỉ DEV) | pgAdmin 4 (container) · MinIO Console (có sẵn trong MinIO) | Xem và sửa dữ liệu PostgreSQL, object trong MinIO ở môi trường phát triển. Mở qua reverse proxy, đăng nhập riêng. Không triển khai ở Production — D-SD01-009 (¶9) |
 | Admin nội bộ (backend UI) | Quasar (Vue 3) + Pinia | Cho Nhân viên thuộc Tổ chức Văn Minh Việt (R-GEN-009 (§1.2.3.1) đặc tả gốc) — đầy đủ chức năng, gồm quản lý người dùng/phân quyền/Tổ chức |
 | Trình soạn thảo nội dung Mục từ | TipTap (Vue 3) | Dùng trong Admin nội bộ cho vai trò Biên tập (R-ENC-019 (§2.3.4) đặc tả gốc) soạn nội dung Mục từ dạng JSON block (R-ENC-007 (§2.3.2.3.1) đặc tả gốc). Core mã nguồn mở (MIT), tự host, không dùng gói Cloud trả phí của TipTap. Dựng trên ProseMirror nên định nghĩa được các loại khối (Node) tuỳ biến cho từng loại nhúng file (ảnh/audio/phim) đúng vị trí, khớp mô hình block đã chốt |
 | Cổng Nhân viên Tổ chức khác | Quasar (Vue 3) + Pinia, **app/deploy riêng** khỏi Admin nội bộ | Cho Nhân viên thuộc Tổ chức khác (R-GEN-010 (§1.2.3.2), module 2.7 đặc tả gốc) — chỉ vai trò Nghiên cứu/Xét duyệt theo Đề tài được gán, không có màn hình quản lý người dùng/Tổ chức. Tách app riêng (không chỉ ẩn UI trong cùng app Admin) để ranh giới bảo mật rõ ràng ở cả tầng route/API — xem D-SD01-002 (¶2) |
@@ -478,13 +479,15 @@ Các mục kỹ thuật bổ sung (không phải chỉ số chính thức của 
 | `DEV_MODE` | `false` | Bật chế độ phát triển |
 | `DEV_RESET_ON_START` | `false` | Xoá sạch dữ liệu mỗi lần `/cmd/api` khởi động. Chỉ hợp lệ khi `DEV_MODE=true` |
 | `DEV_MAILBOX_URL` | — | Địa chỉ giao diện web Mailpit. Chỉ đọc khi `DEV_MODE=true` |
+| `DEV_DB_CONSOLE_URL` | — | Địa chỉ giao diện web pgAdmin. Chỉ đọc khi `DEV_MODE=true` |
+| `DEV_STORAGE_CONSOLE_URL` | — | Địa chỉ MinIO Console. Chỉ đọc khi `DEV_MODE=true` |
 | `ROOT_ADMIN_EMAIL`, `ROOT_ADMIN_PASSWORD`, `ROOT_ADMIN_DISPLAY_NAME` | — | Tài khoản Quản trị hệ thống gốc (D-SD02-002 (¶3.0)). Bắt buộc ở mọi môi trường, cả hai chế độ |
 
 **Khi `DEV_MODE=true`:**
 
 - Tài khoản Quản trị hệ thống gốc được đặt lại theo `ROOT_ADMIN_*` mỗi lần `/cmd/api` khởi động (D-SD02-002 (¶3.0)).
 - Các luồng nghiệp vụ khác giữ nguyên: mời Nhân viên, quên/đặt lại mật khẩu, chính sách mật khẩu. Email gửi tới Mailpit (bên dưới).
-- `auth.getEnvironment` (không xác thực, mount `admin` và `partner`) trả `dev_mailbox_url` theo `DEV_MAILBOX_URL` (D-SD02-009 (¶5.1)). Khi `DEV_MODE=false` trường này là `null`.
+- `auth.getEnvironment` (không xác thực, mount `admin` và `partner`) trả `dev_mailbox_url`, `dev_db_console_url`, `dev_storage_console_url`, lấy lần lượt theo `DEV_MAILBOX_URL`, `DEV_DB_CONSOLE_URL`, `DEV_STORAGE_CONSOLE_URL` (D-SD02-009 (¶5.1)). Khi `DEV_MODE=false` cả ba trường là `null`.
 - `public.listTodayItems` trả tin "Hôm nay" mẫu (D-SD04-018 (¶5.4)).
 - `/cmd/api` và `/cmd/worker` ghi log cảnh báo đang chạy `DEV_MODE` mỗi lần khởi động.
 
@@ -514,6 +517,24 @@ Các mục kỹ thuật bổ sung (không phải chỉ số chính thức của 
 - Cổng SMTP của Mailpit chỉ mở trong mạng nội bộ Docker.
 - Khi `DEV_MODE=true` mà SMTP trỏ tới host khác Mailpit: `/cmd/api` ghi log cảnh báo, không chặn khởi động.
 - Giao diện Nhân viên hiện link "Hộp thư DEV" khi `dev_mailbox_url` khác `null`, kể cả ở các màn hình trước đăng nhập.
+
+**Console cơ sở dữ liệu và lưu trữ ở DEV:**
+
+- **pgAdmin 4** mở tại `https://<domain-dev>/pgadmin/` qua reverse proxy, chạy ở chế độ server dưới đường dẫn con.
+  - Người dùng đăng nhập bằng tài khoản pgAdmin (`PGADMIN_DEFAULT_EMAIL`, `PGADMIN_DEFAULT_PASSWORD`), chỉ cấp cho đội dev/test. Proxy không tự gắn thông tin đăng nhập.
+  - Server DB của ứng dụng được khai báo sẵn (`servers.json` kèm passfile), người dùng không phải nhập thông tin kết nối.
+  - pgAdmin kết nối bằng chính role DB của ứng dụng.
+- **MinIO Console** (giao diện có sẵn của MinIO) mở tại `https://<domain-dev>/minio/` qua reverse proxy (`MINIO_BROWSER_REDIRECT_URL`).
+  - Người dùng đăng nhập bằng tài khoản quản trị MinIO, chỉ cấp cho đội dev/test.
+- ⚠ Hai console có toàn quyền trên dữ liệu:
+  - Sửa trực tiếp không qua kiểm tra nghiệp vụ và không ghi audit.
+  - Drop hoặc ALTER bảng, hay sửa bảng job của river, có thể làm hỏng DEV. Khôi phục bằng `DEV_RESET_ON_START`.
+  - Xoá object do ứng dụng tạo làm bản ghi trỏ tới file không còn.
+  - Thay đổi trong thư mục Tư liệu gốc được xử lý ở lần đồng bộ kế tiếp (D-SD03-020 (¶4.5)).
+  - Chấp nhận vì DEV chỉ chứa dữ liệu thử.
+- ⚠ Chức năng quản trị (user, policy, bucket) của MinIO Console phụ thuộc phiên bản MinIO. Bản Community phát hành từ khoảng giữa năm 2025 chỉ còn Object Browser; với bản đó, việc quản trị làm bằng `mc`.
+- Cổng web của pgAdmin và MinIO Console không publish ra ngoài, chỉ truy cập qua reverse proxy. Hai console chỉ có trong cấu hình triển khai DEV.
+- Giao diện Nhân viên hiện link "Cơ sở dữ liệu DEV" và "Lưu trữ DEV" cạnh "Hộp thư DEV" khi URL tương ứng khác `null`, kể cả ở các màn hình trước đăng nhập.
 
 ## 10. Vấn đề mở
 
