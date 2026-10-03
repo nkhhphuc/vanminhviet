@@ -77,3 +77,4 @@
   - Mục 4.5: bấm dòng Tư liệu gốc mở 4.13. Mục 4.11: vai trò Nghiên cứu thêm việc đọc Tư liệu gốc. Mục 6, 7: cập nhật theo màn hình mới.
   - File **00-claude-instructions.md** mục 6, 7: thêm quyết định truy cập Tư liệu gốc; số màn hình đổi thành 13.
   - Mốc đồng bộ partner-web: DC-20261003-04.
+- Ghi mục đích cốt lõi của Cổng Nhân viên Tổ chức khác: hỗ trợ nghiên cứu văn hóa và lịch sử của dân tộc Việt Nam; dùng làm tiêu chí ưu tiên khi chọn phương án thiết kế. Không đổi nội dung cần hiện thực, không tạo DC. File: **partner-web-design.md** (1), **00-claude-instructions.md** (1).

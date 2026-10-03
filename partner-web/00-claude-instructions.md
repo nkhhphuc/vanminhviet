@@ -4,6 +4,7 @@
 
 ## 1. Mục tiêu
 
+- **Mục đích cốt lõi của Cổng Nhân viên Tổ chức khác:** hỗ trợ nghiên cứu văn hóa và lịch sử của dân tộc Việt Nam. Mọi quyết định thiết kế giao diện (bố cục, ưu tiên thông tin, điều hướng) được cân nhắc theo mục đích này; khi có nhiều lựa chọn, ưu tiên phương án giúp Nhân viên tiếp cận Tư liệu gốc, nghiên cứu và xét duyệt Hạng mục tri thức thuận tiện, chính xác hơn.
 - Thiết kế/biên tập `partner-web-design.md` thành một đặc tả giao diện đủ chi tiết để đội dev dùng làm đầu vào build giao diện Cổng Nhân viên Tổ chức khác.
 - Đối tượng dùng: Nhân viên Tổ chức khác — 3 vai trò theo phạm vi Đề tài được gán: Nghiên cứu, Xét duyệt (R-PTN-003 (§2.7.2)–R-PTN-004 (§2.7.3) đặc tả gốc) và Chủ nhiệm đề tài (R-KB-073 (§2.2.5.5)) — **không có** màn hình quản lý người dùng/Tổ chức (ranh giới route `/api/v1/partner/...` đã chốt ở D-SD01-002 (¶2) — chỉ mount `knowledge` và `gate`, không mount `identity`, `ingestion`, `encyclopedia`).
 - Ưu tiên rõ ràng chức năng, phạm vi thao tác hẹp và đúng theo Đề tài được gán — không cần mockup chi tiết như `public-web/`.
