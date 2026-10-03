@@ -133,3 +133,11 @@
   - **01-architecture-and-tech-stack.md** ¶3 (D-SD01-003): danh mục `reason_code` thêm `no_public_version`.
   - **00-claude-instructions.md** mục 8: thêm việc tồn đọng "Tên file của `entry_file` và `knowledge_object_file`", "Xem nội dung một phiên bản Mục từ đã chốt".
 - DC-20261003-03 (câu hỏi của partner-web, dialog Đổi mật khẩu): **07-system-settings.md** ¶2.3 (D-SD07-003): `identity.login_max_failed_attempts`, `identity.login_lockout_minutes` thêm exposure `partner_client`.
+- CR-20261003-06 (Trang Cương vực trên website công khai): **04-encyclopedia.md**
+  - ¶2.5 (D-SD04-005): thêm cột `cultural_domain.content_updated_at` — ngày cập nhật của trang Cương vực trong sitemap; `updated_at` chỉ còn là thời điểm sửa gần nhất; định nghĩa "Cương vực đang hiển thị" (có ít nhất một Mục từ đang công khai), tính khi truy vấn, giữ slug và lịch sử slug khi ẩn.
+  - ¶3.7 (D-SD04-023): khối "Cương vực trên website công khai" — chỉ Cương vực đang hiển thị có ở `public.listCulturalDomains`, `public.resolveCulturalDomainSlug`, `public.listSitemapItems`; trang Cương vực dùng `public.listEntries` với một `cultural_domain_id`; điều kiện ẩn/hiện lại; `resolveCulturalDomainSlug` trả 404 với Cương vực không hiển thị.
+  - ¶4.4 (D-SD04-014): `AssignCulturalDomain`/`UnassignCulturalDomain` (khi Mục từ đang công khai), `CreateCulturalDomain`, `UpdateCulturalDomain` (khi đổi `name`/`code`), `SetPublicVersion` đặt `content_updated_at = now()`.
+  - ¶5.3 (D-SD04-017): `encyclopedia.listCulturalDomains` thêm `public_entry_count`, `is_public_visible`.
+  - ¶5.4 (D-SD04-018): `public.listCulturalDomains` chỉ trả Cương vực đang hiển thị; `public.resolveCulturalDomainSlug` 404 với Cương vực không hiển thị; `public.listSitemapItems` chỉ gồm Cương vực đang hiển thị, `updated_at` = `content_updated_at`.
+  - ¶6: ghi nhận các quyết định ⚠ của thiết kế.
+  - Lưu ý cho luồng khác: public-web — empty state "Cương vực này chưa có Mục từ công khai" ở D-PUB-013 (¶4.10) không còn xảy ra vì Cương vực như vậy trả 404; admin-web — có thể dùng `public_entry_count`/`is_public_visible` cho gợi ý (b), (c) của CR. Code: migration thêm cột `content_updated_at`.
