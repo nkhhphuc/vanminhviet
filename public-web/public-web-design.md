@@ -293,7 +293,11 @@ Từ khoá và bộ lọc lấy từ query của URL (D-PUB-010 (¶3)), nên m�
 
 ### 4.4 [D-PUB-004] Trang chi tiết Mục từ
 
-**Icon share** đặt cạnh tiêu đề Mục từ.
+**Chia sẻ** (R-NFR-034 (§3.6.8)): hàng nút icon ngay dưới chip Cương vực, gồm Facebook, Zalo, Sao chép liên kết. Liên kết chia sẻ là đường dẫn canonical của trang (D-PUB-014 (¶8)).
+- Facebook: mở hộp chia sẻ của Facebook trong cửa sổ mới.
+- Zalo: dùng nút chia sẻ của Zalo. ⚠ Nút này cần Zalo Official Account của dự án, mã lấy từ biến môi trường; cần kiểm tra lại cách tích hợp lúc code.
+- Sao chép liên kết: sao chép đường dẫn và hiện thông báo "Đã sao chép liên kết" (D-PUB-012 (¶2.3)).
+- Màn hình hẹp, khi trình duyệt hỗ trợ Web Share API: thêm nút "Khác" mở hộp chia sẻ của hệ thống.
 
 **Header:** Tiêu đề Mục từ (lớn, đậm), chip Cương vực ngay dưới tiêu đề (có thể nhiều), theo thứ tự `cultural_domain_ids`; bấm chip thì mở Trang Cương vực D-PUB-013 (¶4.10).
 
@@ -440,6 +444,39 @@ Trang của một Cương vực, liệt kê các Mục từ đang công khai thu
 - Mọi màn hình dùng chung Header và Footer (D-PUB-012 (¶2.3)); riêng Chat AI không có Footer.
 - Cần chuẩn bị hệ thống **component tái sử dụng**: Card ảnh + tiêu đề, Pill/Chip button, Progress bar, Segmented control (tab switch), Post card (cộng đồng), Header (2 mức, mega menu, menu màn hình hẹp), Footer, Card Cương vực, Nhãn "Sắp ra mắt", Breadcrumb, Trang không tìm thấy.
 - Nội dung media (ảnh 360°, VR/AR cho bảo tàng số) cần xác định rõ công nghệ triển khai (WebXR, model-viewer) — mức hỗ trợ WebXR/AR khác nhau giữa các trình duyệt trong R-NFR-019 (§3.3.4), cần có cách xem thay thế (360°/ảnh) khi trình duyệt không hỗ trợ; phần này nên trao đổi thêm với dev trước khi implement để chọn giải pháp phù hợp nền tảng.
+
+## 8. [D-PUB-014] SEO & chia sẻ
+
+**Thẻ trang** (R-NFR-030 (§3.6.4), R-NFR-034 (§3.6.8), D-SD04-023 (¶3.7)): mỗi trang khai báo `<title>`, `meta description`, Open Graph (`og:title`, `og:description`, `og:image`, `og:url`, `og:type`, `og:site_name` = "Văn Minh Việt", `og:locale` = `vi_VN`). Trang được lập chỉ mục khai báo thêm `canonical`. `og:url` là đường dẫn canonical, hoặc đường dẫn hiện tại nếu trang không có canonical. `og:type` là `article` ở trang Mục từ, `website` ở các trang khác.
+
+| Trang | `<title>` | Mô tả | `og:image` | Lập chỉ mục |
+|---|---|---|---|---|
+| Trang chủ D-PUB-001 (¶4.1) | "Văn Minh Việt — Bách khoa tri thức văn hoá, lịch sử Việt" | Mô tả ở hero | Ảnh mặc định | Có |
+| Bách khoa D-PUB-003 (¶4.3), không có query | "Bách khoa toàn thư \| Văn Minh Việt" | "Tra cứu các Mục từ về văn hoá, lịch sử Việt Nam đã được thẩm định." | Ảnh mặc định | Có |
+| Bách khoa D-PUB-003 (¶4.3), có `q` hoặc `cuong-vuc` | "Kết quả tìm kiếm \| Văn Minh Việt" | như trên | Ảnh mặc định | Không ⚠ |
+| Trang Cương vực D-PUB-013 (¶4.10) | "{tên Cương vực} \| Văn Minh Việt" | "Các Mục từ về {tên Cương vực} trong Bách khoa toàn thư Văn Minh Việt." | Ảnh mặc định | Có |
+| Trang chi tiết Mục từ D-PUB-004 (¶4.4) | "{`seo.title`} \| Văn Minh Việt" | `seo.description` | `seo.image.url`; `null` thì Ảnh mặc định | Có |
+| Chat AI D-PUB-002 (¶4.2) | "Trợ lý AI \| Văn Minh Việt" | "Hỏi đáp về văn hoá, lịch sử Việt Nam, trả lời kèm Mục từ nguồn." | Ảnh mặc định | Không |
+| Màn hình module ngoài phạm vi D-PUB-005 (¶4.5)–D-PUB-009 (¶4.9) | "{tên module} \| Văn Minh Việt" | 1 dòng giới thiệu module | Ảnh mặc định | Không ⚠ |
+| Trang không tìm thấy (D-PUB-012 (¶2.3)) | "Không tìm thấy trang \| Văn Minh Việt" | — | — | Không |
+
+- Ảnh mặc định: Ảnh mặc định của Mục từ (D-PUB-012 (¶2.3)).
+- ⚠ Hậu tố " | Văn Minh Việt" do web thêm. Độ dài khuyến nghị 60 ký tự của tiêu đề (D-SD04-023 (¶3.7)) tính trên phần trước hậu tố.
+
+**Chặn lập chỉ mục** (R-NFR-028 (§3.6.2), R-NFR-032 (§3.6.6)):
+- Trang có cột "Lập chỉ mục" là "Không" khai báo `<meta name="robots" content="noindex, follow">`.
+- `robots.txt` tĩnh: chặn `/tro-ly-ai` và `/bach-khoa?` (trang kết quả tìm kiếm, lọc); khai báo `Sitemap: {địa chỉ website}/sitemap.xml`.
+
+**Sơ đồ trang** (R-NFR-032 (§3.6.6)): `sitemap.xml` sinh động, gồm Trang chủ, `/bach-khoa`, mọi trang Cương vực và mọi trang Mục từ trong `public.listSitemapItems` (`lastmod` = `updated_at`). Không gồm Chat AI và các màn hình module ngoài phạm vi.
+
+**Dữ liệu có cấu trúc** (R-NFR-031 (§3.6.5)), dạng JSON-LD:
+- Trang Mục từ:
+  - `Article`: `headline`, `description`, `image` theo thẻ trang; `datePublished` = `first_public_at`; `dateModified` = `public_version_set_at`; `inLanguage` = `vi`; `publisher` là Văn Minh Việt.
+  - `BreadcrumbList`: Bách khoa toàn thư → Cương vực đầu tiên → Mục từ. Mục từ chưa gán Cương vực thì bỏ cấp giữa.
+- ⚠ Trang Cương vực: `CollectionPage` và `BreadcrumbList` (Bách khoa toàn thư → Cương vực).
+- ⚠ Trang chủ: `WebSite` và `Organization` (tên, logo, địa chỉ website).
+
+**Xác minh quyền sở hữu** (R-NFR-032 (§3.6.6)): thẻ meta xác minh của Google Search Console, Bing Webmaster Tools và công cụ tương tự, giá trị lấy từ biến môi trường của Web công khai (D-SD04-023 (¶3.7)). Chỉ đặt ở Trang chủ.
 
 ---
 
