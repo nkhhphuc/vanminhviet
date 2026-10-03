@@ -41,7 +41,7 @@ Khi phát hiện một điểm trong `public-web-design.md` không có cơ sở 
 - **Chỉ website, responsive 2 mức**: `public-web-design.md` chỉ đặc tả website (Next.js), ứng dụng di động không thuộc phạm vi. Bố cục 2 mức, dùng chung Header (menu chữ ở màn hình rộng, nút menu ở màn hình hẹp) và Footer; không dùng Bottom Tab Bar. Khác biệt giữa hai mức viết thành quy tắc chung, chỉ ghi riêng các ngoại lệ.
 - **Mục 4.9 (Cộng đồng)**: tạm gác lại, chưa biên tập chi tiết — chờ quay lại sau.
 - **Theme**: sáng (light mode), nền trắng ngà, màu nhấn đỏ son, icon set minh hoạ màu (illustrated); nhận diện (màu, font, logo, phong cách ảnh) dùng chung với landing vanminhviet.org. Áp dụng cho toàn bộ `public-web-design.md` (`public-web` ¶2 Design System, mô tả màu sắc ở `public-web` ¶4, ghi chú theme ở `public-web` ¶7).
-- **Thứ tự màn hình 4.x**: Bách Khoa Toàn Thư (Danh sách Mục từ, Trang chi tiết Mục từ) đặt ngay sau D-PUB-002 (¶4.2) (Chat AI); các màn hình còn lại theo sau: 4.5 Bản đồ văn hóa, 4.6 Bảo tàng số 3D, 4.7 Game lịch sử, 4.8 Phim & TV, 4.9 Cộng đồng.
+- **Thứ tự màn hình 4.x**: Bách Khoa Toàn Thư (Danh sách Mục từ, Trang chi tiết Mục từ) đặt ngay sau D-PUB-002 (¶4.2) (Chat AI); các màn hình còn lại theo sau: 4.5 Bản đồ văn hóa, 4.6 Bảo tàng số 3D, 4.7 Game lịch sử, 4.8 Phim & TV, 4.9 Cộng đồng; 4.10 Trang Cương vực (D-PUB-013) đặt cuối theo quy tắc giữ số mục.
 - **Trang chủ kiểu website**: module ngoài phạm vi gom vào dải "Sắp ra mắt" và menu "Khám phá thêm"; module đã có màn hình thiết kế đi trước thì liên kết tới màn hình đó, chưa có thì chỉ hiển thị. Footer lấy nội dung từ landing vanminhviet.org.
 
 ## 7. Trạng thái hiện tại — đối chiếu phạm vi (10 điểm)

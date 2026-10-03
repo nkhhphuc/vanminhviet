@@ -53,7 +53,7 @@ Nhận diện thương hiệu (màu, font, logo, phong cách ảnh) dùng chung 
     - Ở giữa: menu chữ gồm Trang chủ · Bách khoa toàn thư · Trợ lý AI · Khám phá thêm ▾. Mục đang active có chữ đỏ và gạch chân đỏ.
     - Bên phải: icon tìm kiếm, icon chuông thông báo (⚠, xem D-PUB-001 (¶4.1)) và nút CTA "Hỏi Trợ lý AI" mở D-PUB-002 (¶4.2).
   - **"Khám phá thêm"** mở mega menu khi hover hoặc bấm, nhấn Esc để đóng. Mega menu có 3 cột:
-    - "Cương vực": danh sách động lấy từ `public.listCulturalDomains`. Bấm một Cương vực thì mở D-PUB-003 (¶4.3) đã lọc sẵn Cương vực đó.
+    - "Cương vực": danh sách động lấy từ `public.listCulturalDomains`. Bấm một Cương vực thì mở Trang Cương vực D-PUB-013 (¶4.10).
     - "Trải nghiệm": Bảo tàng số 3D, Bản đồ văn hóa, Game lịch sử, Phim & Truyền hình.
     - "Cộng đồng & Học tập": Cộng đồng, Giáo dục.
   - **Nhãn "Sắp ra mắt":** mỗi module ngoài phạm vi có nhãn dạng pill viền vàng đồng.
@@ -77,6 +77,8 @@ Nhận diện thương hiệu (màu, font, logo, phong cách ảnh) dùng chung 
 - **Nút CTA chính:** nền đỏ, chữ trắng, bo góc, dùng cho hành động chính (vd: "Chơi ngay", "Tìm hiểu ngay").
 - **Search bar:** bo tròn/bo góc lớn, nền sáng hơn/khác tông nhẹ so với nền chính (viền mảnh xám kem), icon kính lúp bên phải, placeholder dạng câu hỏi gợi ý.
 - **Chia sẻ:** nếu trình duyệt hỗ trợ thì mở hộp chia sẻ của hệ thống (Web Share API). Nếu không, sao chép URL của màn hình vào clipboard và hiện thông báo ngắn "Đã sao chép liên kết".
+- **Breadcrumb:** dải đường dẫn phân cấp đặt trên H1, chữ nhỏ màu Chữ phụ, các cấp cách nhau bằng `›`. Các cấp trước là liên kết, cấp cuối là trang hiện tại.
+- **Trang không tìm thấy** ⚠: dùng khi đường dẫn không tồn tại, hoặc khi Mục từ hay Cương vực không còn công khai. HTTP 404, H1 "Không tìm thấy trang", 1 dòng mô tả, 2 nút "Về Trang chủ" và "Duyệt Bách khoa toàn thư". Có Header và Footer.
 - **Trạng thái tương tác:**
   - Mọi phần tử bấm được đều có trạng thái hover (chữ hoặc viền chuyển đỏ, hoặc nền đậm nhẹ).
   - Mọi phần tử bấm được đều có focus ring nhìn rõ (viền accent 2px) khi điều hướng bằng bàn phím.
@@ -92,7 +94,7 @@ Header (D-PUB-012 (¶2.3)) — mọi màn hình
 ├── Bách khoa toàn thư ──► D-PUB-003 (¶4.3)
 ├── Trợ lý AI, nút "Hỏi Trợ lý AI" ──► D-PUB-002 (¶4.2)
 ├── Khám phá thêm (mega menu / menu màn hình hẹp)
-│   ├── Cương vực (danh sách động) ──► D-PUB-003 (¶4.3), lọc sẵn Cương vực
+│   ├── Cương vực (danh sách động) ──► D-PUB-013 (¶4.10)
 │   ├── Bảo tàng số 3D · Sắp ra mắt ──► D-PUB-006 (¶4.6)
 │   ├── Bản đồ văn hóa · Sắp ra mắt ──► D-PUB-005 (¶4.5)
 │   ├── Game lịch sử · Sắp ra mắt ──► D-PUB-007 (¶4.7)
@@ -103,29 +105,38 @@ Header (D-PUB-012 (¶2.3)) — mọi màn hình
 
 Trang chủ D-PUB-001 (¶4.1):
 ├── Ô hỏi AI ở hero / câu hỏi gợi ý ──► D-PUB-002 (¶4.2), kèm câu hỏi
-├── Card Cương vực ──► D-PUB-003 (¶4.3), lọc sẵn Cương vực
+├── Card Cương vực ──► D-PUB-013 (¶4.10)
 └── Dải "Sắp ra mắt" ──► như nhóm Sắp ra mắt ở trên
 
-Mục từ (card Trang chủ, trích dẫn Chat AI, hoặc D-PUB-003 (¶4.3)) ──► Trang chi tiết Mục từ (D-PUB-004 (¶4.4))
+Mục từ (card Trang chủ, trích dẫn Chat AI, D-PUB-003 (¶4.3) hoặc D-PUB-013 (¶4.10)) ──► Trang chi tiết Mục từ (D-PUB-004 (¶4.4))
+Chip Cương vực ở D-PUB-004 (¶4.4) ──► D-PUB-013 (¶4.10)
 
 Footer "Về dự án" ──► landing vanminhviet.org
 ```
 
-**Đường dẫn (URL):** mỗi màn hình có URL riêng, mở trực tiếp và chia sẻ được. Nút back và forward của trình duyệt phải hoạt động đúng. Từ khoá tìm kiếm và bộ lọc Cương vực ở D-PUB-003 (¶4.3) được phản ánh lên query của URL.
+**Đường dẫn (URL):** mỗi màn hình có URL riêng, mở trực tiếp và chia sẻ được. Nút back và forward của trình duyệt phải hoạt động đúng.
 
-⚠ Đề xuất bảng đường dẫn:
+- Mục từ và Cương vực dùng slug (R-NFR-029 (§3.6.3), D-SD04-023 (¶3.7)). Liên kết tới Mục từ dựng từ `slug` có sẵn trong dữ liệu (`public.listEntries`, sự kiện `citations`). Liên kết tới Cương vực dựng từ `slug` của `public.listCulturalDomains`.
+- Khi mở trang theo slug, web gọi `public.resolveEntrySlug` hoặc `public.resolveCulturalDomainSlug`:
+  - Slug khác slug hiện hành (slug cũ) thì trả 301 tới đường dẫn có slug hiện hành.
+  - Không tìm thấy thì hiện Trang không tìm thấy (D-PUB-012 (¶2.3)).
+- Trang Mục từ và trang Cương vực khai báo `canonical` là đường dẫn có slug hiện hành.
+- D-PUB-003 (¶4.3) phản ánh từ khoá và bộ lọc lên query: `q` (từ khoá) và `cuong-vuc` (slug Cương vực, lặp lại khi chọn nhiều). ⚠
 
 | Màn hình | Đường dẫn |
 |---|---|
 | Trang chủ D-PUB-001 (¶4.1) | `/` |
 | Chat AI D-PUB-002 (¶4.2) | `/tro-ly-ai` |
-| Bách Khoa Toàn Thư D-PUB-003 (¶4.3) | `/bach-khoa` |
-| Trang chi tiết Mục từ D-PUB-004 (¶4.4) | `/muc-tu/{id}` |
+| Bách Khoa Toàn Thư D-PUB-003 (¶4.3) | `/bach-khoa`, ví dụ `/bach-khoa?q=dinh&cuong-vuc=van-minh-dinh-lang-viet` |
+| Trang chi tiết Mục từ D-PUB-004 (¶4.4) | `/muc-tu/{slug}` |
+| Trang Cương vực D-PUB-013 (¶4.10) | `/cuong-vuc/{slug}` |
 | Bản đồ văn hóa D-PUB-005 (¶4.5) | `/ban-do` |
 | Bảo tàng số 3D D-PUB-006 (¶4.6) | `/bao-tang` |
 | Game lịch sử D-PUB-007 (¶4.7) | `/game` |
 | Phim & TV D-PUB-008 (¶4.8) | `/phim` |
 | Cộng đồng D-PUB-009 (¶4.9) | `/cong-dong` |
+
+⚠ Tên các tiền tố đường dẫn (`/bach-khoa`, `/muc-tu`, `/cuong-vuc`…) do thiết kế đặt.
 
 ---
 
@@ -160,7 +171,7 @@ Header và Footer theo D-PUB-012 (¶2.3), mục "Trang chủ" ở trạng thái 
 - Mỗi Cương vực trong `public.listCulturalDomains` là một card (R-PUB-005 (§2.6.2.2), R-ENC-032 (§2.3.7)).
   - Card có nền trắng ngà và viền. Góc trên-phải có hoạ tiết trang trí vàng đồng nét mảnh.
   - Nội dung card: nhãn nhỏ "CƯƠNG VỰC", tên Cương vực (Lora), link "Xem Mục từ →".
-  - Bấm card thì mở D-PUB-003 (¶4.3) đã lọc sẵn Cương vực đó.
+  - Bấm card thì mở Trang Cương vực D-PUB-013 (¶4.10).
 - Hoạ tiết lấy luân phiên từ một bộ cố định theo mô-típ văn hoá (mái đình, trống đồng, đồ thờ, binh khí…). Hoạ tiết không gắn với Cương vực cụ thể, vì Cương vực không có ảnh hay mô tả.
 - Lưới 4 cột ở màn hình rộng, 2 cột ở màn hình hẹp.
 
@@ -249,11 +260,13 @@ Header và Footer theo D-PUB-012 (¶2.3), mục "Trang chủ" ở trạng thái 
 - Tiêu đề Mục từ bên dưới ảnh, đậm, tối đa 2 dòng (không hiện mô tả phụ do khổ card hẹp).
 - Gap ngang/dọc giữa các card ~12–16px, container padding 16–20px hai bên (nhất quán ¶5).
 
+**Phân trang** ⚠: trang đầu dựng sẵn khi tải trang. Nút "Xem thêm" ở cuối danh sách tải trang tiếp theo bằng `cursor` của `public.listEntries` (D-SD04-018 (¶5.4)). Hết dữ liệu thì ẩn nút.
+
 Empty state khi tìm kiếm/lọc không có kết quả: minh hoạ + text "Không tìm thấy mục từ phù hợp".
 
 > Ghi chú: chỉ hiển thị Mục từ đang có phiên bản công khai (R-PUB-006 (§2.6.2.3)) — quy tắc dữ liệu, không cần UI riêng.
 
-Mở từ một Cương vực (card ở Trang chủ, menu Header) thì bộ lọc chọn sẵn Cương vực đó.
+Từ khoá và bộ lọc lấy từ query của URL (D-PUB-010 (¶3)), nên mở một đường dẫn có sẵn query sẽ hiện đúng kết quả đó.
 
 ---
 
@@ -261,7 +274,7 @@ Mở từ một Cương vực (card ở Trang chủ, menu Header) thì bộ lọ
 
 **Icon share** đặt cạnh tiêu đề Mục từ.
 
-**Header:** Tiêu đề Mục từ (lớn, đậm), chip Cương vực ngay dưới tiêu đề (có thể nhiều), theo thứ tự `cultural_domain_ids`.
+**Header:** Tiêu đề Mục từ (lớn, đậm), chip Cương vực ngay dưới tiêu đề (có thể nhiều), theo thứ tự `cultural_domain_ids`; bấm chip thì mở Trang Cương vực D-PUB-013 (¶4.10).
 
 **Nội dung:** render tuần tự theo danh sách block đã đặc tả (R-ENC-007 (§2.3.2.3.1)) — kiểu trang wiki:
 - Block đoạn văn/tiêu đề phụ/chú thích: typography Body/H2-H3 (¶2.2).
@@ -353,6 +366,28 @@ Là màn hình đích khi: bấm card ở "Mục từ nổi bật" (D-PUB-001 (�
 
 ---
 
+### 4.10 [D-PUB-013] Trang Cương vực
+
+Trang của một Cương vực, liệt kê các Mục từ đang công khai thuộc Cương vực đó (R-PUB-005 (§2.6.2.2), R-NFR-029 (§3.6.3)). Đường dẫn `/cuong-vuc/{slug}` (D-PUB-010 (¶3)). Header và Footer theo D-PUB-012 (¶2.3), mục "Bách khoa toàn thư" ở trạng thái active.
+
+**Breadcrumb:** Bách khoa toàn thư (mở D-PUB-003 (¶4.3)) › tên Cương vực.
+
+**Vùng tiêu đề:** nhãn nhỏ "CƯƠNG VỰC", H1 là tên Cương vực, icon share cạnh tiêu đề.
+
+**Dải Cương vực:** mỗi Cương vực trong `public.listCulturalDomains` là một chip.
+- Chip của trang hiện tại ở trạng thái active (nền Accent, chữ trắng).
+- Bấm chip khác thì mở trang của Cương vực đó.
+- Màn hình hẹp cuộn ngang, màn hình rộng xuống dòng.
+- Trang này không có ô tìm kiếm và không có bộ lọc đa chọn. Hai chức năng đó ở D-PUB-003 (¶4.3).
+
+**Danh sách Mục từ:** gọi `public.listEntries` với `cultural_domain_id` của Cương vực và `sort=latest`. Lưới, card và phân trang giống D-PUB-003 (¶4.3).
+
+**Empty state:** minh hoạ, text "Cương vực này chưa có Mục từ công khai" và link "Xem tất cả Mục từ →" mở D-PUB-003 (¶4.3).
+
+**Màn hình rộng:** giống D-PUB-003 (¶4.3).
+
+---
+
 ## 5. Hệ thống lưới, Spacing & Responsive (đề xuất cho dev)
 
 - **Container padding:** 16–20px hai bên.
@@ -382,7 +417,7 @@ Là màn hình đích khi: bấm card ở "Mục từ nổi bật" (D-PUB-001 (�
 
 - Toàn bộ website mặc định **light theme (nền sáng/kem)**; nếu cần dark mode, cần thiết kế bổ sung (không có trong mockup mới).
 - Mọi màn hình dùng chung Header và Footer (D-PUB-012 (¶2.3)); riêng Chat AI không có Footer.
-- Cần chuẩn bị hệ thống **component tái sử dụng**: Card ảnh + tiêu đề, Pill/Chip button, Progress bar, Segmented control (tab switch), Post card (cộng đồng), Header (2 mức, mega menu, menu màn hình hẹp), Footer, Card Cương vực, Nhãn "Sắp ra mắt".
+- Cần chuẩn bị hệ thống **component tái sử dụng**: Card ảnh + tiêu đề, Pill/Chip button, Progress bar, Segmented control (tab switch), Post card (cộng đồng), Header (2 mức, mega menu, menu màn hình hẹp), Footer, Card Cương vực, Nhãn "Sắp ra mắt", Breadcrumb, Trang không tìm thấy.
 - Nội dung media (ảnh 360°, VR/AR cho bảo tàng số) cần xác định rõ công nghệ triển khai (WebXR, model-viewer) — mức hỗ trợ WebXR/AR khác nhau giữa các trình duyệt trong R-NFR-019 (§3.3.4), cần có cách xem thay thế (360°/ảnh) khi trình duyệt không hỗ trợ; phần này nên trao đổi thêm với dev trước khi implement để chọn giải pháp phù hợp nền tảng.
 
 ---

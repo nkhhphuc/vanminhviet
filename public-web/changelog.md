@@ -32,3 +32,8 @@
   - Chat AI: dải ảnh minh hoạ lấy `cover_image` trong `citations` (tối đa 3, bấm mở Mục từ); thêm khối "Dữ liệu câu trả lời" theo sự kiện SSE kênh `public`, không có `self_audit`.
   - "Mục từ nổi bật" dùng `sort=latest&limit=4`, ẩn section khi chưa có Mục từ công khai.
   - File: **public-web-design.md** (2.3, 4.1, 4.2, 4.3, 4.4).
+- CR-20261002-01 (đợt 1 — đường dẫn):
+  - Mục từ và Cương vực dùng slug (`/muc-tu/{slug}`, `/cuong-vuc/{slug}`), slug cũ chuyển hướng 301, không tìm thấy hiện Trang không tìm thấy (404), khai báo `canonical`. D-PUB-003 phản ánh `q` và `cuong-vuc` lên query.
+  - Màn hình mới 4.10 [D-PUB-013] Trang Cương vực. Card Cương vực ở Trang chủ, nhóm Cương vực ở Header và chip Cương vực ở trang Mục từ đều trỏ tới trang này.
+  - Thành phần mới: Breadcrumb, Trang không tìm thấy. D-PUB-003 phân trang bằng nút "Xem thêm".
+  - File: **public-web-design.md** (2.3, 3, 4.1, 4.3, 4.4, 4.10, 7), **00-claude-instructions.md** (6).
