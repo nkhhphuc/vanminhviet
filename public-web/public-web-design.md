@@ -109,8 +109,8 @@ Trang chủ D-PUB-001 (¶4.1):
 ├── Card Cương vực ──► D-PUB-013 (¶4.10)
 └── Dải "Sắp ra mắt" ──► như nhóm Sắp ra mắt ở trên
 
-Mục từ (card Trang chủ, trích dẫn Chat AI, D-PUB-003 (¶4.3) hoặc D-PUB-013 (¶4.10)) ──► Trang chi tiết Mục từ (D-PUB-004 (¶4.4))
-Chip Cương vực ở D-PUB-004 (¶4.4) ──► D-PUB-013 (¶4.10)
+Mục từ (card Trang chủ, trích dẫn Chat AI, D-PUB-003 (¶4.3), D-PUB-013 (¶4.10) hoặc Mục từ liên quan) ──► Trang chi tiết Mục từ (D-PUB-004 (¶4.4))
+Chip Cương vực, breadcrumb ở D-PUB-004 (¶4.4) ──► D-PUB-013 (¶4.10)
 
 Footer "Về dự án" ──► landing vanminhviet.org
 ```
@@ -293,13 +293,17 @@ Từ khoá và bộ lọc lấy từ query của URL (D-PUB-010 (¶3)), nên m�
 
 ### 4.4 [D-PUB-004] Trang chi tiết Mục từ
 
+Đường dẫn `/muc-tu/{slug}` (D-PUB-010 (¶3)), dữ liệu từ `public.getEntry`. Header và Footer theo D-PUB-012 (¶2.3), mục "Bách khoa toàn thư" ở trạng thái active.
+
+**Breadcrumb** (R-NFR-035 (§3.6.9)): Bách khoa toàn thư (mở D-PUB-003 (¶4.3)) › Cương vực đầu tiên (mở D-PUB-013 (¶4.10)) › tiêu đề Mục từ. Mục từ chưa gán Cương vực thì bỏ cấp giữa. Khớp `BreadcrumbList` ở D-PUB-014 (¶8).
+
+**Vùng tiêu đề:** H1 là Tiêu đề Mục từ, chip Cương vực ngay dưới tiêu đề (có thể nhiều), theo thứ tự `cultural_domain_ids`; bấm chip thì mở Trang Cương vực D-PUB-013 (¶4.10).
+
 **Chia sẻ** (R-NFR-034 (§3.6.8)): hàng nút icon ngay dưới chip Cương vực, gồm Facebook, Zalo, Sao chép liên kết. Liên kết chia sẻ là đường dẫn canonical của trang (D-PUB-014 (¶8)).
 - Facebook: mở hộp chia sẻ của Facebook trong cửa sổ mới.
 - Zalo: dùng nút chia sẻ của Zalo. ⚠ Nút này cần Zalo Official Account của dự án, mã lấy từ biến môi trường; cần kiểm tra lại cách tích hợp lúc code.
 - Sao chép liên kết: sao chép đường dẫn và hiện thông báo "Đã sao chép liên kết" (D-PUB-012 (¶2.3)).
 - Màn hình hẹp, khi trình duyệt hỗ trợ Web Share API: thêm nút "Khác" mở hộp chia sẻ của hệ thống.
-
-**Header:** Tiêu đề Mục từ (lớn, đậm), chip Cương vực ngay dưới tiêu đề (có thể nhiều), theo thứ tự `cultural_domain_ids`; bấm chip thì mở Trang Cương vực D-PUB-013 (¶4.10).
 
 **Nội dung:** render tuần tự theo danh sách block đã đặc tả (R-ENC-007 (§2.3.2.3.1)) — kiểu trang wiki:
 - Block đoạn văn/tiêu đề phụ/chú thích: typography Body/H2-H3 (¶2.2).
@@ -307,11 +311,16 @@ Từ khoá và bộ lọc lấy từ query của URL (D-PUB-010 (¶3)), nên m�
 - Block nhúng âm thanh: thanh audio player ngang.
 - Block nhúng phim: video player/thumbnail có nút play.
 
-**Màn hình rộng:** phần nội dung có độ rộng tối đa của nội dung đọc (¶5), căn giữa; section "Mục từ liên quan" dạng lưới 4 cột.
+**Mục từ liên quan** (R-NFR-035 (§3.6.9)): section dưới nội dung, H2 "Mục từ liên quan".
+- Dữ liệu: `public.listRelatedEntries` với `limit=8` ⚠. Hệ thống tự xác định Mục từ liên quan theo độ gần nội dung và Cương vực, chỉ gồm Mục từ đang công khai (D-SD04-023 (¶3.7)).
+- Card giống card "Mục từ nổi bật" (D-PUB-001 (¶4.1)): ảnh bìa 4:3, Cương vực đầu tiên, tiêu đề, trích đoạn. Bấm card thì mở Trang chi tiết Mục từ đó.
+- Màn hình rộng: lưới 4 cột. Màn hình hẹp: carousel vuốt ngang (¶5).
+- ⚠ Dựng sẵn khi tải trang cùng nội dung chính, để máy tìm kiếm đọc được các liên kết nội bộ (R-NFR-028 (§3.6.2)).
+- Danh sách rỗng thì ẩn section.
 
-> ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: section "Mục từ liên quan" (gợi ý các Mục từ khác cùng Cương vực) bên dưới nội dung — chưa có cơ sở trong Business Requirements, là đề xuất UI thêm để tăng khả năng khám phá nội dung.
+**Màn hình rộng:** phần nội dung có độ rộng tối đa của nội dung đọc (¶5), căn giữa; section "Mục từ liên quan" rộng theo container.
 
-Là màn hình đích khi: bấm card ở "Mục từ nổi bật" (D-PUB-001 (¶4.1)), bấm trích dẫn Mục từ nguồn ở Chat AI (D-PUB-002 (¶4.2), R-PUB-007 (§2.6.3)), hoặc bấm một Mục từ ở màn hình Bách Khoa (D-PUB-003 (¶4.3)).
+Là màn hình đích khi: bấm card ở "Mục từ nổi bật" (D-PUB-001 (¶4.1)), bấm trích dẫn Mục từ nguồn ở Chat AI (D-PUB-002 (¶4.2), R-PUB-007 (§2.6.3)), bấm một Mục từ ở D-PUB-003 (¶4.3) hoặc D-PUB-013 (¶4.10), hoặc bấm một Mục từ liên quan.
 
 ---
 
