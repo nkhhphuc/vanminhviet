@@ -67,3 +67,13 @@
   - Mục 4.12: dòng tham số tạm khoá đăng nhập dưới ô Mật khẩu hiện tại; API thêm `clientSettings.getSettings`.
   - Mục 6: nút Xoá ở 4.7/4.10 theo `delete` của `actions`.
   - Mốc đồng bộ partner-web: DC-20261003-03.
+- DC-20261003-04: đáp ứng R-PTN-005 (§2.7.3.1), truy cập Tư liệu gốc thuộc Đề tài. File **partner-web-design.md**:
+  - Mục 4.13 (mới, D-PRT-014) "Chi tiết Tư liệu gốc":
+    - Mở từ 4.5, dành cho Nghiên cứu/Xét duyệt.
+    - Bố cục 2 cột: danh sách file theo `relative_path`, lọc theo đường dẫn, file `is_missing` có cảnh báo và không xem được; trình xem dùng bộ chọn vị trí ở chế độ chỉ xem, có nút "Tải xuống".
+    - ⚠ File đang chọn được ghi vào URL `?file=`.
+    - API: `knowledge.getResearchTopicSource`, `knowledge.getResearchTopicSourceFileDownloadUrl`.
+  - Mục 2: thêm 4.13. Mục 3: Sidebar highlight "Đề tài nghiên cứu" ở 4.13; bộ chọn vị trí ở chế độ chỉ xem dùng cho 4.13.
+  - Mục 4.5: bấm dòng Tư liệu gốc mở 4.13. Mục 4.11: vai trò Nghiên cứu thêm việc đọc Tư liệu gốc. Mục 6, 7: cập nhật theo màn hình mới.
+  - File **00-claude-instructions.md** mục 6, 7: thêm quyết định truy cập Tư liệu gốc; số màn hình đổi thành 13.
+  - Mốc đồng bộ partner-web: DC-20261003-04.

@@ -8,7 +8,7 @@
 |---|---|
 | system-design | DC-20261003-01 |
 | admin-web | DC-20261002-02 |
-| partner-web | DC-20261003-03 |
+| partner-web | DC-20261003-04 |
 | public-web | DC-20261002-02 |
 
 ## ID lớn nhất đã cấp
@@ -38,7 +38,7 @@
 | SD06 | D-SD06-014 |
 | SD07 | D-SD07-014 |
 | ADM | D-ADM-029 |
-| PRT | D-PRT-013 |
+| PRT | D-PRT-014 |
 | PUB | D-PUB-013 |
 
 ## Danh sách thay đổi
@@ -75,3 +75,4 @@
 | DC-20261003-01 | 2026-10-03 | Console dữ liệu ở DEV (D-SD01-009 (¶9)): pgAdmin 4 tại `/pgadmin/` (đăng nhập tài khoản pgAdmin, server khai báo sẵn, kết nối bằng role DB của ứng dụng) và MinIO Console tại `/minio/` (đăng nhập tài khoản quản trị MinIO) qua reverse proxy, không publish cổng, chỉ có ở DEV. Biến `DEV_DB_CONSOLE_URL`, `DEV_STORAGE_CONSOLE_URL`; `auth.getEnvironment` trả thêm `dev_db_console_url`, `dev_storage_console_url`. Giao diện Nhân viên hiện link "Cơ sở dữ liệu DEV", "Lưu trữ DEV". Code: container pgAdmin, cấu hình proxy, 2 trường mới trong `auth.getEnvironment` và hợp đồng `admin.yaml`/`partner.yaml`. | — | ✅ `01`: 1, 9 · `02`: 5.1 · `00-claude-instructions.md`: 8 | ✅ 3, 4.1–4.3 · `00-claude-instructions.md`: 6 | ✅ 3, 4.1–4.3 | — |
 | DC-20261003-02 | 2026-10-03 | Đề xuất của admin-web cho khối "Công khai & SEO" (D-ADM-019 (¶4.19)). (1) Bảng thao tác Mục từ D-SD04-021 (¶3.6) thêm `edit_seo` — `encyclopedia.updateEntrySeo`, hiện khi giữ `xuat_ban_muc_tu`, thực hiện được khi Mục từ có phiên bản đang công khai, `reason_code` `no_public_version` (mã mới trong danh mục D-SD01-003 (¶3)). (2) `encyclopedia.getEntry`: `seo.image` thêm `candidates: [{file_id}]` — các hình chọn được làm hình chia sẻ: hình được chèn trong `content_blocks` của phiên bản đang công khai, theo thứ tự xuất hiện, đúng tập `UpdateEntrySeo` chấp nhận; không có `file_name`, không trả URL ký sẵn, ảnh xem qua `encyclopedia.getEntryFileDownloadUrl`. Chỉ nhóm `admin`, không migration, không đổi hành vi nghiệp vụ. admin-web: phần tử `candidates` chỉ có `file_id`, `not_public` → `no_public_version`, gỡ ⚠ chờ. Code: tính `edit_seo` trong `actions`, trả `candidates`, cập nhật `admin.yaml` + sinh lại client. | — | ✅ `01`: 3 · `04`: 3.6, 5.1 · `00-claude-instructions.md`: 8 | ✅ 3, 4.19 · `00-claude-instructions.md`: 7 | — | — |
 | DC-20261003-03 | 2026-10-03 | Câu hỏi của partner-web (D-PRT-012 (¶4.12) Đổi mật khẩu, R-NFR-041 (§3.7.4)): `identity.login_max_failed_attempts`, `identity.login_lockout_minutes` thêm exposure `partner_client` (D-SD07-003 (¶2.3)); `clientSettings.getSettings` ở kênh `partner` trả 2 key này. Không đổi API. partner-web: dialog Đổi mật khẩu hiện "Nhập sai mật khẩu {N} lần liên tiếp sẽ bị tạm khoá {M} phút" theo 2 giá trị, ẩn khi `identity.login_max_failed_attempts = 0`. Code: thêm `partner_client` vào registry 2 key, cập nhật `partner.yaml` nếu hợp đồng liệt kê key. | — | ✅ `07`: 2.3 | — | ✅ 3, 4.12 | — |
+| DC-20261003-04 | 2026-10-03 | partner-web đáp ứng R-PTN-005 (§2.7.3.1): màn hình mới D-PRT-014 (¶4.13) "Chi tiết Tư liệu gốc", mở từ D-PRT-005 (¶4.5). Nhân viên giữ Nghiên cứu/Xét duyệt của đề tài xem danh sách file của một Tư liệu gốc đã gán và xem/tải từng file (bố cục 2 cột), dùng `knowledge.getResearchTopicSource`, `knowledge.getResearchTopicSourceFileDownloadUrl` (đã mount `partner`). Không đổi API, không đổi phạm vi quyền. Code: partner app thêm route và màn hình 4.13, dùng lại trình xem của bộ chọn vị trí ở chế độ chỉ xem. | — | — | — | ✅ 2, 3, 4.5, 4.11, 4.13 (mới), 6, 7 · `00-claude-instructions.md`: 6, 7 | — |

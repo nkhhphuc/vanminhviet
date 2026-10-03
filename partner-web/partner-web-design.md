@@ -33,6 +33,7 @@
 - 4.8. Màn hình Xét duyệt Hạng mục tri thức (chuyên gia)
 - 4.9. Xem & Mở lại Hạng mục tri thức (Đạt xét duyệt / Đã xuất bản / Không xuất bản)
 - 4.10. Quản lý & Tiến độ đề tài (vai trò Chủ nhiệm đề tài)
+- 4.13. Chi tiết Tư liệu gốc (chỉ xem — vai trò Nghiên cứu/Xét duyệt)
 
 ## 3. [D-PRT-013] Quy ước chung — khung ứng dụng & điều hướng
 
@@ -74,7 +75,7 @@
   - HTTP 401 `session_revoked`, trả về từ bất kỳ API nào (kể cả `auth.refresh`): phiên đã bị vô hiệu hoá phía máy chủ. Nguyên nhân có thể là một trong các trường hợp sau: tài khoản bị Quản trị hệ thống vô hiệu hoá; Nhân viên vừa đổi/đặt lại mật khẩu ở nơi khác; Nhân viên bị chuyển sang Tổ chức khác (D-SD02-007 (¶3.5)); hoặc token không thuộc kênh `partner` (D-SD02-004 (¶3.2)). Client **không** gọi `auth.refresh` và không gọi `auth.logout`. Client xoá access/refresh token và store Pinia, rồi chuyển thẳng về D-PRT-001 (¶4.1) kèm thông báo "Phiên đăng nhập đã kết thúc, vui lòng đăng nhập lại". Mã lỗi không cho biết nguyên nhân cụ thể, nên mọi trường hợp dùng chung một thông báo.
   - Không hiện hộp thoại "Thay đổi chưa lưu" khi bị chuyển về do `session_revoked` (ví dụ đang biên tập ở D-PRT-007 (¶4.7)). Lúc này mọi request lưu đều bị từ chối, nên không còn cách nào giữ lại thay đổi.
   - Sau khi đăng nhập lại, client đưa Nhân viên về đúng màn hình trước đó nếu họ vẫn còn quyền truy cập. Nếu không còn quyền thì về D-PRT-011 (¶4.11) (Tổng quan).
-- **Sidebar**: mục **"Tổng quan"** luôn hiện đầu tiên (mọi Nhân viên đã đăng nhập, dẫn tới D-PRT-011 (¶4.11)), tiếp theo là nhóm **"Nghiên cứu & Xét duyệt"**: Đề tài nghiên cứu, Hạng mục tri thức. Mục đang được chọn luôn được highlight rõ ràng (kể cả khi đang ở màn hình con không có mục Sidebar riêng, ví dụ D-PRT-005 (¶4.5)/D-PRT-007 (¶4.7)/D-PRT-008 (¶4.8)/D-PRT-009 (¶4.9)/D-PRT-010 (¶4.10) — Sidebar highlight mục cha gần nhất, ở đây là "Đề tài nghiên cứu" hoặc "Hạng mục tri thức" tuỳ đường vào). Mục "Đề tài nghiên cứu" luôn hiện cho mọi Nhân viên đã đăng nhập (việc lọc theo đúng đề tài/role đã xử lý ở tầng dữ liệu, gồm cả role Chủ nhiệm đề tài — D-PRT-004 (¶4.4)). Mục "Hạng mục tri thức" **ẩn** nếu Nhân viên không giữ role `nghien_cuu`/`xet_duyet` ở **bất kỳ** đề tài nào (chỉ giữ `chu_nhiem_de_tai` đơn thuần) — vì không có quyền vào D-PRT-006 (¶4.6)/D-PRT-007 (¶4.7)/D-PRT-008 (¶4.8)/D-PRT-009 (¶4.9) (D-SD03-021 (¶5.1)); trường hợp này truy cập tiến độ/quản lý nhân sự qua D-PRT-010 (¶4.10) (mở từ D-PRT-004 (¶4.4)).
+- **Sidebar**: mục **"Tổng quan"** luôn hiện đầu tiên (mọi Nhân viên đã đăng nhập, dẫn tới D-PRT-011 (¶4.11)), tiếp theo là nhóm **"Nghiên cứu & Xét duyệt"**: Đề tài nghiên cứu, Hạng mục tri thức. Mục đang được chọn luôn được highlight rõ ràng (kể cả khi đang ở màn hình con không có mục Sidebar riêng, ví dụ D-PRT-005 (¶4.5)/D-PRT-007 (¶4.7)/D-PRT-008 (¶4.8)/D-PRT-009 (¶4.9)/D-PRT-010 (¶4.10)/D-PRT-014 (¶4.13) — Sidebar highlight mục cha gần nhất, ở đây là "Đề tài nghiên cứu" hoặc "Hạng mục tri thức" tuỳ đường vào). Mục "Đề tài nghiên cứu" luôn hiện cho mọi Nhân viên đã đăng nhập (việc lọc theo đúng đề tài/role đã xử lý ở tầng dữ liệu, gồm cả role Chủ nhiệm đề tài — D-PRT-004 (¶4.4)). Mục "Hạng mục tri thức" **ẩn** nếu Nhân viên không giữ role `nghien_cuu`/`xet_duyet` ở **bất kỳ** đề tài nào (chỉ giữ `chu_nhiem_de_tai` đơn thuần) — vì không có quyền vào D-PRT-006 (¶4.6)/D-PRT-007 (¶4.7)/D-PRT-008 (¶4.8)/D-PRT-009 (¶4.9) (D-SD03-021 (¶5.1)); trường hợp này truy cập tiến độ/quản lý nhân sự qua D-PRT-010 (¶4.10) (mở từ D-PRT-004 (¶4.4)).
 - **Breadcrumb**: mỗi màn hình con (trừ nhóm Xác thực D-PRT-001 (¶4.1)–D-PRT-003 (¶4.3), không thuộc cây phân cấp dữ liệu) hiển thị đường dẫn phân cấp đầy đủ từ nhóm chức năng đến màn hình hiện tại, đặt ngay dưới Topbar, phía trên tiêu đề màn hình — ví dụ "Nghiên cứu & Xét duyệt > Đề tài nghiên cứu > {Tên đề tài} > Hạng mục tri thức > {Tiêu đề}". Mỗi mắt xích (trừ mắt xích cuối, chính là màn hình đang xem) là link điều hướng ngược lại đúng màn hình tương ứng. Breadcrumb là thành phần bắt buộc cho mọi màn hình con, thay cho các link cha rời rạc kiểu cũ.
 - **Stepper trạng thái**: áp dụng cho các màn hình thuộc vòng đời Hạng mục tri thức (D-PRT-007 (¶4.7)/D-PRT-008 (¶4.8)/D-PRT-009 (¶4.9) — Cổng này không có Mục từ nên chỉ có 1 Stepper duy nhất, khác Admin nội bộ). Đặt ngay dưới Breadcrumb, trên phần nội dung màn hình, gộp 9 mã trạng thái thành **5 cụm** hiển thị theo thứ tự trước sau — cùng cách gộp với D-ADM-029 (¶3):
   1. **Nghiên cứu** (`dang_nghien_cuu`)
@@ -88,7 +89,7 @@
   - Badge trạng thái (màu theo `status`, cùng 9 mã Hạng mục tri thức).
   - Bảng danh sách có cursor-pagination + filter.
   - Khối "Người phụ trách": hiện tên người đang giữ + nút **Nhận xử lý**/**Nhả** theo phần tử `claim`/`release` của `actions` (bullet "Thao tác theo `actions`"). ⚠ Khác Admin nội bộ: Cổng này **không có** nút "Cưỡng chế nhả" — `ForceRelease` chỉ gọi được bởi role `quan_tri_he_thong`, và role này không có hiệu lực ở Cổng này, kể cả khi Nhân viên nội bộ đang giữ (D-SD03-017 (¶4.2)); khi người phụ trách không tự nhả (nghỉ việc, thu hồi quyền...), Nhân viên Tổ chức khác phải liên hệ Quản trị hệ thống xử lý qua Admin nội bộ — ngoài phạm vi thao tác của Cổng này.
-  - Bộ chọn vị trí trong file tuỳ theo `file_type` (page/line cho văn bản, vẽ khung cho ảnh, kéo mốc thời gian cho âm thanh/phim) — dùng chung cho Tham chiếu tới Tư liệu gốc và Vị trí trong Nội dung, cả ở chế độ chọn và chế độ chỉ xem/highlight.
+  - Bộ chọn vị trí trong file tuỳ theo `file_type` (page/line cho văn bản, vẽ khung cho ảnh, kéo mốc thời gian cho âm thanh/phim) — dùng chung cho Tham chiếu tới Tư liệu gốc và Vị trí trong Nội dung, cả ở chế độ chọn và chế độ chỉ xem/highlight. Chế độ chỉ xem không highlight dùng để đọc file Tư liệu gốc ở D-PRT-014 (¶4.13).
 - **Thao tác theo `actions`** (R-NFR-039 (§3.7.2), R-NFR-040 (§3.7.3); quy ước D-SD01-003 (¶3), bảng thao tác D-SD03-027 (¶3.7)), cùng cách hiển thị với D-ADM-029 (¶3): ở D-PRT-005 (¶4.5) (`actions` của `knowledge.getResearchTopic`), D-PRT-007 (¶4.7)–D-PRT-009 (¶4.9) (`actions` của `knowledge.getKnowledgeObject`) và D-PRT-010 (¶4.10) (`actions` của từng dòng `knowledge.getResearchTopicProgress`, chỉ gồm `delete`), nút thao tác và quyền chỉnh sửa lấy từ `actions` trong response chi tiết. Giao diện không tự suy quy tắc từ `status`, Người phụ trách hay role. Ở kênh `partner`, `actions` chỉ xét role theo phạm vi Đề tài.
   - Thao tác có trong `actions` thì hiện nút; không có thì không hiện.
   - `enabled = false`: nút vô hiệu, kèm dòng chữ phụ ngay dưới nút nêu lý do theo `reason_code` (không chỉ làm mờ nút). Với `edit_content` và `review_claims`, lý do hiện thành banner khoá trên khối nội dung (quy ước (c) bên dưới).
@@ -149,7 +150,7 @@
 - Header: Tên, badge Trạng thái. ⚠ Dưới badge hiện dòng quy trình "Chuẩn bị tư liệu → Tư liệu sẵn sàng", in đậm bước hiện tại (R-NFR-039 (§3.7.2)).
 - Nút thao tác theo `actions` của `knowledge.getResearchTopic` (D-PRT-013 (¶3), D-SD03-027 (¶3.7)).
 - **Không có** nút "Đánh dấu Tư liệu sẵn sàng" — chỉ vai trò Nhập liệu/Quản trị hệ thống, không tồn tại ở Cổng này (R-KB-011 (§2.2.1.6.2), R-KB-069 (§2.2.5.1)).
-- Khối "Tư liệu gốc đã gán": bảng chỉ đọc (Tên, Loại, cảnh báo khi `has_missing_files = true`) — **không có** nút "Gỡ" hay ô gán thêm Tư liệu gốc (chỉ vai trò Nhập liệu/Quản trị hệ thống thao tác được, ở Admin nội bộ).
+- Khối "Tư liệu gốc đã gán": bảng chỉ đọc (Tên, Loại, cảnh báo khi `has_missing_files = true`). Bấm một dòng sẽ mở D-PRT-014 (¶4.13) (Chi tiết Tư liệu gốc). Bảng **không có** nút "Gỡ" hay ô gán thêm Tư liệu gốc (chỉ vai trò Nhập liệu/Quản trị hệ thống thao tác được, ở Admin nội bộ).
 - Khối "Hạng mục tri thức": thống kê số lượng theo từng trạng thái (chip đếm), link mở D-PRT-006 (¶4.6) đã lọc sẵn theo đề tài này. Nút "+ Tạo Hạng mục tri thức" theo phần tử `create_knowledge_object` — dialog nhập Tiêu đề, đề tài này chọn sẵn; khi vô hiệu, lý do theo `reason_code` (`topic_not_ready`).
 - API: `knowledge.getResearchTopic`.
 
@@ -245,7 +246,7 @@
 
   2 cụm "Nghiên cứu" và "Xét duyệt chuyên gia" (thuộc phạm vi Cổng này) được làm nổi bật trực quan trên sơ đồ ứng với (các) role mà Nhân viên đang đăng nhập đang giữ ở ít nhất một đề tài, để thấy ngay công việc của mình nằm ở đâu trong toàn bộ pipeline — kể cả các bước ngoài phạm vi thao tác của mình. Sơ đồ không hiển thị số liệu/số đếm.
 - **Khối 2 — Mô tả vai trò của bạn** (đặt dưới sơ đồ, văn bản ngắn, chỉ hiện đoạn tương ứng (các) role Nhân viên đang giữ ở ít nhất 1 đề tài):
-  - **Nghiên cứu**: biên tập Nội dung/Phát biểu/Tham chiếu cho Hạng mục tri thức thuộc đề tài được gán, gửi đi xét duyệt. → D-PRT-006 (¶4.6).
+  - **Nghiên cứu**: đọc Tư liệu gốc của đề tài được gán (D-PRT-014 (¶4.13)), biên tập Nội dung/Phát biểu/Tham chiếu cho Hạng mục tri thức thuộc đề tài được gán, gửi đi xét duyệt. → D-PRT-006 (¶4.6).
   - **Xét duyệt**: thẩm định Hạng mục tri thức đã qua AI Verification, ghi kết luận chuyên gia, quyết định Đạt/Không đạt xét duyệt; có thể Mở lại Hạng mục tri thức đã xuất bản/không xuất bản. → D-PRT-006 (¶4.6).
   - **Chủ nhiệm đề tài**: quản lý nhân sự Nghiên cứu/Xét duyệt và theo dõi tiến độ của (các) đề tài mình phụ trách, không xem được Nội dung/Phát biểu/Tham chiếu chi tiết. → D-PRT-004 (¶4.4) (từ đó điều hướng tới D-PRT-010 (¶4.10) của từng đề tài).
 - Quyền truy cập: mọi Nhân viên đã đăng nhập (nội dung Khối 1/Khối 2 tự điều chỉnh theo (các) role đang giữ như trên).
@@ -275,6 +276,27 @@
 - Không có email thông báo sau khi đổi mật khẩu (R-ID-039 (§2.1.5.10.4)).
 - API: `auth.getPasswordPolicy`, `auth.getMe`, `auth.changePassword` (body `{current_password, new_password}`), `clientSettings.getSettings`.
 
+## 4.13. [D-PRT-014] Chi tiết Tư liệu gốc
+
+- Breadcrumb: Nghiên cứu & Xét duyệt > Đề tài nghiên cứu > {Tên đề tài} > {Tên Tư liệu gốc}
+- Mở từ dòng Tư liệu gốc ở D-PRT-005 (¶4.5) (R-PTN-005 (§2.7.3.1), R-KB-070 (§2.2.5.2)). Route gồm ID đề tài và ID Tư liệu gốc, theo `knowledge.getResearchTopicSource`.
+- Quyền truy cập: Nhân viên giữ role `nghien_cuu` hoặc `xet_duyet` của đề tài này. Chủ nhiệm đề tài đơn thuần không đọc được Tư liệu gốc (D-SD03-021 (¶5.1)). Nếu mở trực tiếp bằng URL mà không có quyền, hoặc Tư liệu gốc không còn được gán cho đề tài, backend trả lỗi. Khi đó màn hình hiện "Bạn không có quyền xem Tư liệu gốc này, hoặc Tư liệu gốc không còn thuộc đề tài", kèm link về D-PRT-004 (¶4.4).
+- Header: Tên, Loại, link Đề tài nghiên cứu cha (→ D-PRT-005 (¶4.5)), cảnh báo khi `has_missing_files = true`.
+- Bố cục 2 cột:
+  - **Cột trái — danh sách file** (`source_file`):
+    - Mỗi dòng có Đường dẫn (`relative_path`) và icon theo `file_type`.
+    - Ô lọc theo đường dẫn, lọc tại client.
+    - File có `is_missing = true` vẫn hiện trong danh sách, kèm cảnh báo "File không còn trong kho lưu trữ từ {missing_since}", nhưng không chọn để xem được (quy ước (d) D-PRT-013 (¶3)).
+    - File đang chọn được highlight.
+  - **Cột phải — trình xem**:
+    - Hiển thị file đang chọn bằng bộ chọn vị trí ở chế độ chỉ xem, không highlight (D-PRT-013 (¶3)), kèm nút "Tải xuống".
+    - URL xem/tải lấy qua `knowledge.getResearchTopicSourceFileDownloadUrl` mỗi khi chọn file. URL có thời hạn: nếu trình xem báo lỗi tải, client lấy lại URL một lần rồi mới hiện lỗi.
+    - Khi chưa chọn file: hiện "Chọn một file ở danh sách bên trái để xem".
+  - Màn hình hẹp (dưới breakpoint `md` của Quasar): hai cột xếp chồng, danh sách file ở trên.
+  - ⚠ File đang chọn được ghi vào URL (`?file={file_id}`). Mở trang với tham số này thì file đó được chọn sẵn. `file_id` không thuộc Tư liệu gốc này hoặc là file `is_missing` thì bỏ qua tham số.
+- Màn hình chỉ đọc: **không có** gỡ/gán Tư liệu gốc (Admin nội bộ) và không tạo Tham chiếu tại đây. Tham chiếu được tạo ở D-PRT-007 (¶4.7).
+- API: `knowledge.getResearchTopicSource`, `knowledge.getResearchTopicSourceFileDownloadUrl`.
+
 ## 5. Đối chiếu với Business Requirements / System Design — quy trình xử lý điểm lệch
 
 *(xem `partner-web/00-claude-instructions.md` mục 5)*
@@ -282,14 +304,15 @@
 ## 6. Quyết định đã chốt
 
 - **Vai trò Xuất bản không thuộc phạm vi Cổng này** (`business-requirements.md` R-PTN-003 (§2.7.2)) — khớp `system-design/03-cultural-knowledge-base.md` (`knowledge.publishKnowledgeObject`, `knowledge.skipKnowledgeObjectPublish`, `knowledge.setKnowledgeObjectUsedVersion` chỉ mount `admin`).
-- **Route đọc file Tư liệu gốc ở `partner`**: `knowledge.getResearchTopicSource` — `GET /knowledge/research-topics/{id}/sources/{source_id}` (mount `admin`, `partner`).
+- **Route đọc file Tư liệu gốc ở `partner`**: `knowledge.getResearchTopicSource` — `GET /knowledge/research-topics/{id}/sources/{source_id}` (mount `admin`, `partner`). Dùng ở D-PRT-014 (¶4.13) để đọc Tư liệu gốc (R-PTN-005 (§2.7.3.1)) và ở D-PRT-007 (¶4.7) để chọn file khi tạo Tham chiếu.
+- **Truy cập Tư liệu gốc** (R-PTN-005 (§2.7.3.1)): màn hình riêng D-PRT-014 (¶4.13), mở từ D-PRT-005 (¶4.5), bố cục 2 cột (danh sách file + trình xem).
 - **Chủ nhiệm đề tài** (R-KB-073 (§2.2.5.5)/R-PTN-008 (§2.7.3.4)–R-PTN-009 (§2.7.3.5)): màn hình riêng D-PRT-010 (¶4.10) (tách khỏi D-PRT-005 (¶4.5) vì phạm vi xem khác — không xem được Nội dung/Hạng mục tri thức chi tiết); nút "Xoá" Hạng mục tri thức (R-KB-049 (§2.2.3.14)) ở D-PRT-007 (¶4.7)/D-PRT-010 (¶4.10), theo phần tử `delete` của `actions` (Chủ nhiệm đề tài của đề tài cha hoặc Người phụ trách; role `quan_tri_he_thong` không có hiệu lực ở Cổng này); không có nút đổi Chủ nhiệm đề tài ở Cổng này (`knowledge.setResearchTopicChair` chỉ mount `admin`).
 - **Stepper trạng thái (D-PRT-007 (¶4.7)/D-PRT-008 (¶4.8)/D-PRT-009 (¶4.9))**: hiển thị đầy đủ cụm "Xuất bản" dù Nhân viên không tự thao tác được — mục đích là cho biết vị trí trong toàn bộ vòng đời, không chỉ liệt kê bước tự làm được.
 - **Dashboard (D-PRT-011 (¶4.11))**: nội dung tĩnh — sơ đồ phạm vi công việc + mô tả theo role, không có chip đếm, không phụ thuộc API `stats`.
 
 ## 7. Trạng thái hiện tại
 
-- Đã thiết kế đủ 12 màn hình (D-PRT-001 (¶4.1)–D-PRT-012 (¶4.12)), khớp `business-requirements.md` R-GEN-010 (§1.2.3.2), R-PTN-001 (§2.7), R-KB-073 (§2.2.5.5), R-KB-012 (§2.2.1.7), R-KB-049 (§2.2.3.14), R-ID-035 (§2.1.5.10) và `system-design/01, 02, 03`.
+- Đã thiết kế đủ 13 màn hình (D-PRT-001 (¶4.1)–D-PRT-012 (¶4.12), D-PRT-014 (¶4.13)), khớp `business-requirements.md` R-GEN-010 (§1.2.3.2), R-PTN-001 (§2.7), R-KB-073 (§2.2.5.5), R-KB-012 (§2.2.1.7), R-KB-049 (§2.2.3.14), R-ID-035 (§2.1.5.10) và `system-design/01, 02, 03`.
 - Không còn điểm lệch nào đang mở. Tài liệu sẵn sàng làm đầu vào build.
 
 ## 8. Đồng bộ với session khác
