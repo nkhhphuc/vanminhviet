@@ -155,9 +155,9 @@ Header và Footer theo D-PUB-012 (¶2.3), mục "Trang chủ" ở trạng thái 
 - H1 "Khám phá Văn Minh Việt", trong đó cụm "Văn Minh Việt" màu Accent.
 - Mô tả: "Tra cứu Mục từ đã được thẩm định, hoặc hỏi Trợ lý AI và nhận câu trả lời kèm nguồn trích dẫn."
 - **Ô hỏi AI** dạng pill, placeholder "Hỏi về lịch sử, văn hoá Việt Nam…", nút "Hỏi AI" nền đỏ ở cuối ô.
-  - Gửi bằng Enter hoặc bấm nút thì mở Chat AI (D-PUB-002 (¶4.2)) kèm câu hỏi vừa nhập. Đây là lối vào chính tới Trợ lý AI từ Trang chủ.
+  - Gửi bằng Enter hoặc bấm nút thì mở Chat AI (D-PUB-002 (¶4.2)) và bắt đầu hội thoại mới với câu hỏi vừa nhập. Đây là lối vào chính tới Trợ lý AI từ Trang chủ.
   - Ô này khác ô tìm kiếm Mục từ theo từ khoá ở D-PUB-003 (¶4.3) (R-PUB-004 (§2.6.2.1)).
-- **Câu hỏi gợi ý:** 3 chip đặt dưới ô hỏi, ví dụ "Đình làng có vai trò gì?", "Trống đồng Ngọc Lũ có gì đặc biệt?", "Nghi lễ cúng giỗ gồm những gì?". Bấm một chip thì mở Chat AI kèm câu hỏi đó. Ở màn hình hẹp, các chip cuộn ngang. ⚠ Danh sách cố định trong code, chưa có cơ sở ở BR.
+- **Câu hỏi gợi ý:** 3 chip đặt dưới ô hỏi, ví dụ "Đình làng có vai trò gì?", "Trống đồng Ngọc Lũ có gì đặc biệt?", "Nghi lễ cúng giỗ gồm những gì?". Bấm một chip thì mở Chat AI và bắt đầu hội thoại mới với câu hỏi đó. Ở màn hình hẹp, các chip cuộn ngang. ⚠ Danh sách cố định trong code, chưa có cơ sở ở BR.
 - Link "Hoặc duyệt Bách khoa toàn thư →" mở D-PUB-003 (¶4.3).
 
 **Section "Hôm nay":**
@@ -217,9 +217,15 @@ Header và Footer theo D-PUB-012 (¶2.3), mục "Trang chủ" ở trạng thái 
 
 ### 4.2 [D-PUB-002] Màn hình Chat AI (AI Văn Minh Việt)
 
-> ⚠️ **Thiết kế đi trước / đơn giản hoá so với đặc tả nghiệp vụ**: Business Requirements R-PUB-008 (§2.6.4) quy định Trợ lý AI cho phép chọn Cương vực để giới hạn phạm vi trả lời (R-PUB-009 (§2.6.4.1)); hệ thống chỉ hỗ trợ tiếng Việt (R-NFR-020 (§3.3.5)). Ở giai đoạn thiết kế này, màn hình tạm **không có UI chọn Cương vực, chỉ hỗ trợ tiếng Việt** — đây là lựa chọn đơn giản hoá cho UI ở giai đoạn này, không phải đề xuất thay đổi Business Requirements. Riêng **quick-reply chips + nhập giọng nói** bên dưới (hai chi tiết chưa có cơ sở trong BR) tạm để xử lý sau.
+> ⚠️ **Lệch đặc tả nghiệp vụ — không có UI chọn Cương vực**: R-PUB-009 (§2.6.4.1) yêu cầu cho phép chọn Cương vực để giới hạn phạm vi trả lời. Màn hình này không có UI đó; AI luôn trả lời trên toàn bộ Bách khoa toàn thư (`assistant.chat` không gửi `cultural_domain_id`). Giữ lựa chọn này thì cần đề xuất sửa đặc tả ở luồng Requirements.
+>
+> ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: quick-reply chips và nhập giọng nói bên dưới chưa có cơ sở trong đặc tả, để xử lý sau.
 
-**Vùng tiêu đề:** H1 "AI Văn Minh Việt". Màn hình này không có Footer; thanh nhập liệu dính ở đáy màn hình.
+Giao diện và câu trả lời chỉ bằng tiếng Việt (R-NFR-020 (§3.3.5)).
+
+**Vùng tiêu đề:** H1 "AI Văn Minh Việt", nút viền "Hội thoại mới" cạnh tiêu đề (R-AI-007 (§2.4.6)). Màn hình này không có Footer; thanh nhập liệu dính ở đáy màn hình.
+- Nút "Hội thoại mới" ẩn khi hội thoại hiện hành chưa có lượt hỏi nào.
+- ⚠ Bấm nút khi đã có lượt hỏi thì hỏi xác nhận: "Bắt đầu hội thoại mới? Hội thoại hiện tại sẽ bị xoá khỏi trình duyệt này."
 
 **Khung chat:**
 - Tin nhắn người dùng: bong bóng bo góc, căn phải, nền đỏ nhạt/hồng phấn.
@@ -229,6 +235,8 @@ Header và Footer theo D-PUB-012 (¶2.3), mục "Trang chủ" ở trạng thái 
   - Không có ảnh nào thì ẩn dải.
   - Bấm một ảnh thì mở Trang chi tiết Mục từ tương ứng. ⚠
 - Dưới mỗi câu trả lời của AI, hiển thị **danh sách trích dẫn Mục từ nguồn** đã dùng để trả lời (dạng chip nhỏ, ví dụ: "Nguồn: Đình Làng Việt · Trống Đồng Đông Sơn") — bấm vào một trích dẫn để mở Trang chi tiết Mục từ tương ứng (Business Requirements R-PUB-007 (§2.6.3), R-PUB-010 (§2.6.4.2)). Nhãn chip là `title` trong sự kiện `citations`.
+- **Câu miễn trừ trách nhiệm** (R-AI-009 (§2.4.8)): dòng chữ nhỏ màu Chữ phụ ngay dưới mỗi câu trả lời của AI, sau chip trích dẫn. Nội dung lấy từ `assistant.disclaimer_text` qua `clientSettings.getSettings`; rỗng thì không hiển thị.
+- **Khi chưa có lượt hỏi nào** ⚠: hiện avatar AI, dòng "Hỏi bất cứ điều gì về văn hoá, lịch sử Việt Nam" và 3 câu hỏi gợi ý của Trang chủ (D-PUB-001 (¶4.1)). Bấm một câu thì gửi câu đó.
 
 **Dữ liệu câu trả lời:** `assistant.chat` trả về các sự kiện SSE (D-SD05-012 (¶5.1)):
 - `token`: nối dần vào bong bóng câu trả lời.
@@ -236,6 +244,18 @@ Header và Footer theo D-PUB-012 (¶2.3), mục "Trang chủ" ở trạng thái 
 - `done`: kết thúc lượt hỏi.
 - `error`: hiện thông báo lỗi ngắn dưới câu trả lời, phần câu trả lời đã hiển thị giữ nguyên.
 - Kênh `public` không có sự kiện `self_audit`, và `done` chỉ có `turn_index`. Vì vậy màn hình không hiển thị cảnh báo kiểm tra câu trả lời.
+
+**Lưu hội thoại trên trình duyệt** (R-PUB-011 (§2.6.4.3), R-AI-007 (§2.4.6)):
+- ⚠ Mỗi trình duyệt giữ một hội thoại hiện hành trong `localStorage`, gồm `conversation_id` và các lượt hỏi–đáp đã hiển thị (câu hỏi, câu trả lời, trích dẫn). Không gắn với tài khoản hay định danh nào.
+- `conversation_id` là UUID do web tự sinh khi bắt đầu hội thoại mới, gửi kèm mọi lượt hỏi (D-SD05-012 (¶5.1)).
+- Thời hạn giữ là `assistant.conversation_ttl_hours` (đọc qua `clientSettings.getSettings`), tính từ lượt hỏi cuối. Mở màn hình khi hội thoại đã quá hạn thì xoá hội thoại đó và bắt đầu hội thoại mới.
+- Bắt đầu hội thoại mới (hội thoại cũ bị xoá khỏi trình duyệt) khi:
+  - bấm "Hội thoại mới";
+  - gửi câu hỏi từ Trang chủ (ô hỏi AI, câu hỏi gợi ý — D-PUB-001 (¶4.1));
+  - hội thoại hết hạn;
+  - nhận lỗi `conversation_mismatch`.
+- Mở Chat AI không kèm câu hỏi (menu Header, nút CTA) thì hiện lại hội thoại hiện hành để hỏi tiếp.
+- ⚠ Vượt giới hạn tần suất hỏi (HTTP 429 `rate_limited`, D-SD05-012 (¶5.1)): hiện thông báo "Bạn đã hỏi quá nhiều trong thời gian ngắn, vui lòng thử lại sau ít phút."; câu hỏi không được thêm vào hội thoại.
 
 **Gợi ý câu hỏi nhanh (Quick reply chips):** dạng nút bo tròn nhỏ, xếp dạng wrap, ví dụ: "Nguồn gốc đình làng", "Kiến trúc đình làng", "Vai trò đình làng".
 

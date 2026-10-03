@@ -58,7 +58,7 @@ Danh sách điểm đối chiếu giữa `public-web-design.md` và `business-re
 7. ✅ Section "Hôm nay" (D-PUB-001 (¶4.1)) — khớp BR R-OOS-006 (§2.5.5) (ngoài phạm vi), đã ghi chú "thiết kế đi trước".
 8. ✅ Card trong section "Mục từ nổi bật" (D-PUB-001 (¶4.1)) — không lệch: mỗi card là một Mục từ (BR R-ENC-002 (§2.3.1)–R-ENC-003 (§2.3.2), R-ENC-032 (§2.3.7)), tài liệu đã làm rõ cấu trúc này.
 9. ✅ Icon thông báo ở Header (màn hình rộng) (D-PUB-001 (¶4.1)) — chưa có đặc tả nghiệp vụ, đã ghi chú "thiết kế đi trước".
-10. ⏳ Màn hình Chat AI (D-PUB-002 (¶4.2)): (a) ✅ chỉ hỗ trợ tiếng Việt, không có UI chọn Cương vực/ngôn ngữ; (b) ✅ trích dẫn Mục từ nguồn dạng chip, bấm mở Trang chi tiết Mục từ (khớp BR R-PUB-007 (§2.6.3), R-PUB-010 (§2.6.4.2)); (c) ⏳ quick-reply chips + nhập giọng nói — chưa có cơ sở trong BR, để xử lý sau.
+10. ⏳ Màn hình Chat AI (D-PUB-002 (¶4.2)): (a) ⚠ lệch đặc tả — không có UI chọn Cương vực (R-PUB-009 (§2.6.4.1)), giữ đơn giản hoá; cần đề xuất sửa đặc tả ở luồng Requirements; chỉ hỗ trợ tiếng Việt khớp R-NFR-020 (§3.3.5); (b) ✅ trích dẫn Mục từ nguồn dạng chip, bấm mở Trang chi tiết Mục từ (khớp BR R-PUB-007 (§2.6.3), R-PUB-010 (§2.6.4.2)); (c) ⏳ quick-reply chips + nhập giọng nói — chưa có cơ sở trong BR, để xử lý sau; (d) ✅ câu miễn trừ trách nhiệm, hội thoại mới, lưu hội thoại trên trình duyệt (R-AI-009 (§2.4.8), R-AI-007 (§2.4.6), R-PUB-011 (§2.6.4.3)).
 
 ## 8. Đồng bộ với session khác
 
