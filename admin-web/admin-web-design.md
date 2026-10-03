@@ -363,7 +363,10 @@
   - Kết thúc (`content_generation` từ `pending`/`running` về `null`): nếu vẫn `soan_thao`, đúng Người phụ trách và còn ít nhất một Hạng mục tri thức nguồn → toast "Đã khởi tạo nội dung bằng AI. Hãy rà soát, chỉnh sửa trước khi gửi xét duyệt." (R-ENC-043 (§2.3.8.5) — nội dung không đánh dấu là do AI sinh); ngược lại → toast "Kết quả sinh nội dung bằng AI đã bị bỏ do {Mục từ đã đổi trạng thái | Người phụ trách đã thay đổi | không còn Hạng mục tri thức nguồn}.", nội dung giữ nguyên.
   - Thất bại (`content_generation.status = failed`): banner đỏ trên editor "Sinh nội dung bằng AI thất bại. Nội dung hiện tại không thay đổi." kèm `error_message` nếu có; `error_code = source_content_too_long` → "Nội dung các Hạng mục tri thức nguồn quá dài để AI xử lý trong một lần. Hãy gỡ bớt Hạng mục tri thức nguồn rồi khởi tạo lại." Nút "Khởi tạo nội dung bằng AI" vẫn dùng được để kích hoạt lại.
 - Khối "Tệp đính kèm" (`entry_file`): danh sách file đã tải lên, nút "+ Tải file lên" (presigned URL) — dùng để nhúng vào Nội dung.
-- Khối "Cương vực": multi-select gán/gỡ (`AssignCulturalDomain`/`UnassignCulturalDomain`).
+- Khối "Cương vực": multi-select gán/gỡ (`encyclopedia.addEntryCulturalDomain`/`encyclopedia.removeEntryCulturalDomain`). Danh sách lấy từ `encyclopedia.listCulturalDomains`; Cương vực có `is_public_visible = false` kèm nhãn phụ "đang ẩn trên website". Gán/gỡ có hiệu lực ngay trên website, không phụ thuộc phiên bản (D-SD04-023 (¶3.7)). Khi Mục từ đang công khai (`seo` khác `null`):
+  - Gỡ Cương vực có `public_entry_count = 1`: hộp thoại xác nhận (R-NFR-040 (§3.7.3), quy ước (b) D-ADM-029 (¶3)): "Mục từ này là Mục từ đang công khai duy nhất của Cương vực "{Tên}". Gỡ Cương vực sẽ làm trang Cương vực "{Tên}" bị ẩn khỏi website (bộ lọc, sitemap; đường dẫn trả về "không tìm thấy") cho tới khi có Mục từ đang công khai khác được gán. Tiếp tục?" — chỉ gọi API khi xác nhận.
+  - Gán Cương vực có `is_public_visible = false`: gán xong → toast "Cương vực "{Tên}" đã hiện trên website."
+  - Số liệu lấy từ danh sách đã tải, tải lại sau mỗi lần gán/gỡ.
 - Khối "Công khai & SEO" (D-ADM-019 (¶4.19)) — khi Mục từ đã có phiên bản chốt.
 - Chỉnh sửa (Nội dung/Tệp đính kèm/Cương vực/Hạng mục tri thức nguồn) theo phần tử `edit_content`: `enabled = false` thì chỉ đọc kèm banner lý do theo `reason_code` (quy ước (c) D-ADM-029 (¶3)); không có phần tử này thì chỉ đọc.
 - Hành động cuối trang theo `status`:
@@ -419,8 +422,9 @@
 ## 4.20. [D-ADM-020] Quản lý Cương vực
 
 - Breadcrumb: Bách khoa toàn thư > Cương vực.
-- Bảng: Mã (`code`), Tên (`name`), số Mục từ đang gán.
-- Nút "+ Thêm Cương vực" — chỉ role `bien_tap` — dialog: Mã, Tên.
+- Bảng: Mã (`code`), Tên (`name`), Mục từ đang gán (`entry_count` — mọi Mục từ đã gán, kể cả chưa công khai), Mục từ đang công khai (`public_entry_count`), Trên website (`is_public_visible` — D-SD04-005 (¶2.5)): badge xanh "Đang hiển thị" / badge xám "Đang ẩn"; tooltip của "Đang ẩn": "Cương vực chỉ hiện trên website khi được gán cho ít nhất một Mục từ đang công khai."
+- Filter: Trên website (Tất cả / Đang hiển thị / Đang ẩn) — lọc phía client trên danh sách đã tải (`encyclopedia.listCulturalDomains` không phân trang).
+- Nút "+ Thêm Cương vực" — chỉ role `bien_tap` — dialog: Mã, Tên, kèm dòng chữ phụ "Cương vực mới chỉ hiện trên website khi được gán cho ít nhất một Mục từ đang công khai." Tạo xong → toast "Đã tạo Cương vực. Cương vực đang ẩn trên website cho tới khi được gán cho một Mục từ đang công khai."
 - Click dòng (chỉ role `bien_tap`) → dialog sửa Tên/Mã.
 - Action inline theo dòng: "Xoá" — chỉ role `bien_tap` (R-ENC-037 (§2.3.7.5)). Hộp thoại xác nhận (không hoàn tác — quy ước (b) D-ADM-029 (¶3)): "Xoá Cương vực "{Tên}" khỏi danh mục? Cương vực sẽ không còn trong bộ lọc của Bách khoa toàn thư và AI Văn Minh Việt. Không thể hoàn tác. Tiếp tục?" → `encyclopedia.deleteCulturalDomain`.
 - Nếu API trả HTTP 409 `cultural_domain_in_use`: đóng hộp thoại xác nhận, hiện thông báo lỗi "Không xoá được: Cương vực "{Tên}" đang được gán cho {`entry_count`} Mục từ. Hãy gỡ Cương vực này khỏi các Mục từ đó trước (ở màn hình Soạn thảo Mục từ, D-ADM-017 (¶4.17))." kèm link "Xem các Mục từ" mở D-ADM-016 (¶4.16) đã lọc sẵn theo Cương vực này. Số liệu lấy từ `entry_count` trong response lỗi, không lấy từ cột trên bảng (có thể đã cũ). Sau khi báo lỗi, tải lại bảng.
