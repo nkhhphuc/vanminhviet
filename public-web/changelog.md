@@ -37,3 +37,4 @@
   - Màn hình mới 4.10 [D-PUB-013] Trang Cương vực. Card Cương vực ở Trang chủ, nhóm Cương vực ở Header và chip Cương vực ở trang Mục từ đều trỏ tới trang này.
   - Thành phần mới: Breadcrumb, Trang không tìm thấy. D-PUB-003 phân trang bằng nút "Xem thêm".
   - File: **public-web-design.md** (2.3, 3, 4.1, 4.3, 4.4, 4.10, 7), **00-claude-instructions.md** (6).
+- Ghi mục đích cốt lõi của web công khai: truyền bá văn hóa và lịch sử của dân tộc Việt Nam trong cộng đồng; dùng làm tiêu chí ưu tiên khi chọn phương án thiết kế. Không đổi nội dung cần hiện thực, không tạo DC. File: **public-web-design.md** (1), **00-claude-instructions.md** (1).

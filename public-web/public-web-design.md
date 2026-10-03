@@ -8,6 +8,7 @@
 
 - **Tên sản phẩm:** Văn Minh Việt
 - **Slogan:** "Hệ sinh thái số toàn cầu về văn minh Việt" / "Kết nối quá khứ — Kiến tạo tương lai"
+- **Mục đích cốt lõi:** truyền bá văn hóa và lịch sử của dân tộc Việt Nam trong cộng đồng.
 - **Loại hình:** Website responsive cho Người dùng công khai (R-GEN-007 (§1.2.2), R-PUB-001 (§2.6)), một giao diện dùng cho cả màn hình hẹp (điện thoại) và màn hình rộng (máy tính) theo 2 mức bố cục (¶5); tổng hợp nội dung văn hóa – lịch sử Việt Nam dưới nhiều hình thức: bách khoa tri thức, AI trợ lý, bảo tàng số 3D/VR/AR, game giáo dục, phim ảnh, bản đồ văn hóa và mạng xã hội cộng đồng.
 - **Nền tảng:** Next.js (SSR/SSG) theo D-SD01-001 (¶1); hỗ trợ trình duyệt theo R-NFR-019 (§3.3.4).
 

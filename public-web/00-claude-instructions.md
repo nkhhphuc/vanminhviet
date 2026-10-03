@@ -4,6 +4,7 @@
 
 ## 1. Mục tiêu
 
+- **Mục đích cốt lõi của web công khai:** truyền bá văn hóa và lịch sử của dân tộc Việt Nam trong cộng đồng. Mọi quyết định thiết kế giao diện (bố cục, ưu tiên nội dung, điều hướng) được cân nhắc theo mục đích này; khi có nhiều lựa chọn, ưu tiên phương án giúp người dùng tiếp cận và đọc nội dung văn hoá – lịch sử tốt hơn.
 - Biên tập, hoàn thiện `public-web-design.md` thành một đặc tả giao diện đủ chi tiết để đội dev/thiết kế dùng làm đầu vào build giao diện web công khai cho "Văn Minh Việt".
 - Tài liệu bắt nguồn từ một bản mô tả lại mockup ứng dụng di động (do người dùng cung cấp) — phạm vi ban đầu rộng hơn nhiều so với những gì `requirements/business-requirements.md` đã đặc tả cho web công khai (R-PUB-001 (§2.6) ở đó). Một phần công việc của luồng này là **đối chiếu từng điểm** giữa hai tài liệu để cả hai bên hiểu giống nhau, và quyết định mỗi điểm lệch nên xử lý thế nào (xem mục 5).
 
