@@ -294,7 +294,7 @@
     - URL xem/tải lấy qua `knowledge.getResearchTopicSourceFileDownloadUrl` mỗi khi chọn file. URL có thời hạn: nếu trình xem báo lỗi tải, client lấy lại URL một lần rồi mới hiện lỗi.
     - Khi chưa chọn file: hiện "Chọn một file ở danh sách bên trái để xem".
   - Màn hình hẹp (dưới breakpoint `md` của Quasar): hai cột xếp chồng, danh sách file ở trên.
-  - ⚠ File đang chọn được ghi vào URL (`?file={file_id}`). Mở trang với tham số này thì file đó được chọn sẵn. `file_id` không thuộc Tư liệu gốc này hoặc là file `is_missing` thì bỏ qua tham số.
+  - File đang chọn được ghi vào URL (`?file={file_id}`). Mở trang với tham số này thì file đó được chọn sẵn. `file_id` không thuộc Tư liệu gốc này hoặc là file `is_missing` thì bỏ qua tham số.
 - Màn hình chỉ đọc: **không có** gỡ/gán Tư liệu gốc (Admin nội bộ) và không tạo Tham chiếu tại đây. Tham chiếu được tạo ở D-PRT-007 (¶4.7).
 - API: `knowledge.getResearchTopicSource`, `knowledge.getResearchTopicSourceFileDownloadUrl`.
 

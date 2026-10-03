@@ -78,3 +78,4 @@
   - File **00-claude-instructions.md** mục 6, 7: thêm quyết định truy cập Tư liệu gốc; số màn hình đổi thành 13.
   - Mốc đồng bộ partner-web: DC-20261003-04.
 - Ghi mục đích cốt lõi của Cổng Nhân viên Tổ chức khác: hỗ trợ nghiên cứu văn hóa và lịch sử của dân tộc Việt Nam; dùng làm tiêu chí ưu tiên khi chọn phương án thiết kế. Không đổi nội dung cần hiện thực, không tạo DC. File: **partner-web-design.md** (1), **00-claude-instructions.md** (1).
+- Chốt ghi file đang chọn vào URL (`?file={file_id}`) ở 4.13, bỏ dấu ⚠. Không đổi nội dung cần hiện thực, không tạo DC. File: **partner-web-design.md** (4.13).
