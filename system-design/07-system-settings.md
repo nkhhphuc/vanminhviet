@@ -61,8 +61,8 @@ Cột **Áp dụng**: `existing` hoặc `new_only` (D-SD07-001 (¶2.1)), kèm gh
 | `identity.password_min_length` | int | 8 | 8–64 | `new_only` — mật khẩu đặt mới sau khi lưu; không buộc đổi mật khẩu hiện có | Mọi Nhân viên — đặt mật khẩu lần đầu, đặt lại, đổi mật khẩu | server (client đọc qua `auth.getPasswordPolicy`) |
 | `identity.password_require_letter_and_digit` | bool | `true` | | như trên | như trên | như trên |
 | `identity.password_require_special_char` | bool | `false` | | như trên | như trên | như trên |
-| `identity.login_max_failed_attempts` | int | 5 | 0–20; `0` = tắt cơ chế tạm khoá | `existing` | Mọi Nhân viên — Đăng nhập, Đổi mật khẩu; Quản trị hệ thống — Gỡ tạm khoá | server, admin_client |
-| `identity.login_lockout_minutes` | int | 15 | 1–1440 | `new_only` — các lần tạm khoá phát sinh sau khi lưu | như trên | server, admin_client |
+| `identity.login_max_failed_attempts` | int | 5 | 0–20; `0` = tắt cơ chế tạm khoá | `existing` | Mọi Nhân viên — Đăng nhập, Đổi mật khẩu; Quản trị hệ thống — Gỡ tạm khoá | server, admin_client, partner_client |
+| `identity.login_lockout_minutes` | int | 15 | 1–1440 | `new_only` — các lần tạm khoá phát sinh sau khi lưu | như trên | server, admin_client, partner_client |
 
 **Nhóm `email` — Email hệ thống (mời, đặt lại mật khẩu)**
 

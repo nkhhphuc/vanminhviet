@@ -132,3 +132,4 @@
   - **04-encyclopedia.md**: ¶3.6 (D-SD04-021) thêm thao tác `edit_seo` (`encyclopedia.updateEntrySeo`, `reason_code` `no_public_version`); ¶5.1 (D-SD04-015) `encyclopedia.getEntry` thêm `seo.image.candidates: [{file_id}]`.
   - **01-architecture-and-tech-stack.md** ¶3 (D-SD01-003): danh mục `reason_code` thêm `no_public_version`.
   - **00-claude-instructions.md** mục 8: thêm việc tồn đọng "Tên file của `entry_file` và `knowledge_object_file`", "Xem nội dung một phiên bản Mục từ đã chốt".
+- DC-20261003-03 (câu hỏi của partner-web, dialog Đổi mật khẩu): **07-system-settings.md** ¶2.3 (D-SD07-003): `identity.login_max_failed_attempts`, `identity.login_lockout_minutes` thêm exposure `partner_client`.
