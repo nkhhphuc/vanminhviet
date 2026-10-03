@@ -455,7 +455,7 @@ Trang của một Cương vực, liệt kê các Mục từ đang công khai thu
 - Cần chuẩn bị hệ thống **component tái sử dụng**: Card ảnh + tiêu đề, Pill/Chip button, Progress bar, Segmented control (tab switch), Post card (cộng đồng), Header (2 mức, mega menu, menu màn hình hẹp), Footer, Card Cương vực, Nhãn "Sắp ra mắt", Breadcrumb, Trang không tìm thấy.
 - Nội dung media (ảnh 360°, VR/AR cho bảo tàng số) cần xác định rõ công nghệ triển khai (WebXR, model-viewer) — mức hỗ trợ WebXR/AR khác nhau giữa các trình duyệt trong R-NFR-019 (§3.3.4), cần có cách xem thay thế (360°/ảnh) khi trình duyệt không hỗ trợ; phần này nên trao đổi thêm với dev trước khi implement để chọn giải pháp phù hợp nền tảng.
 
-## 8. [D-PUB-014] SEO & chia sẻ
+## 8. [D-PUB-014] SEO, chia sẻ & đo lường truy cập
 
 **Thẻ trang** (R-NFR-030 (§3.6.4), R-NFR-034 (§3.6.8), D-SD04-023 (¶3.7)): mỗi trang khai báo `<title>`, `meta description`, Open Graph (`og:title`, `og:description`, `og:image`, `og:url`, `og:type`, `og:site_name` = "Văn Minh Việt", `og:locale` = `vi_VN`). Trang được lập chỉ mục khai báo thêm `canonical`. `og:url` là đường dẫn canonical, hoặc đường dẫn hiện tại nếu trang không có canonical. `og:type` là `article` ở trang Mục từ, `website` ở các trang khác.
 
@@ -487,6 +487,14 @@ Trang của một Cương vực, liệt kê các Mục từ đang công khai thu
 - ⚠ Trang chủ: `WebSite` và `Organization` (tên, logo, địa chỉ website).
 
 **Xác minh quyền sở hữu** (R-NFR-032 (§3.6.6)): thẻ meta xác minh của Google Search Console, Bing Webmaster Tools và công cụ tương tự, giá trị lấy từ biến môi trường của Web công khai (D-SD04-023 (¶3.7)). Chỉ đặt ở Trang chủ.
+
+**Đo lường truy cập** (R-NFR-036 (§3.6.10), D-SD01-001 (¶1)): dùng Umami tự host.
+- Script Umami gắn vào mọi trang của Web công khai, tải kiểu `defer` để không làm chậm hiển thị (R-NFR-033 (§3.6.7)). Địa chỉ script và mã website lấy từ biến môi trường; thiếu biến thì không gắn script.
+- Không dùng cookie, không thu thập dữ liệu định danh; không có hộp xin đồng ý.
+- Mỗi lần chuyển trang (kể cả chuyển trang phía client của Next.js) ghi một lượt xem trang. Số liệu lượt xem, lượt truy cập, nguồn truy cập, Mục từ và Cương vực được xem nhiều đọc từ báo cáo lượt xem theo đường dẫn và tiêu đề trang của Umami.
+- ⚠ Không ghi query của URL (cấu hình loại bỏ query khi gửi lượt xem), để từ khoá người dùng gõ ở D-PUB-003 (¶4.3) không bị lưu vào số liệu (R-NFR-003 (§3.1.1)).
+- ⚠ Mục từ hoặc Cương vực đổi slug thì số liệu theo đường dẫn tách làm hai; xem gộp theo tiêu đề trang.
+- Sự kiện lượt bấm Mục từ ở section "Hôm nay" (`today_entry_click`, D-SD04-018 (¶5.4)) đặc tả cùng section "Hôm nay".
 
 ---
 
