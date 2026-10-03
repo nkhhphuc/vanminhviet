@@ -75,11 +75,12 @@ Nhận diện thương hiệu (màu, font, logo, phong cách ảnh) dùng chung 
 - **Card hình chữ nhật bo góc** (radius 16px, ¶5) dùng cho danh sách nội dung nổi bật, ảnh nền + gradient tối phía dưới để đè chữ.
 - **Ảnh mặc định của Mục từ** ⚠: một minh hoạ thuỷ mặc tông sáng cố định (¶6). Dùng khi Mục từ không có ảnh bìa (`cover_image = null`) ở card Mục từ, đồng thời là hình chia sẻ mặc định của website (D-SD04-023 (¶3.7)).
 - **Cương vực đầu tiên của Mục từ:** phần tử đầu của `cultural_domain_ids`, tức Cương vực được gán sớm nhất (D-SD04-018 (¶5.4)). Tên Cương vực lấy từ `public.listCulturalDomains`. Mục từ chưa gán Cương vực thì không hiện nhãn này.
+- **Danh sách Cương vực trên website:** mọi nơi hiển thị danh sách Cương vực (mega menu và menu màn hình hẹp, card ở Trang chủ, bộ lọc ở D-PUB-003 (¶4.3), dải Cương vực ở D-PUB-013 (¶4.10)) đều lấy từ `public.listCulturalDomains`. Endpoint này chỉ trả Cương vực đang có Mục từ công khai (R-PUB-019 (§2.6.2.4), D-SD04-005 (¶2.5)). Danh sách rỗng thì ẩn nhóm "Cương vực" trong menu.
 - **Nút CTA chính:** nền đỏ, chữ trắng, bo góc, dùng cho hành động chính (vd: "Chơi ngay", "Tìm hiểu ngay").
 - **Search bar:** bo tròn/bo góc lớn, nền sáng hơn/khác tông nhẹ so với nền chính (viền mảnh xám kem), icon kính lúp bên phải, placeholder dạng câu hỏi gợi ý.
 - **Chia sẻ:** nếu trình duyệt hỗ trợ thì mở hộp chia sẻ của hệ thống (Web Share API). Nếu không, sao chép URL của màn hình vào clipboard và hiện thông báo ngắn "Đã sao chép liên kết".
 - **Breadcrumb:** dải đường dẫn phân cấp đặt trên H1, chữ nhỏ màu Chữ phụ, các cấp cách nhau bằng `›`. Các cấp trước là liên kết, cấp cuối là trang hiện tại.
-- **Trang không tìm thấy** ⚠: dùng khi đường dẫn không tồn tại, hoặc khi Mục từ hay Cương vực không còn công khai. HTTP 404, H1 "Không tìm thấy trang", 1 dòng mô tả, 2 nút "Về Trang chủ" và "Duyệt Bách khoa toàn thư". Có Header và Footer.
+- **Trang không tìm thấy** ⚠: dùng khi đường dẫn không tồn tại, hoặc khi Mục từ không còn công khai, Cương vực không còn Mục từ công khai nào. HTTP 404, H1 "Không tìm thấy trang", 1 dòng mô tả, 2 nút "Về Trang chủ" và "Duyệt Bách khoa toàn thư". Có Header và Footer.
 - **Trạng thái tương tác:**
   - Mọi phần tử bấm được đều có trạng thái hover (chữ hoặc viền chuyển đỏ, hoặc nền đậm nhẹ).
   - Mọi phần tử bấm được đều có focus ring nhìn rõ (viền accent 2px) khi điều hướng bằng bàn phím.
@@ -175,6 +176,7 @@ Header và Footer theo D-PUB-012 (¶2.3), mục "Trang chủ" ở trạng thái 
   - Bấm card thì mở Trang Cương vực D-PUB-013 (¶4.10).
 - Hoạ tiết lấy luân phiên từ một bộ cố định theo mô-típ văn hoá (mái đình, trống đồng, đồ thờ, binh khí…). Hoạ tiết không gắn với Cương vực cụ thể, vì Cương vực không có ảnh hay mô tả.
 - Lưới 4 cột ở màn hình rộng, 2 cột ở màn hình hẹp.
+- Chưa có Cương vực nào thì ẩn section.
 
 **Section "Mục từ nổi bật":**
 - Nhãn "BÁCH KHOA TOÀN THƯ", H2 "Mục từ nổi bật", link "Xem tất cả →" mở D-PUB-003 (¶4.3).
@@ -274,6 +276,7 @@ Giao diện và câu trả lời chỉ bằng tiếng Việt (R-NFR-020 (§3.3.5
 **Bộ lọc Cương vực** (filter chips, đa chọn; cuộn ngang ở màn hình hẹp, xuống dòng ở màn hình rộng): mỗi Cương vực trong `public.listCulturalDomains` là một chip (R-PUB-005 (§2.6.2.2), R-ENC-032 (§2.3.7)).
 - Chọn nhiều Cương vực thì hiện các Mục từ thuộc ít nhất một Cương vực đã chọn. Không chọn Cương vực nào thì không lọc.
 - Các Cương vực đã chọn gửi lên `public.listEntries` bằng tham số `cultural_domain_id` lặp lại (D-SD04-018 (¶5.4)).
+- Slug ở query `cuong-vuc` không có trong `public.listCulturalDomains` (Cương vực đã ẩn hoặc không tồn tại) thì bỏ qua slug đó.
 
 **Danh sách Mục từ — lưới 2 cột (màn hình hẹp), 4 cột (màn hình rộng):** mỗi ô là một card dọc gồm:
 - Ảnh tỉ lệ vuông (1:1), bo góc, lấy từ `cover_image`. Không có ảnh bìa thì dùng Ảnh mặc định của Mục từ (D-PUB-012 (¶2.3)).
@@ -402,7 +405,7 @@ Là màn hình đích khi: bấm card ở "Mục từ nổi bật" (D-PUB-001 (�
 
 ### 4.10 [D-PUB-013] Trang Cương vực
 
-Trang của một Cương vực, liệt kê các Mục từ đang công khai thuộc Cương vực đó (R-PUB-005 (§2.6.2.2), R-NFR-029 (§3.6.3)). Đường dẫn `/cuong-vuc/{slug}` (D-PUB-010 (¶3)). Header và Footer theo D-PUB-012 (¶2.3), mục "Bách khoa toàn thư" ở trạng thái active.
+Trang của một Cương vực, liệt kê các Mục từ đang công khai thuộc Cương vực đó (R-PUB-019 (§2.6.2.4)). Chỉ có trang cho Cương vực đang có Mục từ công khai; Cương vực khác trả Trang không tìm thấy (D-PUB-010 (¶3)). Khi Cương vực hiển thị lại, trang dùng lại đường dẫn cũ. Đường dẫn `/cuong-vuc/{slug}` (D-PUB-010 (¶3)). Header và Footer theo D-PUB-012 (¶2.3), mục "Bách khoa toàn thư" ở trạng thái active.
 
 **Breadcrumb:** Bách khoa toàn thư (mở D-PUB-003 (¶4.3)) › tên Cương vực.
 
@@ -415,8 +418,6 @@ Trang của một Cương vực, liệt kê các Mục từ đang công khai thu
 - Trang này không có ô tìm kiếm và không có bộ lọc đa chọn. Hai chức năng đó ở D-PUB-003 (¶4.3).
 
 **Danh sách Mục từ:** gọi `public.listEntries` với `cultural_domain_id` của Cương vực và `sort=latest`. Lưới, card và phân trang giống D-PUB-003 (¶4.3).
-
-**Empty state:** minh hoạ, text "Cương vực này chưa có Mục từ công khai" và link "Xem tất cả Mục từ →" mở D-PUB-003 (¶4.3).
 
 **Màn hình rộng:** giống D-PUB-003 (¶4.3).
 
@@ -476,7 +477,7 @@ Trang của một Cương vực, liệt kê các Mục từ đang công khai thu
 - Trang có cột "Lập chỉ mục" là "Không" khai báo `<meta name="robots" content="noindex, follow">`.
 - `robots.txt` tĩnh: chặn `/tro-ly-ai` và `/bach-khoa?` (trang kết quả tìm kiếm, lọc); khai báo `Sitemap: {địa chỉ website}/sitemap.xml`.
 
-**Sơ đồ trang** (R-NFR-032 (§3.6.6)): `sitemap.xml` sinh động, gồm Trang chủ, `/bach-khoa`, mọi trang Cương vực và mọi trang Mục từ trong `public.listSitemapItems` (`lastmod` = `updated_at`). Không gồm Chat AI và các màn hình module ngoài phạm vi.
+**Sơ đồ trang** (R-NFR-032 (§3.6.6)): `sitemap.xml` sinh động, gồm Trang chủ, `/bach-khoa`, mọi trang Cương vực đang hiển thị và mọi trang Mục từ trong `public.listSitemapItems` (`lastmod` = `updated_at`). Không gồm Chat AI và các màn hình module ngoài phạm vi.
 
 **Dữ liệu có cấu trúc** (R-NFR-031 (§3.6.5)), dạng JSON-LD:
 - Trang Mục từ:
