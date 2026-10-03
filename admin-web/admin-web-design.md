@@ -60,6 +60,8 @@
 ## 3. [D-ADM-029] Quy ước chung — khung ứng dụng & điều hướng
 
 - **Bố cục sau đăng nhập**: Sidebar cố định bên trái + Topbar trên cùng + khu vực nội dung chính.
+- **Không lập chỉ mục** (R-NFR-032 (§3.6.6), D-SD01-007 (¶7)): Admin nội bộ phục vụ `robots.txt` chặn toàn bộ; reverse proxy gắn header `X-Robots-Tag: noindex, nofollow`.
+- **Bố cục trước đăng nhập** (D-ADM-001 (¶4.1)–D-ADM-003 (¶4.3)): không có Sidebar, Topbar, Breadcrumb; form đặt giữa màn hình; chip "DEV" (bullet Topbar) ở góc trên phải màn hình.
 - **Bảng màu & font chữ**: dùng chung màu nhận diện thương hiệu và font chữ thường với D-PUB-011 (¶2.1) và Typography của Web công khai; vùng nội dung/bảng dữ liệu chính dùng nền trung tính để ưu tiên tốc độ đọc/thao tác (đúng nguyên tắc ¶1). Không dùng font serif Lora, màu phụ trang trí (vàng đồng, xanh rêu), ảnh minh hoạ thuỷ mặc và thang bo góc của Web công khai — bo góc theo mặc định Quasar.
 
   | Vai trò | Mã màu | Áp dụng |
@@ -80,7 +82,14 @@
 - **Topbar**:
   - Màu: nền `#F7F2EA`, viền dưới `#E6E0D7`. Tên nhóm/module hiện tại và tên Nhân viên dùng Chữ chính `#252421`, tên Tổ chức dùng Chữ phụ, logo và icon dùng Accent. **Không dùng chữ/icon `#FFFFFF` trên Topbar**: phải đặt lại cả màu chữ mặc định `text-white` lẫn màu nền mặc định `bg-primary` của `QHeader` (quy tắc tương phản ở Bảng màu).
   - Bên trái: **tên nhóm/module hiện tại** (ví dụ "Cơ sở dữ liệu văn hóa", cập nhật theo màn hình đang xem, giúp biết đang ở module nào trong tổng thể hệ thống dù đã cuộn sâu vào một màn hình chi tiết).
-  - **Chip "DEV · Hộp thư"** (chỉ khi `dev_mailbox_url` khác `null` — lấy từ `auth.login`/`auth.getMe`, D-SD01-009 (¶9)): nằm bên phải, ngay trước nút tài khoản; hiện cho mọi Nhân viên; nền vàng cảnh báo (`warning` của Quasar), chữ và icon thư dùng Chữ chính `#252421`; bấm mở `dev_mailbox_url` ở tab mới. Vừa là lối tắt tới hộp thư Mailpit vừa là dấu hiệu nhận biết đang ở môi trường DEV.
+  - **Chip "DEV"** (D-SD01-009 (¶9)): khi tải app (kể cả trước đăng nhập), client gọi `auth.getEnvironment` một lần; chip hiện khi ít nhất một trong `dev_mailbox_url`, `dev_db_console_url`, `dev_storage_console_url` khác `null`; gọi lỗi thì ẩn chip, không báo lỗi.
+    - Vị trí: bên phải Topbar, ngay trước nút tài khoản; ở D-ADM-001 (¶4.1)–D-ADM-003 (¶4.3) đặt ở góc trên phải màn hình. Hiện cho mọi Nhân viên, kể cả khi chưa đăng nhập.
+    - Màu: nền vàng cảnh báo (`warning` của Quasar); chữ, icon và mũi tên xuống dùng Chữ chính `#252421`.
+    - Bấm mở menu; mỗi mục chỉ hiện khi URL tương ứng khác `null`, bấm mở ở tab mới:
+      - "Hộp thư DEV" (icon thư) → `dev_mailbox_url` (Mailpit).
+      - "Cơ sở dữ liệu DEV" (icon cơ sở dữ liệu) → `dev_db_console_url` (pgAdmin); dòng phụ "Toàn quyền dữ liệu, không qua kiểm tra nghiệp vụ".
+      - "Lưu trữ DEV" (icon thư mục) → `dev_storage_console_url` (MinIO Console); dòng phụ "Toàn quyền dữ liệu, không qua kiểm tra nghiệp vụ".
+    - Vừa là lối tắt tới các công cụ DEV vừa là dấu hiệu nhận biết đang ở môi trường DEV.
   - Bên phải: **nút tài khoản** — avatar (chữ cái đầu của tên) + tên Nhân viên + tên Tổ chức trực thuộc, kèm icon mũi tên xuống. Bấm mở **menu tài khoản** gồm:
     - Phần đầu (không bấm được): tên Nhân viên, email, tên Tổ chức.
     - "Đổi mật khẩu" (icon khoá) → mở dialog D-ADM-027 (¶4.27).
@@ -93,7 +102,7 @@
   - Nếu `auth.logout` lỗi (mất mạng, token đã hết hạn…), client vẫn xoá dữ liệu phiên cục bộ và về D-ADM-001 (¶4.1) — người dùng không bị kẹt ở trạng thái đăng nhập.
   - Hết phiên ngoài ý muốn — client phân biệt 2 loại HTTP 401:
     - **401 do access token hết hạn**: gọi `auth.refresh` một lần. Refresh thành công thì gửi lại request ban đầu. Refresh thất bại (refresh token hết hạn hoặc bị thu hồi, hoặc `auth.refresh` trả `session_revoked`) thì xử lý như dòng dưới.
-    - **401 `session_revoked`** (D-SD02-007 (¶3.5) — tài khoản bị vô hiệu hoá, mật khẩu vừa được đổi/đặt lại ở thiết bị khác, hoặc bị tạm khoá khi đổi mật khẩu): **không gọi `auth.refresh`**. Xử lý ngay như Đăng xuất (bỏ qua bước gọi `auth.logout`): xoá access/refresh token, store Pinia, hội thoại AI lưu tạm (D-ADM-023 (¶4.23)), rồi về D-ADM-001 (¶4.1).
+    - **401 `session_revoked`** (D-SD02-007 (¶3.5) — tài khoản bị vô hiệu hoá, mật khẩu vừa được đổi/đặt lại ở thiết bị khác, bị tạm khoá khi đổi mật khẩu, Tổ chức của Nhân viên vừa bị đổi, hoặc token không phải do Admin nội bộ cấp): **không gọi `auth.refresh`**. Xử lý ngay như Đăng xuất (bỏ qua bước gọi `auth.logout`): xoá access/refresh token, store Pinia, hội thoại AI lưu tạm (D-ADM-023 (¶4.23)), rồi về D-ADM-001 (¶4.1).
     - Cả hai trường hợp: về D-ADM-001 (¶4.1) kèm thông báo "Phiên đăng nhập đã kết thúc, vui lòng đăng nhập lại". Sau khi đăng nhập lại, điều hướng về đúng màn hình trước đó (nếu Nhân viên vẫn có quyền truy cập), không phải D-ADM-022 (¶4.22). Nhiều request cùng nhận 401 một lúc chỉ kích hoạt một lần làm mới phiên/một lần chuyển về D-ADM-001 (¶4.1).
     - Form đang chỉnh sửa dở không được giữ lại khi phiên kết thúc ngoài ý muốn (không hiện hộp thoại "Thay đổi chưa lưu").
   - Có form đang chỉnh sửa dở (ví dụ TipTap ở D-ADM-017 (¶4.17), form Phát biểu ở D-ADM-013 (¶4.13)) khi bấm Đăng xuất: hộp thoại "Thay đổi chưa lưu sẽ bị mất. Vẫn đăng xuất?" — theo cùng cơ chế cảnh báo rời trang của màn hình đó.
@@ -112,44 +121,61 @@
   - Mục từ (4 cụm): Soạn thảo (`soan_thao`) → Chờ & Xét duyệt (`cho_xet_duyet`, `dang_xet_duyet`) → Đạt xét duyệt (`dat_xet_duyet`) → Xuất bản (`da_xuat_ban`/`khong_xuat_ban`).
   - Nhánh "Không đạt xét duyệt" (`khong_dat_xet_duyet`) thể hiện bằng một mũi tên cong nối từ cụm "Xét duyệt"/"Chờ & Xét duyệt" quay lại cụm đầu tiên, kèm nhãn — **không** phải một điểm riêng trên trục chính, vì đây là luồng có thể lặp lại nhiều vòng, không tuyến tính tuyệt đối. Tương tự, việc "Mở lại" từ `da_xuat_ban`/`khong_xuat_ban` về một trạng thái trước đó cũng thể hiện bằng mũi tên quay lại, không vẽ lại toàn bộ trục.
   - Stepper chỉ mang tính hiển thị định hướng, không thay thế các nút hành động đã có ở màn hình tương ứng.
-- **Thành phần dùng lại nhiều nơi**: badge trạng thái (màu theo `status`), bảng danh sách có cursor-pagination + filter, khối "Người phụ trách" (hiện tên người đang giữ + nút Nhận xử lý/Nhả tuỳ quyền, cùng nút Cưỡng chế nhả riêng cho `quan_tri_he_thong` khi đang có người phụ trách), bộ chọn vị trí trong file tuỳ theo `file_type` (page/line cho văn bản, vẽ khung cho ảnh, kéo mốc thời gian cho âm thanh/phim — dùng chung cho Tham chiếu tới Tư liệu gốc và Vị trí trong Nội dung, cả ở chế độ chọn và chế độ chỉ xem/highlight).
+- **Thành phần dùng lại nhiều nơi**: badge trạng thái (màu theo `status`), bảng danh sách có cursor-pagination + filter, khối "Người phụ trách" (hiện tên người đang giữ + nút Nhận xử lý/Nhả/Cưỡng chế nhả theo phần tử `claim`/`release`/`force_release` của `actions` — bullet "Thao tác theo `actions`"), bộ chọn vị trí trong file tuỳ theo `file_type` (page/line cho văn bản, vẽ khung cho ảnh, kéo mốc thời gian cho âm thanh/phim — dùng chung cho Tham chiếu tới Tư liệu gốc và Vị trí trong Nội dung, cả ở chế độ chọn và chế độ chỉ xem/highlight).
+- **Thao tác theo `actions`** (R-NFR-039 (§3.7.2), R-NFR-040 (§3.7.3); quy ước D-SD01-003 (¶3), bảng thao tác D-SD03-027 (¶3.7), D-SD04-021 (¶3.6)): ở màn hình chi tiết Đề tài nghiên cứu (D-ADM-009 (¶4.9)), Hạng mục tri thức (D-ADM-013 (¶4.13)–D-ADM-015 (¶4.15)) và Mục từ (D-ADM-017 (¶4.17)–D-ADM-019 (¶4.19)), nút thao tác và quyền chỉnh sửa lấy từ `actions` trong response chi tiết. Giao diện không tự suy quy tắc từ `status`, Người phụ trách hay role.
+  - Thao tác có trong `actions` thì hiện nút; không có thì không hiện (thao tác thuộc vai trò Nhân viên không giữ).
+  - `enabled = false`: nút vô hiệu, kèm dòng chữ phụ ngay dưới nút nêu lý do theo `reason_code` (không chỉ làm mờ nút). Với `edit_content`, lý do hiện thành banner khoá trên khối nội dung (quy ước (c) bên dưới).
+  - Nhãn `reason_code`: `invalid_status` "Không thực hiện được ở trạng thái {nhãn trạng thái hiện tại}"; `assigned_to_other` "{Tên Người phụ trách} đang phụ trách"; `not_assigned` "Cần Nhận xử lý trước"; `no_assignee` "Chưa có Người phụ trách"; `job_running` "Đang có xử lý nền trên đối tượng này"; `topic_not_ready` "Đề tài nghiên cứu chưa ở trạng thái Tư liệu sẵn sàng"; `has_frozen_version` "Đã có phiên bản chốt"; `no_frozen_version` "Chưa có phiên bản chốt nào"; `referenced_by_entry` "Đang được Mục từ tham chiếu"; `has_knowledge_objects` "Đề tài còn Hạng mục tri thức"; `no_source_content` "Chưa có Hạng mục tri thức nguồn nào có phiên bản đang được sử dụng"; `no_public_version` "Mục từ chưa có phiên bản công khai"; mã lạ → "Hiện chưa thực hiện được thao tác này".
+  - Thao tác có `transitions`: dòng chữ phụ dưới nút "→ {nhãn trạng thái đích} · Xử lý tiếp: {vai trò}"; hộp thoại xác nhận (nếu có) lặp lại thông tin này. `next_roles` hiện theo nhãn vai trò (`nhap_lieu` Nhập liệu, `nghien_cuu` Nghiên cứu, `xet_duyet` Xét duyệt, `xuat_ban` Xuất bản, `chu_nhiem_de_tai` Chủ nhiệm đề tài, `bien_tap` Biên tập, `xet_duyet_muc_tu` Xét duyệt Mục từ, `xuat_ban_muc_tu` Xuất bản Mục từ, `quan_tri_he_thong` Quản trị hệ thống); `he_thong` → "Hệ thống tự xử lý"; mảng rỗng → "Kết thúc vòng xử lý". Thao tác có nhiều phần tử `transitions` (Mở lại): dialog liệt kê từng trạng thái đích kèm vai trò xử lý tiếp.
+  - Sau mỗi thao tác (thành công hoặc lỗi), tải lại chi tiết để cập nhật `actions`. Endpoint vẫn có thể từ chối (dữ liệu vừa đổi): hiện thông báo lỗi rồi tải lại.
+  - Màn hình danh sách không có `actions`, nên không có thao tác chuyển trạng thái/xoá trên dòng; các thao tác này thực hiện ở màn hình chi tiết.
+- **Tham số cấu hình tại nơi thao tác** (R-NFR-041 (§3.7.4)): giá trị hiện hành lấy từ `clientSettings.getSettings` (D-SD07-013 (¶5.2) — mỗi key `{value, label, description, applies_to}`), gọi sau khi đăng nhập/khôi phục phiên, dùng chung toàn app. Hiện thành dòng chữ phụ kèm icon ⓘ ngay cạnh nút/khối liên quan, bằng lời của từng màn hình; di chuột vào ⓘ hiện `description`; người xem có `quan_tri_he_thong` thấy thêm link "Cấu hình" mở D-ADM-028 (¶4.28) đúng nhóm. Gọi lỗi thì ẩn dòng. Danh sách tham số theo từng màn hình ghi tại màn hình đó (D-ADM-004 (¶4.4), D-ADM-005 (¶4.5), D-ADM-011 (¶4.11), D-ADM-013 (¶4.13), D-ADM-021 (¶4.21), D-ADM-023 (¶4.23)–D-ADM-027 (¶4.27)).
+- **Thời hạn tự xử lý** (R-NFR-042 (§3.7.5); quy ước D-SD01-003 (¶3)): với đối tượng hệ thống tự xử lý khi đến hạn:
+  - Còn hạn: chữ phụ "Hết hạn {dd/MM HH:mm}", tooltip "còn {x giờ/ngày}".
+  - Cờ `*_due_soon = true`: badge cam "Sắp hết hạn · còn {x}", cả dòng tô nền cam nhạt.
+  - Đã quá hạn: theo từng màn hình (ví dụ lời mời ở D-ADM-004 (¶4.4)).
+  - Ô sắp xếp của bảng: thứ tự mặc định hoặc "Sắp đến hạn trước" (`sort=due_at`).
 - **Nút "Lịch sử hoạt động"** (component dùng chung): chỉ hiện với role `quan_tri_he_thong`, đặt ở góc phải header của màn hình chi tiết; bấm mở D-ADM-021 (¶4.21) đã lọc sẵn theo `entity_type` + `entity_id` của đối tượng đang xem. Nhật ký của đối tượng gồm cả thao tác trên thành phần con (Phát biểu, Tham chiếu, file, Cương vực/Hạng mục tri thức gán vào Mục từ…), vì audit ghi các thao tác này theo đối tượng gốc (D-SD01-002 (¶2)). Không hiện ở chế độ "Tạo mới".
-- **Mức độ đặc tả hành vi cho từng thao tác**: chỉ mô tả rõ nội dung hộp thoại xác nhận/cảnh báo cho các hành động (a) đặc tả gốc yêu cầu cảnh báo rõ (ví dụ "Không xuất bản"), (b) không thể hoàn tác hoặc ảnh hưởng người khác (Cưỡng chế nhả, Xuất bản, Xoá, Khoá/Disable Nhân viên), (c) trạng thái khoá nội dung — cần thể hiện rõ lý do khoá trên UI (banner/tooltip), không chỉ ẩn/mờ nút, (d) cảnh báo dữ liệu bất thường (file `is_missing`, nội dung Mục từ đã lỗi thời so với Hạng mục tri thức nguồn). Các hành vi UI thông thường khác (validate trường bắt buộc, trạng thái loading, toast thành công...) theo convention chuẩn của Quasar, không đặc tả riêng cho từng màn hình.
+- **Mức độ đặc tả hành vi cho từng thao tác**: chỉ mô tả rõ nội dung hộp thoại xác nhận/cảnh báo cho các hành động (a) đặc tả gốc yêu cầu cảnh báo rõ (ví dụ "Không xuất bản"), (b) không thể hoàn tác hoặc ảnh hưởng người khác (Cưỡng chế nhả, Xuất bản, Xoá, Khoá/Disable Nhân viên), (c) trạng thái khoá nội dung — cần thể hiện rõ lý do khoá trên UI (banner/tooltip, theo `reason_code` khi có `actions`), không chỉ ẩn/mờ nút, (d) cảnh báo dữ liệu bất thường (file `is_missing`, nội dung Mục từ đã lỗi thời so với Hạng mục tri thức nguồn). Các hành vi UI thông thường khác (validate trường bắt buộc, trạng thái loading, toast thành công...) theo convention chuẩn của Quasar, không đặc tả riêng cho từng màn hình.
 
 ## 4.1. [D-ADM-001] Đăng nhập
 
 - Form giữa màn hình: input Email, input Mật khẩu, nút "Đăng nhập", link "Quên mật khẩu?".
 - Không có lựa chọn "Đăng ký" — Nhân viên không tự tạo tài khoản (R-ID-018 (§2.1.5.2) đặc tả gốc).
-- Lỗi hiển thị dùng chung một thông báo ("Email hoặc mật khẩu không đúng") dù sai lý do gì (email không tồn tại/sai mật khẩu/tài khoản `invited`/`disabled` xử lý riêng theo thông báo tương ứng — xem D-SD02-004 (¶3.2)).
+- Lỗi hiển thị dùng chung một thông báo ("Email hoặc mật khẩu không đúng") dù sai lý do gì: email không tồn tại, sai mật khẩu, hoặc Nhân viên không thuộc Tổ chức Văn Minh Việt (sai kênh, D-SD02-004 (¶3.2) bước 2b) — không có gợi ý riêng cho trường hợp sai kênh. Tài khoản `invited`/`disabled` xử lý riêng theo thông báo tương ứng (D-SD02-004 (¶3.2)).
 - Đăng nhập thành công điều hướng tới D-ADM-022 (¶4.22) (Tổng quan) — không có Breadcrumb (nhóm Xác thực).
 - Thông báo dạng banner thông tin phía trên form khi được điều hướng về từ: hết phiên hoặc phiên bị thu hồi (D-ADM-029 (¶3) — "Phiên đăng nhập đã kết thúc, vui lòng đăng nhập lại"), đổi mật khẩu thành công (D-ADM-027 (¶4.27) — "Đổi mật khẩu thành công, vui lòng đăng nhập lại bằng mật khẩu mới"), bị tạm khoá khi đổi mật khẩu (D-ADM-027 (¶4.27) — "Tài khoản đang tạm khoá do nhập sai mật khẩu nhiều lần. Thử lại sau {locked_until}."). Đăng xuất chủ động không hiện thông báo.
-- Vai trò truy cập: không cần đăng nhập. API: `auth.login`.
+- Vai trò truy cập: không cần đăng nhập. API: `auth.login`, `auth.getEnvironment` (chip "DEV", D-ADM-029 (¶3)).
 
 ## 4.2. [D-ADM-002] Quên mật khẩu / Đặt lại mật khẩu
 
 - **Bước 1 — Quên mật khẩu**: input Email, nút gửi. Sau khi gửi luôn hiện cùng một thông báo ("Nếu email tồn tại, một link đặt lại mật khẩu đã được gửi") bất kể email có tồn tại hay không (D-SD02-005 (¶3.3)).
 - **Bước 2 — Đặt lại mật khẩu** (mở từ link trong email): input Mật khẩu mới + Xác nhận mật khẩu, nút "Đặt lại mật khẩu". Token sai/hết hạn/đã dùng → báo lỗi, hướng dẫn liên hệ Quản trị hệ thống.
-- API: `auth.forgotPassword`, `auth.resetPassword`.
+- API: `auth.forgotPassword`, `auth.resetPassword`, `auth.getEnvironment` (chip "DEV", D-ADM-029 (¶3)).
 
 ## 4.3. [D-ADM-003] Đặt mật khẩu lần đầu (từ lời mời)
 
 - Mở từ link mời trong email → gọi `auth.getInvite` để xác thực trước, hiện email (readonly) nếu hợp lệ.
 - Input Mật khẩu mới + Xác nhận, nút "Kích hoạt tài khoản". Token sai/hết hạn/đã dùng → báo lỗi tương tự D-ADM-002 (¶4.2).
-- API: `auth.getInvite`, `auth.acceptInvite`.
+- API: `auth.getInvite`, `auth.acceptInvite`, `auth.getEnvironment` (chip "DEV", D-ADM-029 (¶3)).
 
 ## 4.4. [D-ADM-004] Danh sách Nhân viên
 
 - Breadcrumb: Người dùng & Tổ chức > Nhân viên.
 - Bảng: Tên, Email, Tổ chức, Trạng thái (badge `invited`/`active`/`disabled`; khi `locked_until` > hiện tại, hiện thêm badge cam "Tạm khoá đến {locked_until}" — R-ID-030 (§2.1.5.9)), Role đang giữ (dạng chip, có thể nhiều).
-- Filter: theo Tổ chức, theo Trạng thái; tìm theo tên/email.
+- Thời hạn (bullet "Thời hạn tự xử lý" D-ADM-029 (¶3)):
+  - `status = invited`: dưới badge "Đã mời" hiện hạn lời mời theo `invite_expires_at`/`invite_due_soon`; `invite_expires_at` đã qua → badge đỏ "Lời mời đã hết hạn — cần gửi lại", nút "Gửi lại lời mời" của dòng được làm nổi bật.
+  - Tạm khoá: badge "Tạm khoá đến {locked_until}" thêm cờ sắp hết theo `login_lock_due_soon`; tooltip badge "Nhập sai mật khẩu {identity.login_max_failed_attempts} lần liên tiếp sẽ bị tạm khoá {identity.login_lockout_minutes} phút" (không hiện khi `identity.login_max_failed_attempts = 0`).
+- Filter: theo Tổ chức, theo Trạng thái; tìm theo tên/email. Sắp xếp: mặc định hoặc "Sắp đến hạn trước" (`sort=due_at`).
 - Nút "+ Tạo Nhân viên" → mở màn hình D-ADM-005 (¶4.5).
 - Action inline theo dòng: "Gửi lại lời mời" (chỉ hiện khi `status = invited`), "Vô hiệu hoá" (khi `active`) / "Kích hoạt lại" (khi `disabled`) (R-ID-024 (§2.1.5.7)). Cả hai cần hộp thoại xác nhận vì ảnh hưởng trực tiếp quyền truy cập của Nhân viên đó (quy ước (b) D-ADM-029 (¶3)):
   - Vô hiệu hoá: "Vô hiệu hoá tài khoản {Tên}? Nhân viên này sẽ **bị đăng xuất ngay khỏi mọi thiết bị** và không đăng nhập được cho tới khi được kích hoạt lại. Role và các Hạng mục tri thức/Mục từ đang phụ trách được giữ nguyên — dùng Cưỡng chế nhả nếu cần giao lại cho người khác. Tiếp tục?" (R-ID-025 (§2.1.5.7.1)–R-ID-027 (§2.1.5.7.3)).
   - Kích hoạt lại: "Kích hoạt lại tài khoản {Tên}? Nhân viên đăng nhập lại bằng mật khẩu và các role cũ. Tiếp tục?" (R-ID-026 (§2.1.5.7.2)).
-- Action "Gỡ tạm khoá" — chỉ hiện khi `locked_until` > hiện tại (R-ID-032 (§2.1.5.9.2)): xác nhận ngắn "Gỡ tạm khoá đăng nhập cho {Tên}? Nhân viên đăng nhập lại được ngay." → `identity.clearEmployeeLoginLock`; thành công thì tải lại dòng.
+  - Gửi lại lời mời: xác nhận ngắn "Gửi lại email mời cho {Tên}? Đường dẫn mời mới có hiệu lực {identity.invite_token_ttl_hours} giờ."
+- Action "Gỡ tạm khoá" — chỉ hiện khi `locked_until` > hiện tại (R-ID-032 (§2.1.5.9.2)): xác nhận ngắn "Gỡ tạm khoá đăng nhập cho {Tên}? Nhân viên đăng nhập lại được ngay.", kèm dòng chữ phụ "Nhập sai mật khẩu {identity.login_max_failed_attempts} lần liên tiếp sẽ bị tạm khoá {identity.login_lockout_minutes} phút" → `identity.clearEmployeeLoginLock`; thành công thì tải lại dòng.
 - Tài khoản gốc (`is_root_admin = true`, R-ID-019 (§2.1.5.2.1)): cột Tên thêm chip "Tài khoản gốc"; action "Vô hiệu hoá" vẫn hiện nhưng vô hiệu, kèm tooltip "Không áp dụng cho tài khoản gốc" (quy ước (c) D-ADM-029 (¶3), R-ID-024 (§2.1.5.7)); "Gỡ tạm khoá" vẫn áp dụng. Lỗi 422 `root_admin_protected` → "Thao tác này không áp dụng cho tài khoản gốc." rồi tải lại dòng.
 - Nhãn badge Trạng thái: `invited` "Đã mời", `active` "Đang hoạt động", `disabled` "Đã vô hiệu hoá" — "Vô hiệu hoá" (R-ID-024 (§2.1.5.7)) khác "tạm khoá đăng nhập" (R-ID-033 (§2.1.5.9.3)).
-- API: `identity.listEmployees`, `identity.resendEmployeeInvite`, `identity.disableEmployee`, `identity.enableEmployee`, `identity.clearEmployeeLoginLock`.
+- API: `identity.listEmployees`, `identity.resendEmployeeInvite`, `identity.disableEmployee`, `identity.enableEmployee`, `identity.clearEmployeeLoginLock`, `clientSettings.getSettings`.
 - Quyền truy cập: chỉ role `quan_tri_he_thong`.
 
 ## 4.5. [D-ADM-005] Tạo/sửa Nhân viên
@@ -159,10 +185,15 @@
 - **Email không sửa được sau khi tạo** — vì là định danh đăng nhập, và API `identity.updateEmployee` chỉ nhận `display_name`/`phone`/`organization_id` (D-SD02-010 (¶5.2)). Ở màn hình sửa, field Email hiển thị readonly.
 - Khối gán **Role theo chức năng**: multi-select trong danh sách role cố định (`nhap_lieu`, `xuat_ban`, `xuat_ban_muc_tu`, `bien_tap`, `xet_duyet_muc_tu`, `van_hanh`, `quan_tri_he_thong`).
 - Khi sửa Nhân viên có `is_root_admin = true` (R-ID-019 (§2.1.5.2.1)): chip "Tài khoản gốc" cạnh tên ở đầu form; dropdown Tổ chức bị vô hiệu và chip `quan_tri_he_thong` trong multi-select role không có nút gỡ, cả hai kèm tooltip "Không áp dụng cho tài khoản gốc"; các trường/role khác sửa bình thường. Lỗi 422 `root_admin_protected` (`identity.updateEmployee`/`identity.removeEmployeeRole`) → "Thao tác này không áp dụng cho tài khoản gốc." rồi tải lại form.
+- **Đổi Tổ chức** (khi sửa, giá trị dropdown Tổ chức khác giá trị đã lưu): bấm Lưu mở hộp thoại xác nhận (quy ước (b) D-ADM-029 (¶3)):
+  - "Đổi Tổ chức của {Tên} từ {Tổ chức cũ} sang {Tổ chức mới}? Nhân viên sẽ bị đăng xuất ngay khỏi mọi thiết bị. Sau đó, Nhân viên thuộc Tổ chức Văn Minh Việt đăng nhập tại Admin nội bộ, Nhân viên Tổ chức khác đăng nhập tại Cổng Nhân viên Tổ chức khác. Tiếp tục?" (D-SD02-007 (¶3.5), D-SD02-004 (¶3.2)).
+  - Khi Nhân viên đang sửa là chính người đăng nhập: thêm câu "Bạn sẽ bị đăng xuất ngay sau khi lưu."
+  - Huỷ thì không lưu gì. Tự đổi Tổ chức của chính mình thành công: request kế tiếp nhận 401 `session_revoked`, xử lý theo D-ADM-029 (¶3).
 - Role theo phạm vi Đề tài nghiên cứu (Chủ nhiệm đề tài, Nghiên cứu, Xét duyệt — R-KB-073 (§2.2.5.5)/R-KB-070 (§2.2.5.2)/R-KB-071 (§2.2.5.3)) được gán tại màn hình D-ADM-009 (¶4.9) (Chi tiết Đề tài nghiên cứu), qua `knowledge.setResearchTopicChair`, `knowledge.addResearchTopicResearcher`/`knowledge.removeResearchTopicResearcher`, `knowledge.addResearchTopicReviewer`/`knowledge.removeResearchTopicReviewer`. Màn hình này chỉ gán role theo chức năng.
-- Submit khi tạo mới: tạo Nhân viên trạng thái `invited`, gửi email mời — toast "Đã tạo Nhân viên và gửi email mời".
+- Submit khi tạo mới: tạo Nhân viên trạng thái `invited`, gửi email mời — toast "Đã tạo Nhân viên và gửi email mời". Dòng chữ phụ cạnh nút Tạo: "Đường dẫn mời có hiệu lực {identity.invite_token_ttl_hours} giờ" (D-ADM-029 (¶3)).
+- Khi sửa Nhân viên `invited`: cạnh trạng thái hiện hạn lời mời theo `invite_expires_at`/`invite_due_soon`, cùng cách hiển thị như D-ADM-004 (¶4.4).
 - Nút "Lịch sử hoạt động" (D-ADM-029 (¶3)) — `entity_type = employee` — chỉ khi sửa.
-- API: `identity.getEmployee` (khi sửa), `identity.createEmployee`, `identity.updateEmployee`, `identity.addEmployeeRole`, `identity.removeEmployeeRole` (nay chỉ dùng cho role theo chức năng).
+- API: `identity.getEmployee` (khi sửa), `identity.createEmployee`, `identity.updateEmployee`, `identity.addEmployeeRole`, `identity.removeEmployeeRole` (nay chỉ dùng cho role theo chức năng), `clientSettings.getSettings`.
 
 ## 4.6. [D-ADM-006] Danh sách Tổ chức
 
@@ -185,25 +216,26 @@
 - Bảng: Tên, Trạng thái (badge `chuan_bi_tu_lieu`/`tu_lieu_san_sang`), Chủ nhiệm đề tài (tên hoặc "Chưa gán"), Số Tư liệu gốc đã gán, Số Hạng mục tri thức (tổng), Ngày tạo.
 - Filter: theo Trạng thái; tìm theo tên.
 - Nút "+ Tạo Đề tài nghiên cứu" — chỉ hiện với role `quan_tri_he_thong` (R-KB-006 (§2.2.1.4)) — mở dialog đơn giản (chỉ nhập Tên), submit xong điều hướng sang D-ADM-009 (¶4.9) để tiếp tục gán Tư liệu gốc.
-- Action inline theo dòng: "Xoá" (R-KB-012 (§2.2.1.7)) — chỉ role `quan_tri_he_thong`; disable kèm tooltip "Đề tài còn Hạng mục tri thức, không xoá được" khi Số Hạng mục tri thức > 0 (điều kiện rỗng); khi đủ điều kiện, hộp thoại xác nhận (không hoàn tác, ảnh hưởng vai trò đã gán — quy ước (b) D-ADM-029 (¶3)): "Xoá Đề tài nghiên cứu này sẽ gỡ luôn các vai trò Chủ nhiệm đề tài/Nghiên cứu/Xét duyệt đã gán. Tư liệu gốc đã gán không bị xoá, chỉ gỡ khỏi danh sách của đề tài. Không thể hoàn tác. Tiếp tục?" (R-KB-013 (§2.2.1.7.1)–R-KB-016 (§2.2.1.7.4)).
+- Không có thao tác trên dòng; xoá Đề tài nghiên cứu ở D-ADM-009 (¶4.9).
 - Click dòng → mở D-ADM-009 (¶4.9).
 - Phạm vi hiển thị: `quan_tri_he_thong` thấy toàn bộ (D-SD03-014 (¶3.5)); Nhân viên khác chỉ thấy đề tài mình được gán **ít nhất một trong** role `chu_nhiem_de_tai`/`nghien_cuu`/`xet_duyet` (D-SD03-021 (¶5.1)).
-- API: `knowledge.listResearchTopics`, `knowledge.createResearchTopic`, `knowledge.deleteResearchTopic`.
+- API: `knowledge.listResearchTopics`, `knowledge.createResearchTopic`.
 - Quyền truy cập: role `nhap_lieu`/`nghien_cuu`/`xet_duyet`/`xuat_ban`/`chu_nhiem_de_tai`/`quan_tri_he_thong`.
 
 ## 4.9. [D-ADM-009] Chi tiết Đề tài nghiên cứu
 
 - Breadcrumb: Cơ sở dữ liệu văn hóa > Đề tài nghiên cứu > {Tên đề tài}.
-- Header: Tên, badge Trạng thái, nút "Xoá" (chỉ `quan_tri_he_thong`; disable kèm tooltip khi còn Hạng mục tri thức — cùng điều kiện/cảnh báo như action "Xoá" ở D-ADM-008 (¶4.8), R-KB-012 (§2.2.1.7)).
-- Nút "Đánh dấu Tư liệu sẵn sàng" — chỉ hiện khi `status = chuan_bi_tu_lieu`, chỉ role `nhap_lieu`/`quan_tri_he_thong`; hộp thoại xác nhận vì đây là chuyển tiếp một chiều, không quay lại được (R-KB-011 (§2.2.1.6.2)): "Sau khi xác nhận, đề tài sẽ mở khoá tạo Hạng mục tri thức cho vai trò Nghiên cứu và không thể quay lại trạng thái Chuẩn bị tư liệu. Tiếp tục?".
-- Khối "Chủ nhiệm đề tài" (R-KB-073 (§2.2.5.5)): hiện tên Nhân viên đang giữ (hoặc "Chưa gán"), nút "Đổi Chủ nhiệm" — chỉ `quan_tri_he_thong` — mở dialog tìm/chọn 1 Nhân viên (ô tìm `knowledge.searchResearchTopicEmployees`, dùng chung component với khối Quản lý nhân sự đề tài; không giới hạn Tổ chức, R-KB-073 (§2.2.5.5) — có thể thuộc bất kỳ Tổ chức nào), xác nhận vì thay thế người cũ (nếu có): "Đổi Chủ nhiệm đề tài sẽ thay thế người đang giữ hiện tại (nếu có). Tiếp tục?" → `knowledge.setResearchTopicChair`.
-- Khối "Quản lý nhân sự đề tài" (Nghiên cứu/Xét duyệt, R-KB-006 (§2.2.1.4)): 2 bảng con "Nghiên cứu" và "Xét duyệt", mỗi bảng liệt kê Nhân viên đang giữ role tương ứng của đề tài này + nút "Gỡ" từng dòng, cùng ô tìm/thêm Nhân viên (không giới hạn Tổ chức; tìm qua `knowledge.searchResearchTopicEmployees` — chỉ trả tên gọi và email). Quyền thao tác: `quan_tri_he_thong` **hoặc** Nhân viên đang giữ Chủ nhiệm đề tài của chính đề tài này (R-KB-006 (§2.2.1.4)) — người xem khác chỉ đọc. API: `knowledge.searchResearchTopicEmployees`, `knowledge.listResearchTopicMembers`, `knowledge.addResearchTopicResearcher`, `knowledge.removeResearchTopicResearcher`, `knowledge.addResearchTopicReviewer`, `knowledge.removeResearchTopicReviewer`.
-- Khối "Tư liệu gốc đã gán": bảng (Tên, Loại, cảnh báo nếu có file `is_missing`), nút "Gỡ" từng dòng (`knowledge.removeResearchTopicSource`), ô tìm/gán thêm Tư liệu gốc có sẵn (`knowledge.addResearchTopicSource`) — gán được bất kỳ lúc nào, kể cả sau `tu_lieu_san_sang` (R-KB-005 (§2.2.1.3)). Chỉ role `nhap_lieu`/`quan_tri_he_thong` thao tác được, các role khác chỉ xem.
+- Nút thao tác theo `actions` của `knowledge.getResearchTopic` (D-ADM-029 (¶3), D-SD03-027 (¶3.7)).
+- Header: Tên, badge Trạng thái, nút "Xoá" (`delete`, R-KB-012 (§2.2.1.7)) — hộp thoại xác nhận (không hoàn tác, ảnh hưởng vai trò đã gán — quy ước (b) D-ADM-029 (¶3)): "Xoá Đề tài nghiên cứu này sẽ gỡ luôn các vai trò Chủ nhiệm đề tài/Nghiên cứu/Xét duyệt đã gán. Tư liệu gốc đã gán không bị xoá, chỉ gỡ khỏi danh sách của đề tài. Không thể hoàn tác. Tiếp tục?" (R-KB-013 (§2.2.1.7.1)–R-KB-016 (§2.2.1.7.4)).
+- Nút "Đánh dấu Tư liệu sẵn sàng" (`mark_ready`); hộp thoại xác nhận vì đây là chuyển tiếp một chiều, không quay lại được (R-KB-011 (§2.2.1.6.2)): "Sau khi xác nhận, đề tài sẽ mở khoá tạo Hạng mục tri thức cho vai trò Nghiên cứu và không thể quay lại trạng thái Chuẩn bị tư liệu. Tiếp tục?".
+- Khối "Chủ nhiệm đề tài" (R-KB-073 (§2.2.5.5)): hiện tên Nhân viên đang giữ (hoặc "Chưa gán"), nút "Đổi Chủ nhiệm" (`set_chair`) — mở dialog tìm/chọn 1 Nhân viên (ô tìm `knowledge.searchResearchTopicEmployees`, dùng chung component với khối Quản lý nhân sự đề tài; không giới hạn Tổ chức, R-KB-073 (§2.2.5.5) — có thể thuộc bất kỳ Tổ chức nào), xác nhận vì thay thế người cũ (nếu có): "Đổi Chủ nhiệm đề tài sẽ thay thế người đang giữ hiện tại (nếu có). Tiếp tục?" → `knowledge.setResearchTopicChair`.
+- Khối "Quản lý nhân sự đề tài" (Nghiên cứu/Xét duyệt, R-KB-006 (§2.2.1.4)): 2 bảng con "Nghiên cứu" và "Xét duyệt", mỗi bảng liệt kê Nhân viên đang giữ role tương ứng của đề tài này + nút "Gỡ" từng dòng, cùng ô tìm/thêm Nhân viên (không giới hạn Tổ chức; tìm qua `knowledge.searchResearchTopicEmployees` — chỉ trả tên gọi và email). Thao tác theo phần tử `manage_members` (R-KB-006 (§2.2.1.4)); không có phần tử này thì chỉ đọc. API: `knowledge.searchResearchTopicEmployees`, `knowledge.listResearchTopicMembers`, `knowledge.addResearchTopicResearcher`, `knowledge.removeResearchTopicResearcher`, `knowledge.addResearchTopicReviewer`, `knowledge.removeResearchTopicReviewer`.
+- Khối "Tư liệu gốc đã gán": bảng (Tên, Loại, cảnh báo nếu có file `is_missing`), nút "Gỡ" từng dòng (`knowledge.removeResearchTopicSource`), ô tìm/gán thêm Tư liệu gốc có sẵn (`knowledge.addResearchTopicSource`) — gán được bất kỳ lúc nào, kể cả sau `tu_lieu_san_sang` (R-KB-005 (§2.2.1.3)). Thao tác theo phần tử `manage_sources`; không có phần tử này thì chỉ xem.
 - Khối "Hạng mục tri thức":
   - Nếu người xem có role `nghien_cuu`/`xet_duyet` của đề tài này, hoặc là `quan_tri_he_thong`: hiển thị đầy đủ — thống kê số lượng theo từng trạng thái (chip đếm), link mở D-ADM-012 (¶4.12) đã lọc sẵn theo đề tài này.
-  - Nếu người xem **chỉ** giữ Chủ nhiệm đề tài (không có Nghiên cứu/Xét duyệt của đề tài này): hiển thị bản rút gọn qua `knowledge.getResearchTopicProgress` (R-KB-073 (§2.2.5.5)/R-PTN-009 (§2.7.3.5)) — thống kê theo trạng thái + bảng danh sách chỉ gồm Tiêu đề/Trạng thái/Người phụ trách/Người tạo, **không** link mở D-ADM-012 (¶4.12)/D-ADM-013 (¶4.13) (không có quyền xem Nội dung/Phát biểu/Tham chiếu/kết quả xét duyệt).
+  - Nếu người xem **chỉ** giữ Chủ nhiệm đề tài (không có Nghiên cứu/Xét duyệt của đề tài này): hiển thị bản rút gọn qua `knowledge.getResearchTopicProgress` (R-KB-073 (§2.2.5.5)/R-PTN-009 (§2.7.3.5)) — thống kê theo trạng thái + bảng danh sách chỉ gồm Tiêu đề/Trạng thái/Người phụ trách/Người tạo, **không** link mở D-ADM-012 (¶4.12)/D-ADM-013 (¶4.13) (không có quyền xem Nội dung/Phát biểu/Tham chiếu/kết quả xét duyệt). Mỗi dòng có nút "Xoá" theo phần tử `delete` trong `actions` của dòng (R-KB-049 (§2.2.3.14)), cùng hộp thoại xác nhận như D-ADM-013 (¶4.13).
 - Nút "Lịch sử hoạt động" (D-ADM-029 (¶3)) — `entity_type = research_topic`.
-- API: `knowledge.getResearchTopic`, `knowledge.addResearchTopicSource`, `knowledge.removeResearchTopicSource`, `knowledge.markResearchTopicReady`, `knowledge.deleteResearchTopic`, `knowledge.setResearchTopicChair`, `knowledge.listResearchTopicMembers`, `knowledge.searchResearchTopicEmployees`, `knowledge.addResearchTopicResearcher`, `knowledge.removeResearchTopicResearcher`, `knowledge.addResearchTopicReviewer`, `knowledge.removeResearchTopicReviewer`, `knowledge.getResearchTopicProgress`.
+- API: `knowledge.getResearchTopic`, `knowledge.addResearchTopicSource`, `knowledge.removeResearchTopicSource`, `knowledge.markResearchTopicReady`, `knowledge.deleteResearchTopic`, `knowledge.setResearchTopicChair`, `knowledge.listResearchTopicMembers`, `knowledge.searchResearchTopicEmployees`, `knowledge.addResearchTopicResearcher`, `knowledge.removeResearchTopicResearcher`, `knowledge.addResearchTopicReviewer`, `knowledge.removeResearchTopicReviewer`, `knowledge.getResearchTopicProgress`, `knowledge.deleteKnowledgeObject`.
 
 ## 4.10. [D-ADM-010] Danh sách Tư liệu gốc
 
@@ -220,11 +252,11 @@
 
 - Breadcrumb: Cơ sở dữ liệu văn hóa > Tư liệu gốc > {Tên tư liệu}.
 - Header: Tên, Loại, đường dẫn thư mục, Lần đồng bộ gần nhất.
-- Nút "Đồng bộ lại" (`knowledge.syncSource`) — chạy đồng bộ thủ công không qua debounce (D-SD03-020 (¶4.5)); nếu đang có lần đồng bộ khác chạy (advisory lock), hiện thông báo "Đang có lượt đồng bộ khác đang chạy, thử lại sau" thay vì chờ.
+- Nút "Đồng bộ lại" (`knowledge.syncSource`) — chạy đồng bộ thủ công không qua debounce (D-SD03-020 (¶4.5)); dòng chữ phụ cạnh nút "Thay đổi trong thư mục được tự đồng bộ sau khoảng {operations.source_sync_debounce_seconds} giây" (D-ADM-029 (¶3)); nếu đang có lần đồng bộ khác chạy (advisory lock), hiện thông báo "Đang có lượt đồng bộ khác đang chạy, thử lại sau" thay vì chờ.
 - Bảng file (`source_file`): Loại file, đường dẫn lưu trữ, Trạng thái (badge "Còn file" / cảnh báo đỏ "Không tìm thấy file" kèm tooltip thời điểm phát hiện mất — `missing_since`, theo quy ước (c) D-ADM-029 (¶3)), Metadata (số trang/kích thước/độ dài tuỳ loại, hiển thị gọn), có transcript hay không (icon), nút "Xem/Tải" từng dòng (`knowledge.getSourceFileDownloadUrl`, mở/tải file qua URL ký tạm) — disable kèm tooltip "Không tìm thấy file trong kho lưu trữ" khi `is_missing = true`.
 - Không có thao tác thêm/sửa/xoá file thủ công trên màn hình này — file chỉ đến từ đồng bộ MinIO/S3 (D-SD03-020 (¶4.5)); chỉ đọc, trừ nút "Đồng bộ lại" ở trên và nút "Xem/Tải" từng file.
 - Nút "Lịch sử hoạt động" (D-ADM-029 (¶3)) — `entity_type = source`.
-- API: `knowledge.getSource`, `knowledge.getSourceFileDownloadUrl`, `knowledge.syncSource`.
+- API: `knowledge.getSource`, `knowledge.getSourceFileDownloadUrl`, `knowledge.syncSource`, `clientSettings.getSettings`.
 
 ## 4.12. [D-ADM-012] Danh sách Hạng mục tri thức
 
@@ -232,9 +264,9 @@
 - Bảng: Tiêu đề, Đề tài nghiên cứu, Trạng thái (badge, 9 mã, gồm cả `dang_xet_duyet_ai` — D-SD03-011 (¶3.2)), Người phụ trách (`assignee_id` — tên hoặc "Chưa có"), **Người tạo** (`created_by`, R-KB-047 (§2.2.3.12)), cảnh báo nếu `has_missing_source_files = true`, Ngày tạo (R-KB-048 (§2.2.3.13)).
 - Filter: theo Đề tài nghiên cứu, theo Trạng thái.
 - Nút "+ Tạo Hạng mục tri thức" — chỉ hiện khi Nhân viên đang giữ role `nghien_cuu` của ít nhất một Đề tài nghiên cứu đang `tu_lieu_san_sang`; dialog chọn Đề tài nghiên cứu (chỉ liệt kê đề tài thoả điều kiện trên) + nhập Tiêu đề. Submit xong điều hướng sang D-ADM-013 (¶4.13).
-- Action inline theo dòng: "Xoá" (R-KB-049 (§2.2.3.14)) — chỉ enable khi `status = dang_nghien_cuu`, disable kèm tooltip "Chỉ xoá được khi đang ở trạng thái Đang nghiên cứu" ở trạng thái khác; hiện với `quan_tri_he_thong`, Chủ nhiệm đề tài của đề tài cha, hoặc `assignee_id` hiện tại (R-KB-053 (§2.2.3.14.4) — khi chưa có Người phụ trách, chỉ 2 vai trò đầu thấy nút này). Hộp thoại xác nhận (không hoàn tác — quy ước (b) D-ADM-029 (¶3)): "Xoá sẽ xoá vĩnh viễn Nội dung/Phát biểu/Tham chiếu của Hạng mục tri thức này. Tư liệu gốc không bị ảnh hưởng. Tiếp tục?"; nếu backend từ chối (đã có phiên bản chốt hoặc đã bị Mục từ tham chiếu), hiện thông báo lỗi tương ứng.
+- Không có thao tác trên dòng; xoá Hạng mục tri thức ở D-ADM-013 (¶4.13) (Chủ nhiệm đề tài không giữ Nghiên cứu/Xét duyệt: ở khối Hạng mục tri thức của D-ADM-009 (¶4.9)).
 - Click dòng → điều hướng theo `status`: `dang_nghien_cuu`/`cho_xet_duyet`/`dang_xet_duyet_ai`/`khong_dat_xet_duyet` → D-ADM-013 (¶4.13); `da_qua_xet_duyet_ai`/`dang_xet_duyet` → D-ADM-014 (¶4.14); `dat_xet_duyet`/`da_xuat_ban`/`khong_xuat_ban` → D-ADM-015 (¶4.15).
-- API: `knowledge.listKnowledgeObjects`, `knowledge.createKnowledgeObject`, `knowledge.deleteKnowledgeObject`.
+- API: `knowledge.listKnowledgeObjects`, `knowledge.createKnowledgeObject`.
 - Quyền truy cập: `admin`+`partner` (theo phạm vi đề tài được gán); `quan_tri_he_thong` xem toàn bộ không lọc (D-SD03-014 (¶3.5)), chỉ đọc trừ khi được gán thêm role.
 
 ## 4.13. [D-ADM-013] Màn hình Nghiên cứu (biên tập Hạng mục tri thức)
@@ -243,25 +275,26 @@
 - Stepper trạng thái (D-ADM-029 (¶3), 5 cụm): active tại cụm "Nghiên cứu" (khi `dang_nghien_cuu`) hoặc "Chờ & Xác minh AI" (khi `cho_xet_duyet`/`dang_xet_duyet_ai`); nếu `khong_dat_xet_duyet`, active vẫn ở cụm "Nghiên cứu" kèm mũi tên quay lại từ cụm "Xét duyệt chuyên gia".
 - Áp dụng khi Hạng mục tri thức đang ở `dang_nghien_cuu`, `cho_xet_duyet`, `dang_xet_duyet_ai`, hoặc `khong_dat_xet_duyet` (D-SD03-012 (¶3.3) bước (1)(2)(3)(7)).
 - Header: Tiêu đề, badge Trạng thái.
-- Khối "Người phụ trách" (component dùng chung, D-ADM-029 (¶3)): tên đang giữ (nếu có) + nút "Nhận xử lý" (`Claim`, hiện khi `assignee_id` đang trống và người xem giữ role `nghien_cuu` của đề tài) / "Nhả" (`Release`, hiện khi `assignee_id` = người xem) / "Cưỡng chế nhả" (`ForceRelease`, chỉ role `quan_tri_he_thong`, hiện khi `assignee_id` đang có giá trị — hộp thoại xác nhận vì ảnh hưởng người khác, quy ước (b) D-ADM-029 (¶3): "Cưỡng chế nhả sẽ gỡ Người phụ trách hiện tại khỏi Hạng mục tri thức này. Tiếp tục?", R-KB-046 (§2.2.3.11.5)).
+- Nút thao tác theo `actions` của `knowledge.getKnowledgeObject` (D-ADM-029 (¶3), D-SD03-027 (¶3.7)).
+- Khối "Người phụ trách" (component dùng chung, D-ADM-029 (¶3)): tên đang giữ (nếu có) + nút "Nhận xử lý" (`claim`) / "Nhả" (`release`) / "Cưỡng chế nhả" (`force_release` — hộp thoại xác nhận vì ảnh hưởng người khác, quy ước (b) D-ADM-029 (¶3): "Cưỡng chế nhả sẽ gỡ Người phụ trách hiện tại khỏi Hạng mục tri thức này. Tiếp tục?", R-KB-046 (§2.2.3.11.5)).
 - Khối Nội dung (`knowledge_object_file`, R-KB-032 (§2.2.3.6) — sản phẩm biên tập của vai trò Nghiên cứu, khác Tư liệu gốc): danh sách file đã tải lên (tên, loại, kích thước, nút xem/tải), nút "+ Tải file lên" (upload trực tiếp qua presigned URL, không phải trình soạn thảo trực tuyến — D-SD03-007 (¶2.7)).
-  - Chỉnh sửa (tải lên/gỡ file, thêm/sửa/xoá Phát biểu & Tham chiếu) chỉ mở khi `status = dang_nghien_cuu` **và** người xem là `assignee_id` hiện tại — các trạng thái/người xem khác chỉ đọc, kèm banner nêu rõ lý do khoá (quy ước (c) D-ADM-029 (¶3): ví dụ "Đang chờ xét duyệt — chỉ Người phụ trách mới chỉnh sửa được" hoặc "Đang chạy AI Verification"). ⚠ Ghi chú thiết kế đi trước: theo `03-cultural-knowledge-base.md` mục "Ghi chú chung cho 2.7–2.9", tầng backend hiện chỉ khoá cứng ghi dữ liệu ở 4 trạng thái (`dang_xet_duyet`/`dat_xet_duyet`/`da_xuat_ban`/`khong_xuat_ban`) và theo `assignee_id` khi `dang_nghien_cuu` — chưa khoá cứng ở `cho_xet_duyet`/`dang_xet_duyet_ai`/`khong_dat_xet_duyet`; việc ẩn nút chỉnh sửa ở các trạng thái này tại đây là lựa chọn UI, không phải do backend chặn.
+  - Chỉnh sửa (tải lên/gỡ file, thêm/sửa/xoá Phát biểu & Tham chiếu) theo phần tử `edit_content`: `enabled = true` thì mở chỉnh sửa; `enabled = false` thì chỉ đọc kèm banner lý do theo `reason_code` (quy ước (c) D-ADM-029 (¶3)), riêng tại `dang_xet_duyet_ai` banner là "Đang chạy AI Verification"; không có phần tử này thì chỉ đọc.
 - Khối Phát biểu (`claim`): bảng liệt kê nội dung, danh sách Tham chiếu (chip: Tư liệu gốc + vị trí) kèm cảnh báo nếu `source_file.is_missing = true`, Vị trí trong Nội dung (nếu có khai báo). Nút "+ Thêm Phát biểu" mở form: nội dung, chọn file Nội dung + bộ chọn vị trí (không bắt buộc), thêm một hoặc nhiều Tham chiếu (chọn Tư liệu gốc đã gán cho đề tài → chọn file → bộ chọn vị trí theo `file_type`: page/line cho văn bản, vẽ khung cho ảnh, kéo mốc thời gian cho âm thanh/phim — component dùng chung cho cả Tham chiếu và Vị trí trong Nội dung, D-SD03-007 (¶2.7)).
 - Khối "Gợi ý AI" (`ai_missed_claims_suggestions`, R-KB-085 (§2.2.6.6.5)): chỉ đọc, hiện khi có dữ liệu — danh sách gợi ý phát biểu có thể bị bỏ sót, chỉ mang tính tham khảo.
 - Vùng trạng thái/hành động cuối trang theo `status`:
-  - `dang_nghien_cuu`: nút "Gửi xét duyệt" (`knowledge.submitKnowledgeObjectForReview`, chỉ `assignee_id` hiện tại) — hạng mục có tự chạy AI Verification hay không tuỳ cấu hình `ai_verification.trigger_mode` (D-SD07-004 (¶3.1)); giao diện không đọc cấu hình này mà dựa vào `status` trả về: `dang_xet_duyet_ai` → toast "Đã gửi xét duyệt — AI Verification đang chạy"; `cho_xet_duyet` → toast "Đã gửi xét duyệt — chờ kích hoạt AI Verification"; nút "Xoá Hạng mục tri thức" (R-KB-049 (§2.2.3.14) — hiện với `quan_tri_he_thong`, Chủ nhiệm đề tài của đề tài cha, hoặc `assignee_id` hiện tại; khi chưa có Người phụ trách, chỉ 2 vai trò đầu thấy nút này, R-KB-053 (§2.2.3.14.4); hộp thoại xác nhận: "Xoá sẽ xoá vĩnh viễn Nội dung/Phát biểu/Tham chiếu của Hạng mục tri thức này. Tư liệu gốc không bị ảnh hưởng. Không thể hoàn tác. Tiếp tục?"; nếu backend từ chối do đã có phiên bản chốt hoặc đã bị Mục từ tham chiếu, hiện thông báo lỗi tương ứng).
-  - `cho_xet_duyet`: hiện "Đang chờ kích hoạt AI Verification" (hạng mục dừng ở đây khi `trigger_mode = manual`, hoặc khi đã vào trạng thái này trước lúc chuyển `manual → auto` — D-SD07-004 (¶3.1)).
+  - `dang_nghien_cuu`: nút "Gửi xét duyệt" (`submit_for_review`), dòng chữ phụ theo `transitions` (D-ADM-029 (¶3)) và dòng tham số "AI Verification: tự động chạy khi gửi xét duyệt" / "AI Verification: kích hoạt thủ công bởi {nhãn các vai trò trong `ai_verification.manual_trigger_roles`}" theo `ai_verification.trigger_mode` (D-SD07-004 (¶3.1)). Sau khi gửi, toast theo `status` trả về: `dang_xet_duyet_ai` → "Đã gửi xét duyệt — AI Verification đang chạy"; `cho_xet_duyet` → "Đã gửi xét duyệt — chờ kích hoạt AI Verification". Nút "Xoá Hạng mục tri thức" (`delete`, R-KB-049 (§2.2.3.14)); hộp thoại xác nhận: "Xoá sẽ xoá vĩnh viễn Nội dung/Phát biểu/Tham chiếu của Hạng mục tri thức này. Tư liệu gốc không bị ảnh hưởng. Không thể hoàn tác. Tiếp tục?"; khi vô hiệu, lý do theo `reason_code` (`has_frozen_version`, `invalid_status`, `referenced_by_entry`).
+  - `cho_xet_duyet`: hiện "Đang chờ kích hoạt AI Verification" (hạng mục dừng ở đây khi `trigger_mode = manual`, hoặc khi đã vào trạng thái này trước lúc chuyển `manual → auto` — D-SD07-004 (¶3.1)), kèm dòng tham số "Kích hoạt thủ công bởi: {nhãn các vai trò trong `ai_verification.manual_trigger_roles`}".
   - `dang_xet_duyet_ai`: dòng trạng thái theo `ai_verification_running` trong chi tiết Hạng mục tri thức (D-SD03-023 (¶5.3)):
     - `true` → "Đang chạy AI Verification..." — chờ job nền `verification.run` (D-SD03-018 (¶4.3); theo dõi job ở D-ADM-026 (¶4.26)).
     - `false` → banner vàng "AI Verification đã dừng (job bị huỷ hoặc thất bại) — cần kích hoạt lại AI Verification" (quy ước (c) D-ADM-029 (¶3)).
-  - Cả `cho_xet_duyet`/`dang_xet_duyet_ai`/`khong_dat_xet_duyet`: nút kích hoạt AI Verification (`knowledge.triggerAiVerification`) — chỉ hiện khi `can_trigger_ai_verification = true` trong chi tiết Hạng mục tri thức (D-SD03-023 (¶5.3); backend tính theo `ai_verification.manual_trigger_roles` — role theo phạm vi chỉ tính với đúng Đề tài nghiên cứu cha — và trạng thái hiện tại, D-SD07-004 (¶3.1), D-SD03-012 (¶3.3) bước (3)); giao diện không tự kiểm role. Nhãn: "Kích hoạt AI Verification" tại `cho_xet_duyet`; "Kích hoạt lại AI Verification" tại `dang_xet_duyet_ai`/`khong_dat_xet_duyet`. Tại `dang_xet_duyet_ai`, nút hiện bất kể giá trị `ai_verification_running`; đây là đường khôi phục khi job AI Verification đã bị huỷ hoặc thất bại hẳn.
+  - Cả `cho_xet_duyet`/`dang_xet_duyet_ai`/`khong_dat_xet_duyet`: nút kích hoạt AI Verification theo phần tử `trigger_ai_verification` (D-SD03-027 (¶3.7); backend tính theo `ai_verification.manual_trigger_roles` — role theo phạm vi chỉ tính với đúng Đề tài nghiên cứu cha — và trạng thái hiện tại, D-SD07-004 (¶3.1)). Nhãn: "Kích hoạt AI Verification" tại `cho_xet_duyet`; "Kích hoạt lại AI Verification" tại `dang_xet_duyet_ai`/`khong_dat_xet_duyet`. Tại `dang_xet_duyet_ai`, nút hiện bất kể giá trị `ai_verification_running`; đây là đường khôi phục khi job AI Verification đã bị huỷ hoặc thất bại hẳn.
     - Kết quả kích hoạt (dùng chung cho D-ADM-014 (¶4.14)), theo `merged_into_running_job` trong response (D-SD03-024 (¶5.4)):
       - `true` → thông báo "AI Verification đang chạy cho Hạng mục tri thức này" (không tạo job mới, trạng thái giữ nguyên, không ghi vào Nhật ký hoạt động D-ADM-021 (¶4.21)).
       - `false` → toast "Đã kích hoạt AI Verification".
       - Cả hai trường hợp: tải lại chi tiết Hạng mục tri thức; nếu `status` mới thuộc màn hình khác thì điều hướng theo `status` như D-ADM-012 (¶4.12).
-  - `khong_dat_xet_duyet`: hiện ghi chú không đạt (`ai_note`/`expert_note` của các Tham chiếu/Vị trí liên quan, gộp lại một danh sách). Nút "Quay lại nghiên cứu" (`knowledge.resumeKnowledgeObjectResearch`, role `nghien_cuu` của đề tài — không giới hạn theo `assignee_id`, nhất quán với `knowledge.submitKnowledgeObjectForReview`).
+  - `khong_dat_xet_duyet`: hiện ghi chú không đạt (`ai_note`/`expert_note` của các Tham chiếu/Vị trí liên quan, gộp lại một danh sách). Nút "Quay lại nghiên cứu" (`resume_research`).
 - Nút "Lịch sử hoạt động" (D-ADM-029 (¶3)) — `entity_type = knowledge_object`.
-- API: `knowledge.getKnowledgeObject`, `knowledge.createKnowledgeObjectFileUploadUrl`, `knowledge.createKnowledgeObjectFile`, `knowledge.deleteKnowledgeObjectFile`, `knowledge.getKnowledgeObjectFileDownloadUrl`, `knowledge.createClaim`, `knowledge.updateClaim`, `knowledge.deleteClaim`, `knowledge.createClaimReference`, `knowledge.deleteClaimReference`, `knowledge.getResearchTopicSource`, `knowledge.getResearchTopicSourceFileDownloadUrl`, `knowledge.submitKnowledgeObjectForReview`, `knowledge.triggerAiVerification`, `knowledge.claimKnowledgeObject`, `knowledge.releaseKnowledgeObject`, `knowledge.forceReleaseKnowledgeObject`, `knowledge.resumeKnowledgeObjectResearch`, `knowledge.deleteKnowledgeObject`.
+- API: `knowledge.getKnowledgeObject`, `knowledge.createKnowledgeObjectFileUploadUrl`, `knowledge.createKnowledgeObjectFile`, `knowledge.deleteKnowledgeObjectFile`, `knowledge.getKnowledgeObjectFileDownloadUrl`, `knowledge.createClaim`, `knowledge.updateClaim`, `knowledge.deleteClaim`, `knowledge.createClaimReference`, `knowledge.deleteClaimReference`, `knowledge.getResearchTopicSource`, `knowledge.getResearchTopicSourceFileDownloadUrl`, `knowledge.submitKnowledgeObjectForReview`, `knowledge.triggerAiVerification`, `knowledge.claimKnowledgeObject`, `knowledge.releaseKnowledgeObject`, `knowledge.forceReleaseKnowledgeObject`, `knowledge.resumeKnowledgeObjectResearch`, `knowledge.deleteKnowledgeObject`, `clientSettings.getSettings`.
 
 ## 4.14. [D-ADM-014] Màn hình Xét duyệt Hạng mục tri thức (chuyên gia)
 
@@ -269,16 +302,17 @@
 - Stepper trạng thái (D-ADM-029 (¶3)): active tại cụm "Xét duyệt chuyên gia" (`da_qua_xet_duyet_ai`/`dang_xet_duyet`).
 - Áp dụng khi Hạng mục tri thức đang ở `da_qua_xet_duyet_ai` (chưa ai nhận xử lý) hoặc `dang_xet_duyet` (chuyên gia đang xử lý — R-KB-087 (§2.2.6.8)).
 - Header: Tiêu đề, badge Trạng thái. Banner "Nội dung bị khoá" khi `dang_xet_duyet` (quy ước (c) D-ADM-029 (¶3)).
-- Khối "Người phụ trách": nút "Nhận xử lý" (`Claim`, hiện tại `da_qua_xet_duyet_ai`, role `xet_duyet` của đề tài — nhận xử lý là một lần "nhận" độc lập, ghi đè `assignee_id` không cần trống trước, đồng thời chuyển `status → dang_xet_duyet`) / "Nhả" (`Release`, chỉ `assignee_id` hiện tại, hiện tại `dang_xet_duyet`, lùi về `da_qua_xet_duyet_ai`) / "Cưỡng chế nhả" (`ForceRelease`, chỉ role `quan_tri_he_thong`, hiện tại `dang_xet_duyet` khi đang có `assignee_id` — hộp thoại xác nhận, cùng quy ước (b) D-ADM-029 (¶3), R-KB-046 (§2.2.3.11.5)).
+- Nút thao tác theo `actions` của `knowledge.getKnowledgeObject` (D-ADM-029 (¶3), D-SD03-027 (¶3.7)).
+- Khối "Người phụ trách": nút "Nhận xử lý" (`claim` — tại `da_qua_xet_duyet_ai`, nhận xử lý ghi đè `assignee_id` và chuyển `status → dang_xet_duyet`) / "Nhả" (`release`, lùi về `da_qua_xet_duyet_ai`) / "Cưỡng chế nhả" (`force_release` — hộp thoại xác nhận như D-ADM-013 (¶4.13), R-KB-046 (§2.2.3.11.5)).
 - Khối Nội dung: xem file đã upload (đọc, không sửa).
 - Khối Phát biểu — với mỗi Phát biểu, hiện từng Tham chiếu và Vị trí trong Nội dung (nếu có) kèm:
   - Vị trí trong Tư liệu gốc/Nội dung (mở file kèm highlight đúng vị trí — dùng lại bộ chọn vị trí ở chế độ chỉ xem).
   - Kết quả AI (`ai_verdict`/`ai_note` hoặc `content_ai_verdict`/`content_ai_note`) — chỉ đọc.
   - Cảnh báo nếu `source_file.is_missing = true` (banner đỏ ngay trên dòng Tham chiếu, quy ước (c) D-ADM-029 (¶3)).
-  - Form ghi kết luận chuyên gia (`expert_verdict`/`expert_note` hoặc `content_expert_verdict`/`content_expert_note`) — chỉ hiện/enable khi `status = dang_xet_duyet` và người xem là `assignee_id` hiện tại.
+  - Form ghi kết luận chuyên gia (`expert_verdict`/`expert_note` hoặc `content_expert_verdict`/`content_expert_note`) — theo phần tử `review_claims`: `enabled = true` thì nhập được; ngược lại chỉ đọc kèm lý do theo `reason_code`.
 - Khối "Gợi ý AI" — tham khảo, cùng cơ chế D-ADM-013 (¶4.13).
-- Nút cuối trang (chỉ `assignee_id` hiện tại, tại `dang_xet_duyet`, sau khi đã thẩm định tổng thể — R-KB-090 (§2.2.6.8.3)): "Không đạt xét duyệt" (`knowledge.rejectKnowledgeObject` → `khong_dat_xet_duyet`) và "Đạt xét duyệt" (`knowledge.approveKnowledgeObject` → `dat_xet_duyet`) — cả hai không có ràng buộc kỹ thuật bắt buộc phải đánh giá hết từng Tham chiếu trước khi bấm (đặc tả không yêu cầu), nhưng giao diện cảnh báo mềm (không chặn) nếu còn Tham chiếu/Vị trí chưa có `expert_verdict`.
-- Nút "Kích hoạt lại AI Verification" — chỉ hiện tại `da_qua_xet_duyet_ai` (chưa `Claim`) khi `can_trigger_ai_verification = true` (cùng cơ chế D-ADM-013 (¶4.13)), không hiện tại `dang_xet_duyet` (D-SD03-012 (¶3.3) bước (3) không liệt kê `dang_xet_duyet` trong danh sách trạng thái được kích hoạt lại); kết quả kích hoạt xử lý theo `merged_into_running_job` như D-ADM-013 (¶4.13).
+- Nút cuối trang (theo phần tử `reject`/`approve` — mọi Nhân viên giữ Xét duyệt của đề tài, không giới hạn theo Người phụ trách, D-SD03-027 (¶3.7); dùng sau khi đã thẩm định tổng thể — R-KB-090 (§2.2.6.8.3)): "Không đạt xét duyệt" (`knowledge.rejectKnowledgeObject` → `khong_dat_xet_duyet`) và "Đạt xét duyệt" (`knowledge.approveKnowledgeObject` → `dat_xet_duyet`) — cả hai không có ràng buộc kỹ thuật bắt buộc phải đánh giá hết từng Tham chiếu trước khi bấm (đặc tả không yêu cầu), nhưng giao diện cảnh báo mềm (không chặn) nếu còn Tham chiếu/Vị trí chưa có `expert_verdict`.
+- Nút "Kích hoạt lại AI Verification" theo phần tử `trigger_ai_verification` (thực hiện được tại `da_qua_xet_duyet_ai`; tại `dang_xet_duyet` vô hiệu kèm lý do); kết quả kích hoạt xử lý theo `merged_into_running_job` như D-ADM-013 (¶4.13).
 - Nút "Lịch sử hoạt động" (D-ADM-029 (¶3)) — `entity_type = knowledge_object`.
 - API: `knowledge.getKnowledgeObject`, `knowledge.listClaims`, `knowledge.getKnowledgeObjectFileDownloadUrl`, `knowledge.getResearchTopicSourceFileDownloadUrl`, `knowledge.claimKnowledgeObject`, `knowledge.releaseKnowledgeObject`, `knowledge.forceReleaseKnowledgeObject`, `knowledge.reviewClaimReference`, `knowledge.reviewClaimContent`, `knowledge.rejectKnowledgeObject`, `knowledge.approveKnowledgeObject`, `knowledge.triggerAiVerification`.
 
@@ -289,14 +323,14 @@
 - Áp dụng khi Hạng mục tri thức đang ở `dat_xet_duyet`, `da_xuat_ban`, hoặc `khong_xuat_ban` (D-SD03-012 (¶3.3) bước (8)(9)(10)) — cả 3 trạng thái đều "Nội dung bị khoá" (banner, quy ước (c) D-ADM-029 (¶3)).
 - Header: Tiêu đề, badge Trạng thái, Người phụ trách (chỉ hiển thị, không còn thao tác Nhận/Nhả ở nhóm trạng thái này).
 - Khối Nội dung/Phát biểu: xem lại toàn bộ (đọc, tái dùng view của D-ADM-014 (¶4.14)) kèm kết quả xét duyệt AI + chuyên gia cuối cùng.
-- Tại `dat_xet_duyet` — 2 quyết định bắt buộc, đúng một trong hai, chỉ role `xuat_ban` (R-KB-092 (§2.2.6.10)):
+- Tại `dat_xet_duyet` — 2 quyết định bắt buộc, đúng một trong hai, theo phần tử `publish`/`skip_publish` (R-KB-092 (§2.2.6.10)):
   - Nút "Xuất bản" (`knowledge.publishKnowledgeObject`) — hộp thoại xác nhận (không hoàn tác, tạo phiên bản mới, ảnh hưởng người khác — quy ước (b) D-ADM-029 (¶3)): "Xuất bản sẽ tạo một phiên bản mới, chốt lại toàn bộ Nội dung/Phát biểu hiện tại. Tiếp tục?".
   - Nút "Không xuất bản" (`knowledge.skipKnowledgeObjectPublish`, body `{confirmed: true}`) — hộp thoại xác nhận bắt buộc (đặc tả yêu cầu cảnh báo rõ, R-KB-094 (§2.2.6.12)): "Không xuất bản: vòng xét duyệt này sẽ không tạo phiên bản nào để lưu lại. Tiếp tục?".
 - Tại `da_xuat_ban`: hiện "Đã xuất bản lúc {frozen_at} bởi {frozen_by}", số phiên bản (`version_number`) vừa tạo.
 - Tại `khong_xuat_ban`: hiện thời điểm chuyển trạng thái.
-- Cả `da_xuat_ban`/`khong_xuat_ban`: nút "Mở lại" — **chỉ role `xet_duyet` của đề tài** (không phải role `xuat_ban` — R-KB-093 (§2.2.6.11)–R-KB-094 (§2.2.6.12)), mở dialog chọn trạng thái đích trong 4 lựa chọn (`dang_nghien_cuu`/`cho_xet_duyet`/`da_qua_xet_duyet_ai`/`dang_xet_duyet`) kèm cảnh báo không hoàn tác/ảnh hưởng người khác (quy ước (b) D-ADM-029 (¶3)): "Mở lại sẽ đưa Hạng mục tri thức quay lại quy trình xét duyệt, Người phụ trách hiện tại (nếu có) được giữ nguyên. Tiếp tục?" (`knowledge.reopenKnowledgeObject`, body `{target_status}`).
+- Cả `da_xuat_ban`/`khong_xuat_ban`: nút "Mở lại" theo phần tử `reopen` (vai trò Xét duyệt của đề tài — R-KB-093 (§2.2.6.11)–R-KB-094 (§2.2.6.12)), mở dialog chọn trạng thái đích theo `transitions` (4 lựa chọn, mỗi lựa chọn kèm vai trò xử lý tiếp) kèm cảnh báo không hoàn tác/ảnh hưởng người khác (quy ước (b) D-ADM-029 (¶3)): "Mở lại sẽ đưa Hạng mục tri thức quay lại quy trình xét duyệt, Người phụ trách hiện tại (nếu có) được giữ nguyên. Tiếp tục?" (`knowledge.reopenKnowledgeObject`, body `{target_status}`).
 - Khối "Lịch sử phiên bản" (độc lập với `status`, luôn hiện nếu đã có ít nhất 1 phiên bản chốt): bảng các phiên bản đã chốt (Số phiên bản, Thời điểm chốt, Người chốt), click 1 dòng → xem snapshot chỉ đọc (`knowledge.getKnowledgeObjectVersion`).
-- Khối "Phiên bản đang được sử dụng" (D-SD03-013 (¶3.4) thao tác (b) — thao tác độc lập với `status`, luôn hiện nếu đã có ít nhất 1 phiên bản chốt, chỉ role `xuat_ban` thao tác): hiện phiên bản hiện đang dùng (`used_version_id`, hoặc "Chưa chọn"), nút "Chọn/Đổi phiên bản đang dùng" mở dialog chọn từ danh sách phiên bản đã chốt (không nhất thiết mới nhất) → `knowledge.setKnowledgeObjectUsedVersion`.
+- Khối "Phiên bản đang được sử dụng" (D-SD03-013 (¶3.4) thao tác (b) — thao tác độc lập với `status`, luôn hiện nếu đã có ít nhất 1 phiên bản chốt, thao tác theo phần tử `set_used_version`): hiện phiên bản hiện đang dùng (`used_version_id`, hoặc "Chưa chọn"), nút "Chọn/Đổi phiên bản đang dùng" mở dialog chọn từ danh sách phiên bản đã chốt (không nhất thiết mới nhất) → `knowledge.setKnowledgeObjectUsedVersion`.
 - Nút "Lịch sử hoạt động" (D-ADM-029 (¶3)) — `entity_type = knowledge_object`.
 - API: `knowledge.getKnowledgeObject`, `knowledge.getKnowledgeObjectVersion`, `knowledge.publishKnowledgeObject`, `knowledge.skipKnowledgeObjectPublish`, `knowledge.reopenKnowledgeObject`, `knowledge.setKnowledgeObjectUsedVersion`.
 
@@ -316,26 +350,28 @@
 - Stepper trạng thái (D-ADM-029 (¶3), 4 cụm): active tại cụm "Soạn thảo" (`soan_thao`) hoặc "Chờ & Xét duyệt" (`cho_xet_duyet`); nếu `khong_dat_xet_duyet`, active vẫn ở cụm "Soạn thảo" kèm mũi tên quay lại từ cụm "Chờ & Xét duyệt".
 - Áp dụng khi `status ∈ {soan_thao, cho_xet_duyet, khong_dat_xet_duyet}`.
 - Header: Tiêu đề, badge Trạng thái.
-- Khối "Người phụ trách": "Nhận xử lý"/"Nhả" (`Claim`/`Release`), cùng cơ chế D-ADM-013 (¶4.13); thêm "Cưỡng chế nhả" (`ForceRelease`, chỉ role `quan_tri_he_thong`, hiện tại `soan_thao` khi đang có `assignee_id` — hộp thoại xác nhận, quy ước (b) D-ADM-029 (¶3), R-ENC-016 (§2.3.2.5.5)). Khi đang sinh nội dung bằng AI (`content_generation.status ∈ {pending, running}`), "Nhả"/"Cưỡng chế nhả" mở hộp thoại xác nhận có thêm dòng "Việc sinh nội dung bằng AI đang thực hiện sẽ bị huỷ, kết quả không được ghi vào Mục từ."
+- Nút thao tác theo `actions` của `encyclopedia.getEntry` (D-ADM-029 (¶3), D-SD04-021 (¶3.6)).
+- Khối "Người phụ trách": "Nhận xử lý"/"Nhả"/"Cưỡng chế nhả" (`claim`/`release`/`force_release`), cùng cơ chế D-ADM-013 (¶4.13); "Cưỡng chế nhả" có hộp thoại xác nhận, quy ước (b) D-ADM-029 (¶3), R-ENC-016 (§2.3.2.5.5)). Khi đang sinh nội dung bằng AI (`content_generation.status ∈ {pending, running}`), "Nhả"/"Cưỡng chế nhả" mở hộp thoại xác nhận có thêm dòng "Việc sinh nội dung bằng AI đang thực hiện sẽ bị huỷ, kết quả không được ghi vào Mục từ."
 - Khối "Hạng mục tri thức nguồn": danh sách Hạng mục tri thức đã gộp/tách vào Mục từ này, nút "Xem nội dung nguồn" (đọc `used_version` — tiêu đề, file, Phát biểu — chỉ tham khảo, qua `GetUsedVersionContent`), cảnh báo "Nội dung nguồn đã có phiên bản mới hơn" khi `used_version_id` khác `last_synced_version_id` (quy ước (d) D-ADM-029 (¶3)), nút "Đánh dấu đã đồng bộ" (`encyclopedia.markEntryKnowledgeObjectSynced`) để tắt cảnh báo sau khi đã cập nhật nội dung. Nút "+ Thêm"/"Gỡ" Hạng mục tri thức nguồn.
 - Khối Nội dung: trình soạn thảo TipTap cho `content_blocks` (đoạn văn, tiêu đề phụ, chú thích, khối nhúng ảnh/âm thanh/phim — nhúng từ file đã tải lên ở khối Tệp đính kèm bên dưới).
 - Khởi tạo nội dung bằng AI (R-ENC-038 (§2.3.8), D-SD04-019 (¶3.5)):
-  - Nút "Khởi tạo nội dung bằng AI" trên thanh tiêu đề khối Nội dung, cạnh nút Lưu. Chỉ hiện khi `status = soan_thao` và người xem là `assignee_id` hiện tại; vô hiệu kèm tooltip "Chưa gán Hạng mục tri thức nguồn" khi khối Hạng mục tri thức nguồn trống; vô hiệu khi đang xử lý.
+  - Nút "Khởi tạo nội dung bằng AI" trên thanh tiêu đề khối Nội dung, cạnh nút Lưu. Theo phần tử `generate_content`; khi vô hiệu, lý do theo `reason_code` (ví dụ `no_source_content`, `job_running`).
   - Hộp thoại xác nhận ghi đè (quy ước (a) D-ADM-029 (¶3), R-ENC-041 (§2.3.8.3)): "AI sẽ sinh nội dung mới từ các Hạng mục tri thức nguồn và ghi đè toàn bộ nội dung hiện tại của Mục từ. Tiếp tục?"; nếu editor còn thay đổi chưa lưu, thêm dòng "Các thay đổi chưa lưu cũng sẽ bị bỏ." Xác nhận → `encyclopedia.generateEntryContent` body `{confirmed: true}`, bỏ thay đổi chưa lưu, tải lại chi tiết.
   - Lỗi khi kích hoạt: 422 `no_source_content` → "Chưa có Hạng mục tri thức nguồn nào có phiên bản đang được sử dụng để sinh nội dung."; 409 `entry_content_generation_running` → "Đang sinh nội dung bằng AI cho Mục từ này." và tải lại chi tiết.
-  - Đang xử lý (`content_generation.status ∈ {pending, running}`): banner thông tin trên editor, hiện với mọi người xem — "Đang sinh nội dung bằng AI… Nội dung sẽ được thay khi hoàn tất."; khoá editor, nút "+ Tải file lên", nút "Gỡ" file, nút "Gửi xét duyệt", kèm tooltip lý do khoá (quy ước (c) D-ADM-029 (¶3)). Khối Người phụ trách, Hạng mục tri thức nguồn, Cương vực vẫn thao tác bình thường.
+  - Đang xử lý (`content_generation.status ∈ {pending, running}`): banner thông tin trên editor, hiện với mọi người xem — "Đang sinh nội dung bằng AI… Nội dung sẽ được thay khi hoàn tất."; khoá editor, nút "+ Tải file lên", nút "Gỡ" file, nút "Gửi xét duyệt", kèm lý do khoá (`edit_content`/`submit_for_review` có `reason_code = job_running`, quy ước (c) D-ADM-029 (¶3)). Khối Người phụ trách, Hạng mục tri thức nguồn, Cương vực vẫn thao tác bình thường.
   - Tự tải lại `encyclopedia.getEntry` mỗi 5 giây (cố định trong code, không theo `operations.admin_polling_interval_seconds`), chỉ khi đang xử lý và màn hình đang mở; dừng khi `content_generation` không còn `pending`/`running`.
   - Kết thúc (`content_generation` từ `pending`/`running` về `null`): nếu vẫn `soan_thao`, đúng Người phụ trách và còn ít nhất một Hạng mục tri thức nguồn → toast "Đã khởi tạo nội dung bằng AI. Hãy rà soát, chỉnh sửa trước khi gửi xét duyệt." (R-ENC-043 (§2.3.8.5) — nội dung không đánh dấu là do AI sinh); ngược lại → toast "Kết quả sinh nội dung bằng AI đã bị bỏ do {Mục từ đã đổi trạng thái | Người phụ trách đã thay đổi | không còn Hạng mục tri thức nguồn}.", nội dung giữ nguyên.
   - Thất bại (`content_generation.status = failed`): banner đỏ trên editor "Sinh nội dung bằng AI thất bại. Nội dung hiện tại không thay đổi." kèm `error_message` nếu có; `error_code = source_content_too_long` → "Nội dung các Hạng mục tri thức nguồn quá dài để AI xử lý trong một lần. Hãy gỡ bớt Hạng mục tri thức nguồn rồi khởi tạo lại." Nút "Khởi tạo nội dung bằng AI" vẫn dùng được để kích hoạt lại.
 - Khối "Tệp đính kèm" (`entry_file`): danh sách file đã tải lên, nút "+ Tải file lên" (presigned URL) — dùng để nhúng vào Nội dung.
 - Khối "Cương vực": multi-select gán/gỡ (`AssignCulturalDomain`/`UnassignCulturalDomain`).
-- Chỉnh sửa (Nội dung/Tệp đính kèm/Cương vực/Hạng mục tri thức nguồn) chỉ mở khi `status = soan_thao` **và** người xem là `assignee_id` hiện tại — trạng thái/người xem khác chỉ đọc kèm banner lý do khoá. ⚠ Ghi chú thiết kế đi trước (cùng cách xử lý đã áp dụng ở D-ADM-013 (¶4.13)): backend hiện chỉ khoá cứng ở 4 trạng thái (`dang_xet_duyet`/`dat_xet_duyet`/`da_xuat_ban`/`khong_xuat_ban`) + theo `assignee_id` khi `soan_thao` — chưa khoá cứng ở `cho_xet_duyet`/`khong_dat_xet_duyet`; ẩn nút chỉnh sửa ở các trạng thái này tại đây là lựa chọn UI.
+- Khối "Công khai & SEO" (D-ADM-019 (¶4.19)) — khi Mục từ đã có phiên bản chốt.
+- Chỉnh sửa (Nội dung/Tệp đính kèm/Cương vực/Hạng mục tri thức nguồn) theo phần tử `edit_content`: `enabled = false` thì chỉ đọc kèm banner lý do theo `reason_code` (quy ước (c) D-ADM-029 (¶3)); không có phần tử này thì chỉ đọc.
 - Hành động cuối trang theo `status`:
-  - `soan_thao` (chỉ `assignee_id` hiện tại): nút "Gửi xét duyệt" (`encyclopedia.submitEntryForReview`).
+  - `soan_thao`: nút "Gửi xét duyệt" (`submit_for_review`).
   - `cho_xet_duyet`: hiện "Đang chờ nhận xét duyệt".
-  - Ghi chú không đạt (`review_note`) hiện ở đây khi Mục từ vừa bị trả về (đọc lại từ lần `khong_dat_xet_duyet` gần nhất). Nút "Quay lại soạn thảo" (`encyclopedia.resumeEntryEditing`, role `bien_tap` — không giới hạn theo `assignee_id`, nhất quán với `encyclopedia.submitEntryForReview`).
+  - Ghi chú không đạt (`review_note`) hiện ở đây khi Mục từ vừa bị trả về (đọc lại từ lần `khong_dat_xet_duyet` gần nhất). Nút "Quay lại soạn thảo" (`resume_editing`).
 - Nút "Lịch sử hoạt động" (D-ADM-029 (¶3)) — `entity_type = entry`.
-- API: `encyclopedia.getEntry`, `encyclopedia.updateEntryContent`, `encyclopedia.addEntryKnowledgeObject`, `encyclopedia.removeEntryKnowledgeObject`, `encyclopedia.markEntryKnowledgeObjectSynced`, `encyclopedia.generateEntryContent`, `encyclopedia.getEntryKnowledgeObjectSource`, `encyclopedia.createEntryFileUploadUrl`, `encyclopedia.createEntryFile`, `encyclopedia.deleteEntryFile`, `encyclopedia.getEntryFileDownloadUrl`, `encyclopedia.addEntryCulturalDomain`, `encyclopedia.removeEntryCulturalDomain`, `encyclopedia.submitEntryForReview`, `encyclopedia.claimEntry`, `encyclopedia.releaseEntry`, `encyclopedia.forceReleaseEntry`, `encyclopedia.resumeEntryEditing`.
+- API: `encyclopedia.getEntry`, `encyclopedia.updateEntryContent`, `encyclopedia.addEntryKnowledgeObject`, `encyclopedia.removeEntryKnowledgeObject`, `encyclopedia.markEntryKnowledgeObjectSynced`, `encyclopedia.generateEntryContent`, `encyclopedia.getEntryKnowledgeObjectSource`, `encyclopedia.createEntryFileUploadUrl`, `encyclopedia.createEntryFile`, `encyclopedia.deleteEntryFile`, `encyclopedia.getEntryFileDownloadUrl`, `encyclopedia.addEntryCulturalDomain`, `encyclopedia.removeEntryCulturalDomain`, `encyclopedia.submitEntryForReview`, `encyclopedia.claimEntry`, `encyclopedia.releaseEntry`, `encyclopedia.forceReleaseEntry`, `encyclopedia.resumeEntryEditing`, `encyclopedia.setEntryPublicVersion`, `encyclopedia.updateEntrySeo`.
 
 ## 4.18. [D-ADM-018] Xét duyệt Mục từ
 
@@ -343,14 +379,16 @@
 - Stepper trạng thái (D-ADM-029 (¶3)): active tại cụm "Chờ & Xét duyệt" (`cho_xet_duyet`/`dang_xet_duyet`).
 - Áp dụng khi `status ∈ {cho_xet_duyet, dang_xet_duyet}` (vai trò Xét duyệt Mục từ — khác vai trò Xét duyệt Hạng mục tri thức ở module 03).
 - Header, banner "Nội dung bị khoá" khi `dang_xet_duyet`.
-- Khối "Người phụ trách": "Nhận xử lý" (`Claim`, tại `cho_xet_duyet`, role `xet_duyet_muc_tu`, đồng thời chuyển `status → dang_xet_duyet`) / "Nhả" (`Release`, chỉ `assignee_id` hiện tại, lùi về `cho_xet_duyet`) / "Cưỡng chế nhả" (`ForceRelease`, chỉ role `quan_tri_he_thong`, tại `dang_xet_duyet` khi đang có `assignee_id` — hộp thoại xác nhận, quy ước (b) D-ADM-029 (¶3), R-ENC-016 (§2.3.2.5.5)).
+- Nút thao tác theo `actions` của `encyclopedia.getEntry` (D-ADM-029 (¶3), D-SD04-021 (¶3.6)).
+- Khối "Người phụ trách": "Nhận xử lý" (`claim` — tại `cho_xet_duyet`, đồng thời chuyển `status → dang_xet_duyet`) / "Nhả" (`release`, lùi về `cho_xet_duyet`) / "Cưỡng chế nhả" (`force_release` — hộp thoại xác nhận, quy ước (b) D-ADM-029 (¶3), R-ENC-016 (§2.3.2.5.5)).
 - Nội dung: xem lại Mục từ đã render (đọc, tái dùng view TipTap ở chế độ chỉ đọc) + Tệp đính kèm + Cương vực đã gán + danh sách Hạng mục tri thức nguồn (tham khảo).
-- Không có cấu trúc Phát biểu/Tham chiếu như module 03 — chỉ có 1 ô "Nhận xét xét duyệt" (`review_note`, textarea) cho nhận xét tổng thể (R-ENC-025 (§2.3.5.3)). Ô chỉ nhập được khi `status = dang_xet_duyet`.
-- Nút cuối trang (tại `dang_xet_duyet`, bất kỳ Nhân viên nào giữ role `xet_duyet_muc_tu`, không giới hạn theo `assignee_id` — D-SD04-014 (¶4.4)):
+- Khối "Công khai & SEO" (D-ADM-019 (¶4.19)) — khi Mục từ đã có phiên bản chốt.
+- Không có cấu trúc Phát biểu/Tham chiếu như module 03 — chỉ có 1 ô "Nhận xét xét duyệt" (`review_note`, textarea) cho nhận xét tổng thể (R-ENC-025 (§2.3.5.3)). Ô nhập được khi phần tử `approve`/`reject` có `enabled = true`.
+- Nút cuối trang (theo phần tử `reject`/`approve` — mọi Nhân viên giữ `xet_duyet_muc_tu`, không giới hạn theo Người phụ trách, D-SD04-021 (¶3.6)):
   - "Không đạt xét duyệt" (`encyclopedia.rejectEntry`, body `{note}`): **nhận xét bắt buộc** (R-ENC-025 (§2.3.5.3)). Nhãn ô nhận xét có dấu `*` kèm chú thích "Bắt buộc khi Không đạt xét duyệt". Nếu ô trống hoặc chỉ có khoảng trắng: không gọi API, báo lỗi ngay dưới ô "Vui lòng nhập nhận xét để vai trò Biên tập biết cần sửa gì" và focus vào ô. Nếu API vẫn trả HTTP 422 `review_note_required`, hiện cùng thông báo lỗi đó dưới ô.
   - "Đạt xét duyệt" (`encyclopedia.approveEntry`, body `{note?}`): nhận xét tuỳ chọn; ô trống thì gửi không kèm `note`.
 - Nút "Lịch sử hoạt động" (D-ADM-029 (¶3)) — `entity_type = entry`.
-- API: `encyclopedia.getEntry`, `encyclopedia.getEntryFileDownloadUrl`, `encyclopedia.claimEntry`, `encyclopedia.releaseEntry`, `encyclopedia.forceReleaseEntry`, `encyclopedia.rejectEntry`, `encyclopedia.approveEntry`.
+- API: `encyclopedia.getEntry`, `encyclopedia.getEntryFileDownloadUrl`, `encyclopedia.claimEntry`, `encyclopedia.releaseEntry`, `encyclopedia.forceReleaseEntry`, `encyclopedia.rejectEntry`, `encyclopedia.approveEntry`, `encyclopedia.setEntryPublicVersion`, `encyclopedia.updateEntrySeo`.
 
 ## 4.19. [D-ADM-019] Xuất bản Mục từ
 
@@ -358,15 +396,25 @@
 - Stepper trạng thái (D-ADM-029 (¶3)): active tại cụm "Đạt xét duyệt" (`dat_xet_duyet`) hoặc "Xuất bản" (`da_xuat_ban`/`khong_xuat_ban`, kèm nhãn phụ theo giá trị thực tế).
 - Áp dụng khi `status ∈ {dat_xet_duyet, da_xuat_ban, khong_xuat_ban}` — cả 3 đều "Nội dung bị khoá".
 - Header + xem lại toàn bộ Nội dung/Tệp đính kèm (đọc, tái dùng view D-ADM-018 (¶4.18)) kèm `review_note` cuối cùng.
-- Tại `dat_xet_duyet` — 2 quyết định bắt buộc, chỉ role `xuat_ban_muc_tu` (R-ENC-021 (§2.3.4.2)):
+- Tại `dat_xet_duyet` — 2 quyết định bắt buộc, theo phần tử `publish`/`skip_publish` (R-ENC-021 (§2.3.4.2)):
   - Nút "Xuất bản" (`encyclopedia.publishEntry`) — xác nhận: "Xuất bản sẽ tạo một phiên bản mới, chốt lại toàn bộ Nội dung hiện tại. Tiếp tục?".
   - Nút "Không xuất bản" (`encyclopedia.skipEntryPublish`, body `{confirmed: true}`) — xác nhận bắt buộc (R-ENC-009 (§2.3.2.4) đặc tả gốc yêu cầu cảnh báo): "Không xuất bản: vòng xét duyệt này sẽ không tạo phiên bản nào để lưu lại. Tiếp tục?".
-- Tại `da_xuat_ban`/`khong_xuat_ban`: hiện thời điểm chuyển trạng thái tương ứng. Nút "Mở lại" — **chỉ role `xet_duyet_muc_tu`** (không phải `xuat_ban_muc_tu`) — dialog chọn 1 trong 3 trạng thái đích (`soan_thao`/`cho_xet_duyet`/`dang_xet_duyet`), xác nhận không hoàn tác/ảnh hưởng người khác (`encyclopedia.reopenEntry`, body `{target_status}`).
+- Tại `da_xuat_ban`/`khong_xuat_ban`: hiện thời điểm chuyển trạng thái tương ứng. Nút "Mở lại" theo phần tử `reopen` (vai trò Xét duyệt Mục từ) — dialog chọn trạng thái đích theo `transitions` (3 lựa chọn, kèm vai trò xử lý tiếp), xác nhận không hoàn tác/ảnh hưởng người khác (`encyclopedia.reopenEntry`, body `{target_status}`).
 - Khối "Lịch sử phiên bản" (luôn hiện nếu đã có ≥1 phiên bản chốt): bảng phiên bản, click → xem snapshot chỉ đọc.
-- Khối "Phiên bản đang công khai" (`current_public_version_id`, độc lập với `status`, chỉ role `xuat_ban_muc_tu`): hiện phiên bản đang công khai (hoặc "Chưa chọn"), nút "Chọn/Đổi" (`encyclopedia.setEntryPublicVersion`).
+- **Khối "Công khai & SEO"** (dùng chung cho D-ADM-017 (¶4.17), D-ADM-018 (¶4.18) và màn hình này; độc lập với `status` của bản soạn thảo — D-SD04-023 (¶3.7)): hiện khi Mục từ đã có ít nhất một phiên bản chốt.
+  - **Phiên bản đang công khai** (`current_public_version_id`): số phiên bản đang công khai (hoặc "Chưa chọn") và thời điểm chọn (`public_version_set_at`). Nút "Chọn/Đổi" (`set_public_version`) mở dialog chọn từ các phiên bản đã chốt → hộp thoại xác nhận (quy ước (b) D-ADM-029 (¶3)): "Công khai phiên bản {n}? Trang công khai cập nhật ngay. Đường dẫn trang có thể đổi theo tiêu đề của phiên bản này — đường dẫn cũ tự chuyển hướng sang đường dẫn mới. Hình chia sẻ đã chọn (nếu có) trở về hình tự động." → `encyclopedia.setEntryPublicVersion`.
+  - **Đường dẫn công khai** (khi có `slug`): đường dẫn trang Mục từ trên Web công khai dựng theo `slug` (D-PUB-004 (¶4.4)), nút sao chép và nút "Xem trang công khai" (tab mới). Đường dẫn không sửa tay (D-SD04-023 (¶3.7)).
+  - **Thông tin SEO** (R-ENC-044 (§2.3.2.6), R-NFR-030 (§3.6.4)) — chỉ khi `seo ≠ null` (đã có phiên bản công khai); ngược lại hiện dòng "Có thể sửa khi Mục từ có phiên bản công khai". Dòng chữ phụ đầu khối: "Sửa được bất kỳ lúc nào, có hiệu lực ngay trên trang công khai, không tạo phiên bản mới, không qua xét duyệt."
+    - "Tiêu đề trang": ô nhập, giá trị = `seo.title.override`, placeholder = `seo.title.auto` ("Tự động: …"); đếm ký tự, vượt 60 ký tự → cảnh báo vàng "Dài hơn mức khuyến nghị 60 ký tự — máy tìm kiếm có thể cắt bớt", không chặn lưu.
+    - "Mô tả ngắn": textarea, giá trị = `seo.description.override`, placeholder = `seo.description.auto`; vượt 160 ký tự → cảnh báo vàng tương tự, không chặn lưu.
+    - "Hình chia sẻ": lưới ảnh thu nhỏ các hình chọn được theo `seo.image.candidates` (hình được chèn trong nội dung phiên bản đang công khai, theo thứ tự xuất hiện — D-SD04-015 (¶5.1)); ảnh hiển thị qua `encyclopedia.getEntryFileDownloadUrl`. Ô đầu tiên "Tự động" — hình `seo.image.auto_file_id`, hoặc "Hình mặc định của website" khi `auto_file_id = null`. Hình đang chọn (`seo.image.override_file_id`) có viền Accent.
+    - Mỗi trường có nút "Dùng giá trị tự động" (đặt về `null`).
+    - Xem trước: thẻ chia sẻ mô phỏng (hình, tiêu đề, mô tả, tên miền) theo giá trị hiệu lực đang soạn.
+    - Nút "Lưu" → `encyclopedia.updateEntrySeo`, chỉ gửi các trường đã đổi (`seo_title`, `seo_description`, `seo_image_file_id`; `null` = về tự động). Thành công → toast "Đã lưu thông tin SEO — có hiệu lực ngay". Lỗi 409 `entry_not_public` → "Mục từ không còn phiên bản công khai." rồi tải lại; 422 `invalid_seo_image` → "Hình đã chọn không còn hợp lệ (phiên bản công khai có thể vừa đổi)." rồi tải lại. Rời trang khi còn thay đổi chưa lưu → cảnh báo rời trang (D-ADM-029 (¶3)).
+    - Quyền sửa: theo phần tử `edit_seo` của `actions` (D-ADM-029 (¶3), D-SD04-021 (¶3.6)). Không có phần tử này thì chỉ đọc (hiện giá trị hiệu lực).
 - Khối "Chỉ mục AI" (chỉ role `quan_tri_he_thong`, chỉ hiện khi Mục từ đang có phiên bản công khai): nút "Đánh chỉ mục lại cho AI" (`assistant.reindexEntry`) — dùng khi khắc phục sự cố chỉ mục AI; không cần hộp thoại xác nhận (không làm mất dữ liệu). Thành công → toast "Đã đưa vào hàng đợi" kèm link "Xem job nền" mở D-ADM-026 (¶4.26) lọc theo loại `assistant.reindex_entry`.
 - Nút "Lịch sử hoạt động" (D-ADM-029 (¶3)) — `entity_type = entry`.
-- API: `encyclopedia.getEntry`, `encyclopedia.getEntryFileDownloadUrl`, `encyclopedia.publishEntry`, `encyclopedia.skipEntryPublish`, `encyclopedia.reopenEntry`, `encyclopedia.setEntryPublicVersion`, `assistant.reindexEntry`.
+- API: `encyclopedia.getEntry`, `encyclopedia.getEntryFileDownloadUrl`, `encyclopedia.publishEntry`, `encyclopedia.skipEntryPublish`, `encyclopedia.reopenEntry`, `encyclopedia.setEntryPublicVersion`, `encyclopedia.updateEntrySeo`, `assistant.reindexEntry`.
 
 ## 4.20. [D-ADM-020] Quản lý Cương vực
 
@@ -388,15 +436,15 @@
   - Người thực hiện (`actor_type`): `employee` → tên + email; `system` → badge "Hệ thống" (job nền, webhook, tạm khoá tự động); `employee` nhưng không khớp Nhân viên nào (`employee = null`) → "Nhân viên không xác định" + 8 ký tự đầu của id.
   - Loại hành động: nhãn tiếng Việt theo "Danh mục sự kiện audit" ở D-SD01-002 (¶2) — nguồn duy nhất (ví dụ "Đăng nhập", "Tạo Nhân viên", "Xuất bản Mục từ", "Chạy lại job nền"); `action_type` chưa có trong bảng nhãn → hiện nguyên mã.
   - Đối tượng liên quan (`entity_type` + `entity_id`): link tới màn hình chi tiết tương ứng nếu có, kèm icon lọc "Xem lịch sử đối tượng này" (lọc bảng theo `entity_type` + `entity_id`).
-  - Chi tiết thay đổi: nút "Xem" mở popup trình bày theo quy ước `detail` của D-SD01-002 (¶2): `{from_status, to_status}` → "Trạng thái: {nhãn A} → {nhãn B}"; `{changes: {field: {old, new}}}` → bảng Trường / Trước / Sau (tham số cấu hình dùng `old_value` → `new_value`, xem bullet `system_setting` bên dưới); `fields: [...]` → "Các trường đã sửa: …" (không hiện nội dung); `job_id` → link "Job #{job_id}" tới D-ADM-026 (¶4.26); các key khác → key-value; giá trị lồng nhau không theo quy ước → JSON thô có định dạng.
+  - Chi tiết thay đổi: nút "Xem" mở popup trình bày theo quy ước `detail` của D-SD01-002 (¶2): `{from_status, to_status}` → "Trạng thái: {nhãn A} → {nhãn B}"; `{changes: {field: {old, new}}}` → bảng Trường / Trước / Sau (tham số cấu hình dùng `old_value` → `new_value`, xem bullet `system_setting` bên dưới); `fields: [...]` → "Các trường đã sửa: …" (không hiện nội dung); `job_id` → link "Job #{job_id}" tới D-ADM-026 (¶4.26); `old_slug`/`new_slug` (khác nhau) → "Đường dẫn công khai: {cũ} → {mới}"; `seo_image_cleared = true` → "Hình chia sẻ đã chọn được đặt về tự động"; các key khác → key-value; giá trị lồng nhau không theo quy ước → JSON thô có định dạng.
 - Với `entity_type = job` (`entity_id` rỗng vì id job là bigint — D-SD01-004 (¶4)): cột Đối tượng liên quan hiển thị "Job #{`detail.job_id`}", link mở chi tiết job ở D-ADM-026 (¶4.26); nếu job đã bị dọn khỏi lịch sử (retention), D-ADM-026 (¶4.26) báo "Job không còn trong lịch sử lưu giữ".
 - Với `entity_type = system_setting` (`entity_id` rỗng): cột Đối tượng liên quan hiển thị nhãn tham số theo `detail.key`, link mở D-ADM-028 (¶4.28) tại đúng nhóm; popup "Xem" hiển thị Giá trị trước (`detail.old_value`) → Giá trị sau (`detail.new_value`).
 - Filter: Người thực hiện (Tất cả / Nhân viên / Hệ thống — `actor_type`); Nhân viên (`employee_id`, chỉ bật khi Người thực hiện ≠ Hệ thống); Loại hành động; Loại đối tượng (`entity_type`); khoảng thời gian (từ ngày – đến ngày).
 - Lọc theo một đối tượng cụ thể (`entity_type` + `entity_id`): không nhập tay — vào từ nút "Lịch sử hoạt động" ở màn hình chi tiết (D-ADM-029 (¶3)) hoặc icon lọc trên dòng; khi đang lọc hiện chip "Đối tượng: {nhãn loại} {tên hoặc id rút gọn}" có nút gỡ. Bộ lọc phản ánh lên URL (query) để quay lại/chia sẻ link.
-- Tự động tải lại định kỳ (chu kỳ theo `operations.admin_polling_interval_seconds`, mặc định 30 giây, đọc từ `clientSettings.getSettings`; có toggle bật/tắt) + nút "Tải lại" thủ công — chỉ làm mới danh sách theo bộ lọc hiện tại.
+- Tự động tải lại định kỳ (chu kỳ theo `operations.admin_polling_interval_seconds`, đọc từ `clientSettings.getSettings`; có toggle bật/tắt, nhãn "Tự tải lại mỗi {n} giây") + nút "Tải lại" thủ công — chỉ làm mới danh sách theo bộ lọc hiện tại.
 - Phân trang kiểu cursor, cùng convention với các bảng danh sách khác trong hệ thống.
 - Chỉ đọc — không có thao tác sửa/xoá trên màn hình này.
-- Dòng chú thích dưới bảng: "Nhật ký được lưu theo thời hạn cấu hình (mặc định 24 tháng). Bản ghi quá thời hạn được hệ thống tự động xoá mỗi ngày." — kèm link "Cấu hình thời hạn lưu" mở D-ADM-028 (¶4.28), nhóm Vận hành (`operations.audit_log_retention_months`, D-SD07-009 (¶4.3)).
+- Dòng chú thích dưới bảng (D-ADM-029 (¶3)): "Nhật ký được lưu {operations.audit_log_retention_months} tháng, quá hạn tự xoá mỗi ngày." (D-SD07-009 (¶4.3)).
 - Quyền truy cập: chỉ role `quan_tri_he_thong`, xem toàn bộ, không giới hạn theo phạm vi/Tổ chức.
 - API: `shared.listAuditLogs` (D-SD01-002 (¶2); tham số lọc `employee_id`, `actor_type`, `action_type`, `entity_type`, `entity_id`, `from`, `to`), `clientSettings.getSettings`.
 
@@ -411,7 +459,7 @@
   4. **Mục từ** (rẽ nhánh từ cụm "Xuất bản" của Hạng mục tri thức, thể hiện quan hệ nhiều-nhiều `entry_knowledge_object`) — 4 cụm trạng thái: Soạn thảo (vai trò Biên tập) → Chờ & Xét duyệt (vai trò Xét duyệt Mục từ) → Đạt xét duyệt → Xuất bản (vai trò Xuất bản Mục từ). Click → mở D-ADM-016 (¶4.16).
   5. **Trợ lý AI Văn Minh Việt** (rẽ từ cụm "Xuất bản" của Mục từ: phiên bản đang công khai được tự động đánh chỉ mục bằng job nền) — trả lời câu hỏi dựa trên Bách khoa toàn thư, kèm trích dẫn Mục từ nguồn và cảnh báo phát biểu chưa được chứng thực. Vai trò: mọi Nhân viên (hỏi), Quản trị hệ thống (rà soát chất lượng). Click → mở D-ADM-023 (¶4.23). Khối này không highlight theo role (mọi Nhân viên đều dùng).
 
-  Cụm/khối tương ứng với (các) role theo chức năng mà Nhân viên đang đăng nhập đang giữ được làm nổi bật trực quan (viền đậm/nền khác màu) trên sơ đồ, để người dùng thấy ngay mình "đứng ở đâu" trong toàn bộ pipeline — đúng tinh thần nguyên tắc ở ¶1. Sơ đồ không hiển thị bất kỳ số liệu/số đếm nào, chỉ thể hiện cấu trúc luồng nghiệp vụ.
+  Cụm/khối tương ứng với (các) role Nhân viên đang đăng nhập đang giữ — cả role theo chức năng lẫn role theo phạm vi Đề tài nghiên cứu (giữ ở ít nhất một Đề tài, theo `roles` của `auth.getMe`; Nghiên cứu → cụm "Nghiên cứu", Xét duyệt → cụm "Xét duyệt chuyên gia", Chủ nhiệm đề tài → khối "Đề tài nghiên cứu") — được làm nổi bật trực quan (R-NFR-039 (§3.7.2)) (viền đậm/nền khác màu) trên sơ đồ, để người dùng thấy ngay mình "đứng ở đâu" trong toàn bộ pipeline — đúng tinh thần nguyên tắc ở ¶1. Sơ đồ không hiển thị bất kỳ số liệu/số đếm nào, chỉ thể hiện cấu trúc luồng nghiệp vụ.
 - **Khối 2 — Mô tả từng nhóm chức năng** (đặt dưới sơ đồ, văn bản ngắn 1–2 câu mỗi nhóm kèm link "Xem thêm" dẫn tới màn hình đầu tiên của nhóm — chỉ hiện nhóm mà người dùng có quyền truy cập, theo đúng điều kiện ẩn/hiện ở Sidebar D-ADM-029 (¶3)):
   - **Người dùng & Tổ chức**: quản lý Nhân viên, phân quyền theo chức năng và theo phạm vi Đề tài nghiên cứu, quản lý các Tổ chức khác tham gia hợp tác nghiên cứu. → D-ADM-004 (¶4.4).
   - **Cơ sở dữ liệu văn hóa**: khởi tạo Đề tài nghiên cứu, đồng bộ Tư liệu gốc, và đội ngũ Nghiên cứu/Xét duyệt cùng biến Tư liệu gốc thành Hạng mục tri thức đã qua kiểm chứng (AI + chuyên gia). → D-ADM-008 (¶4.8).
@@ -431,18 +479,19 @@
 - Hội thoại: chỉ giữ một hội thoại hiện tại, không có danh sách hội thoại cũ. Client tự sinh `conversation_id` (UUID) khi bắt đầu hội thoại mới (lần đầu vào màn hình, bấm "Hội thoại mới", hoặc hội thoại đã lưu hết hạn).
 - Lưu tạm hội thoại hiện tại trong localStorage của trình duyệt để tải lại trang/quay lại màn hình vẫn chat tiếp được:
   - Khoá lưu gắn theo id Nhân viên đăng nhập (nhiều tài khoản trên cùng trình duyệt không thấy hội thoại của nhau).
-  - Nội dung lưu: `conversation_id`, Cương vực đang chọn, các lượt đã hoàn tất (câu hỏi, câu trả lời, trích dẫn, cờ self-audit), thời điểm lượt hỏi cuối. Trích dẫn lưu kèm `cover_image` (gồm `url_expires_at`); khi khôi phục, ảnh có `url_expires_at` đã qua không hiện, cả dải không còn ảnh thì ẩn dải, chỉ giữ chip.
+  - Nội dung lưu: `conversation_id`, Cương vực đang chọn, các lượt đã hoàn tất (câu hỏi, câu trả lời, trích dẫn, cờ self-audit), thời điểm lượt hỏi cuối. Trích dẫn lưu kèm `slug` và `cover_image` (`{file_id, url}`, URL ổn định — D-SD05-012 (¶5.1)).
   - Chỉ lưu lượt sau khi nhận `done`; lượt đang stream dở hoặc lỗi không được lưu.
   - Hết hạn sau `assistant.conversation_ttl_hours` giờ (mặc định 6, đọc từ `clientSettings.getSettings` — D-SD07-013 (¶5.2)) tính từ lượt hỏi cuối — khi vào màn hình mà hội thoại đã lưu quá hạn thì xoá và bắt đầu hội thoại mới.
   - Xoá khi bấm "Hội thoại mới" và khi Đăng xuất.
+  - Dòng tham số dưới ô nhập (D-ADM-029 (¶3)): "Hội thoại được giữ trên trình duyệt này {assistant.conversation_ttl_hours} giờ kể từ lượt hỏi cuối".
   - Tiếp tục chat sau khi tải lại: gửi cùng `conversation_id` — backend tự đọc lịch sử N lượt gần nhất theo `conversation_id` (D-SD05-005 (¶3.2) bước 0), không cần API đọc lại hội thoại cho Nhân viên.
 - Trạng thái trống: đoạn giới thiệu ngắn — AI chỉ trả lời trong phạm vi Bách khoa toàn thư đã xuất bản (R-AI-005 (§2.4.4)).
 - Câu miễn trừ trách nhiệm (R-AI-009 (§2.4.8)): `assistant.disclaimer_text` từ `clientSettings.getSettings`, hiện dạng chú thích Chữ phụ cố định ngay dưới ô nhập; chuỗi rỗng thì không hiện.
 - Hiển thị một lượt hỏi theo hợp đồng SSE (D-SD05-012 (¶5.1)):
   - `token`: bong bóng trả lời hiện chữ dần; trong lúc stream khoá ô nhập/nút gửi (một lượt hỏi tại một thời điểm).
   - `citations`: dưới câu trả lời hiện:
-    - Dải ảnh minh hoạ ngang (như Web công khai): tối đa 3 ảnh nhỏ bo góc 8px theo thứ tự trích dẫn, lấy từ `cover_image` của từng Mục từ; Mục từ có `cover_image = null` thì bỏ qua; không có ảnh nào thì không hiện dải. Bấm ảnh mở Trang chi tiết Mục từ của Web công khai (D-PUB-004 (¶4.4)) trong tab mới. Ảnh tải lỗi thì ẩn ảnh đó.
-    - Dải chip "Nguồn: …": mỗi chip mở Trang chi tiết Mục từ của Web công khai (D-PUB-004 (¶4.4)) trong tab mới — không mở màn hình biên tập D-ADM-017 (¶4.17)–D-ADM-019 (¶4.19).
+    - Dải ảnh minh hoạ ngang (như Web công khai): tối đa 3 ảnh nhỏ bo góc 8px theo thứ tự trích dẫn, lấy từ `cover_image` của từng Mục từ; Mục từ có `cover_image = null` thì bỏ qua; không có ảnh nào thì không hiện dải. Bấm ảnh mở Trang chi tiết Mục từ của Web công khai (D-PUB-004 (¶4.4)) theo `slug`, trong tab mới. Ảnh tải lỗi thì ẩn ảnh đó.
+    - Dải chip "Nguồn: …": mỗi chip mở Trang chi tiết Mục từ của Web công khai (D-PUB-004 (¶4.4)) theo `slug`, trong tab mới — không mở màn hình biên tập D-ADM-017 (¶4.17)–D-ADM-019 (¶4.19).
   - `self_audit`: `flags` có phần tử → banner cảnh báo màu vàng dưới câu trả lời: "Một số phát biểu trong câu trả lời chưa được chứng thực bởi nguồn trích dẫn", mở rộng để xem từng `claim_text` kèm `reason`; `flags = null` → dòng chú thích xám "Chưa kiểm tra được độ tin cậy của câu trả lời này"; `[]` → không hiện gì.
   - `done`: mở lại ô nhập.
   - `error`: giữ nguyên phần câu trả lời đã hiện (nếu có), hiện thông báo lỗi kèm `trace_id` và nút "Hỏi lại" (gửi lại cùng câu hỏi, cùng `conversation_id`).
@@ -452,19 +501,19 @@
 
 - Breadcrumb: Trợ lý AI > Hỏi–đáp AI.
 - Quyền truy cập: chỉ role `quan_tri_he_thong` (rà soát chất lượng — D-SD05-013 (¶5.2)).
-- Bảng (mỗi dòng = một lượt hỏi–đáp): Thời điểm, Kênh (badge "Admin"/"Công khai"), Người hỏi (`asked_by` — tên + email; "Ẩn danh" với kênh công khai), Câu hỏi (cắt 2 dòng), Cương vực (tên, hoặc "Toàn bộ"), Số Mục từ trích dẫn, Cờ self-audit (`self_audit_flag_count`: > 0 → badge vàng kèm số; 0 → "—"; `null` → badge xám "Chưa kiểm"), Lượt thứ (`turn_index + 1`).
-- Filter: Kênh, Cương vực, Nhân viên hỏi (ô tìm theo tên/email, `identity.listEmployees`), toggle "Chỉ lượt có cờ self-audit" (`has_self_audit_flags = true`), khoảng thời gian.
+- Bảng (mỗi dòng = một lượt hỏi–đáp): Thời điểm, Kênh (badge "Admin"/"Công khai"), Người hỏi (`asked_by` — tên + email; "Ẩn danh" với kênh công khai), Câu hỏi (cắt 2 dòng), Cương vực (tên, hoặc "Toàn bộ"), Số Mục từ trích dẫn, Cờ self-audit (`self_audit_flag_count`: > 0 → badge vàng kèm số; 0 → "—"; `null` → badge xám "Chưa kiểm"), Lượt thứ (`turn_index + 1`), Tự xoá lúc (`expires_at`/`due_soon`, bullet "Thời hạn tự xử lý" D-ADM-029 (¶3)).
+- Filter: Kênh, Cương vực, Nhân viên hỏi (ô tìm theo tên/email, `identity.listEmployees`), toggle "Chỉ lượt có cờ self-audit" (`has_self_audit_flags = true`), khoảng thời gian. Sắp xếp: mặc định hoặc "Sắp đến hạn trước" (`sort=due_at`).
 - Phân trang cursor; nút "Tải lại" thủ công (không tự tải lại định kỳ).
 - Click dòng → D-ADM-025 (¶4.25) mở hội thoại chứa lượt đó, cuộn tới và highlight lượt được chọn.
 - Chỉ đọc.
-- Dòng chú thích dưới bảng: "Hội thoại không có lượt hỏi mới trong thời hạn lưu (mặc định 180 ngày) được hệ thống tự động xoá mỗi ngày, cùng toàn bộ lượt hỏi–đáp của hội thoại đó." — kèm link "Cấu hình thời hạn lưu" mở D-ADM-028 (¶4.28), nhóm AI Văn Minh Việt (`assistant.query_log_retention_days`, D-SD05-006 (¶3.3)).
-- API: `assistant.listQueryLogs`, `encyclopedia.listCulturalDomains`, `identity.listEmployees`.
+- Dòng chú thích dưới bảng (D-ADM-029 (¶3)): "Hội thoại không có lượt hỏi mới quá {assistant.query_log_retention_days} ngày sẽ tự xoá, cùng toàn bộ lượt hỏi–đáp của hội thoại đó." (D-SD05-006 (¶3.3)).
+- API: `assistant.listQueryLogs`, `encyclopedia.listCulturalDomains`, `identity.listEmployees`, `clientSettings.getSettings`.
 
 ## 4.25. [D-ADM-025] Chi tiết hội thoại AI
 
 - Breadcrumb: Trợ lý AI > Hỏi–đáp AI > Hội thoại {thời điểm bắt đầu}.
 - Quyền truy cập: chỉ role `quan_tri_he_thong`.
-- Header: Kênh, Người hỏi (`asked_by` cấp hội thoại; "Ẩn danh" với kênh công khai), thời điểm bắt đầu/lượt cuối, số lượt.
+- Header: Kênh, Người hỏi (`asked_by` cấp hội thoại; "Ẩn danh" với kênh công khai), thời điểm bắt đầu/lượt cuối, số lượt, Tự xoá lúc (`expires_at`/`due_soon` cấp hội thoại, bullet "Thời hạn tự xử lý" D-ADM-029 (¶3)), kèm dòng tham số "Hội thoại không có lượt hỏi mới quá {assistant.query_log_retention_days} ngày sẽ tự xoá".
 - Danh sách các lượt theo `turn_index`, mỗi lượt gồm:
   - Câu hỏi gốc; nếu có `rewritten_question`, hiện dòng chữ phụ "Câu hỏi đã viết lại: …".
   - Cương vực đã chọn (hoặc "Toàn bộ").
@@ -473,7 +522,7 @@
   - Cờ self-audit: danh sách `claim_text` + `reason` (nền vàng); `null` → "Chưa kiểm được"; `[]` → "Không có cờ".
 - Hội thoại đã bị dọn theo thời hạn lưu (mở từ link cũ/bookmark, API trả 404): hiện "Hội thoại không còn trong thời hạn lưu giữ" kèm link quay lại D-ADM-024 (¶4.24).
 - Chỉ đọc.
-- API: `assistant.getConversation`.
+- API: `assistant.getConversation`, `clientSettings.getSettings`.
 
 ## 4.26. [D-ADM-026] Theo dõi job nền
 
@@ -484,7 +533,7 @@
 - Badge trạng thái: `pending` "Đang chờ"; `running` "Đang chạy"; `failed` + `exhausted = false` "Lỗi — sẽ thử lại"; `failed` + `exhausted = true` "Lỗi — hết lượt thử"; `completed` "Hoàn thành"; `cancelled` "Đã huỷ".
 - Đối tượng liên quan (`related_entity`): `source` → D-ADM-011 (¶4.11); `knowledge_object` → điều hướng theo `status` như D-ADM-012 (¶4.12); `entry` → điều hướng theo `status` như D-ADM-016 (¶4.16); `null` → "—".
 - Filter: Loại job, Trạng thái, khoảng thời gian.
-- Tự động tải lại định kỳ (cùng chu kỳ cấu hình và toggle như D-ADM-021 (¶4.21)) + nút "Tải lại".
+- Tự động tải lại định kỳ (cùng chu kỳ cấu hình, toggle và nhãn "Tự tải lại mỗi {n} giây" như D-ADM-021 (¶4.21)) + nút "Tải lại".
 - Click dòng → panel chi tiết (`shared.getJob`): payload (key-value), lỗi gần nhất, lịch sử các lần thử (thời điểm + lỗi từng lần).
   - Job `ingestion.sync_source` có `follows_job_id` trong payload (job nối tiếp, D-SD03-017 (¶4.2)): hiện dòng "Nối tiếp job #{follows_job_id}", click mở panel chi tiết của job đó; nếu job đó đã bị dọn (API trả 404) → thông báo "Job #{follows_job_id} không còn trong thời gian lưu giữ".
 - Hành động (trên dòng và trong panel chi tiết):
@@ -495,8 +544,8 @@
     - `ingestion.sync_source`: "Tư liệu gốc sẽ không được đồng bộ cho tới khi bấm 'Đồng bộ lại' (D-ADM-011 (¶4.11))."
     - Loại khác: "Huỷ job #{id}? Không thể hoàn tác."
   - Cả hai thao tác được ghi audit log (`job.retry`/`job.cancel`, xem D-ADM-021 (¶4.21)).
-- Dòng chú thích dưới bảng: chỉ hiển thị job trong thời gian lưu giữ của hệ thống; job cũ hơn đã được dọn tự động.
-- API: `shared.listJobs`, `shared.getJob`, `shared.retryJob`, `shared.cancelJob`.
+- Dòng chú thích dưới bảng (D-ADM-029 (¶3)): "Job hoàn thành giữ {operations.job_retention_completed_hours} giờ, đã huỷ {operations.job_retention_cancelled_hours} giờ, lỗi hết lượt thử {operations.job_retention_discarded_hours} giờ; job cũ hơn được dọn tự động."
+- API: `shared.listJobs`, `shared.getJob`, `shared.retryJob`, `shared.cancelJob`, `clientSettings.getSettings`.
 
 ## 4.27. [D-ADM-027] Đổi mật khẩu
 
@@ -505,7 +554,7 @@
 - Dạng dialog (không có route/Breadcrumb riêng), mở từ "Đổi mật khẩu" trong menu tài khoản trên Topbar (D-ADM-029 (¶3)), từ bất kỳ màn hình nào.
 - Quyền truy cập: mọi Nhân viên đã đăng nhập, chỉ đổi mật khẩu của chính mình.
 - Form:
-  - Mật khẩu hiện tại.
+  - Mật khẩu hiện tại — dòng tham số bên dưới (D-ADM-029 (¶3)): "Nhập sai mật khẩu {identity.login_max_failed_attempts} lần liên tiếp sẽ bị tạm khoá {identity.login_lockout_minutes} phút" (không hiện khi `identity.login_max_failed_attempts = 0`).
   - Mật khẩu mới — bên dưới hiện danh sách yêu cầu theo chính sách mật khẩu đang cấu hình (`auth.getPasswordPolicy`: độ dài tối thiểu, có cả chữ và số, có ký tự đặc biệt), mỗi dòng tick xanh khi đã đạt, kiểm tra ngay khi gõ.
   - Xác nhận mật khẩu mới.
   - Cả 3 ô có nút hiện/ẩn mật khẩu.
@@ -517,7 +566,7 @@
   - HTTP 422 `password_policy_violation` → hiện đúng các điều kiện chưa đạt trả về (trường hợp chính sách vừa đổi sau khi mở dialog).
   - HTTP 423 `login_locked` (nhập sai mật khẩu hiện tại quá số lần cho phép — mọi phiên đã bị thu hồi, R-ID-036 (§2.1.5.10.1)) → đóng dialog, xử lý như phiên bị thu hồi (D-ADM-029 (¶3)), về D-ADM-001 (¶4.1) với thông báo "Tài khoản đang tạm khoá do nhập sai mật khẩu nhiều lần. Thử lại sau {locked_until}."
 - Thành công (204) → backend thu hồi toàn bộ phiên của Nhân viên (D-SD02-006 (¶3.4) bước 6, D-SD02-007 (¶3.5)) → client xử lý như Đăng xuất (D-ADM-029 (¶3), bỏ qua bước gọi `auth.logout`) → về D-ADM-001 (¶4.1) kèm thông báo "Đổi mật khẩu thành công, vui lòng đăng nhập lại bằng mật khẩu mới".
-- API: `auth.getPasswordPolicy`, `auth.changePassword` (body `{current_password, new_password}`).
+- API: `auth.getPasswordPolicy`, `auth.changePassword` (body `{current_password, new_password}`), `clientSettings.getSettings`.
 
 ## 4.28. [D-ADM-028] Cấu hình hệ thống
 
@@ -525,11 +574,11 @@
 - Quyền truy cập: chỉ role `quan_tri_he_thong` (R-CFG-002 (§2.8.1)).
 - Cơ sở: `system-design/07-system-settings.md` (registry tham số D-SD07-003 (¶2.3), luồng sửa D-SD07-005 (¶3.2), API D-SD07-012 (¶5.1)).
 - **Bố cục**: tab dọc bên trái gồm 5 nhóm theo `group` — AI Verification (`ai_verification`), Tài khoản & bảo mật (`identity`), Email hệ thống (`email`), AI Văn Minh Việt (`assistant`), Vận hành (`operations`). Tab nhóm nào có tham số đang khác mặc định hiện chấm nhỏ màu Accent. Tab đang chọn phản ánh trên URL (query `group`) để link từ màn hình khác (D-ADM-021 (¶4.21), D-ADM-024 (¶4.24)) mở đúng nhóm.
-- Dữ liệu: `shared.getSettings` một lần khi vào màn hình. Nhãn tiếng Việt, mô tả và đơn vị của từng tham số do frontend quản lý theo `key` (D-SD07-012 (¶5.1)) — bảng nhãn bên dưới.
+- Dữ liệu: `shared.getSettings` một lần khi vào màn hình. Nhãn (`label`), mô tả (`description`) và phạm vi áp dụng (`applies_to`) lấy từ backend (D-SD07-001 (¶2.1), D-SD07-012 (¶5.1); R-CFG-003 (§2.8.2)). Frontend chỉ quản lý đơn vị và kiểu ô nhập theo `key` — các bảng bên dưới — cùng các ghi chú riêng của từng nhóm.
 - **Mỗi tham số là một dòng**:
-  - Nhãn + mô tả ngắn (1 dòng, Chữ phụ).
+  - `label` + `description` (Chữ phụ).
   - Ô nhập theo `type`/`constraints`: `int` → ô số kèm đơn vị và gợi ý "Từ {min} đến {max}"; `bool` → toggle; `text` có `allowed_values` → radio; `text[]` → nhóm checkbox; `text` → input/textarea kèm đếm ký tự; `int` nullable → toggle bật/tắt + ô số (tắt = `null`).
-  - Dòng phụ: "Mặc định: {default_value}" và `apply_note` ("Áp dụng: …").
+  - Dòng phụ: "Mặc định: {default_value}" và phạm vi áp dụng theo `applies_to`: `existing` → "Áp dụng cả cho dữ liệu đang có"; `new_only` → "Chỉ áp dụng cho thao tác phát sinh sau khi lưu".
   - Khi `is_default = false`: badge "Đã chỉnh", tooltip "Sửa lần cuối bởi {updated_by.display_name} lúc {updated_at}", và nút "Khôi phục mặc định".
   - Kiểm tra phía client theo `constraints` ngay khi nhập (ngoài giới hạn → viền đỏ + thông báo dưới ô).
 - **Lưu theo nhóm**: thanh hành động cố định ở cuối tab — "Huỷ thay đổi" và "Lưu thay đổi" (enable khi tab có thay đổi và không có lỗi phía client), kèm đếm "{n} tham số đã sửa". Lưu → `shared.updateSettings` chỉ gửi các key đã sửa trong tab.
@@ -542,27 +591,27 @@
 
 **Nhóm AI Verification** (R-CFG-006 (§2.8.4.1))
 
-| Key | Nhãn | Ô nhập |
-|---|---|---|
-| `ai_verification.trigger_mode` | Chế độ kích hoạt AI Verification | Radio "Tự động khi gửi xét duyệt" (`auto`) / "Thủ công" (`manual`) |
-| `ai_verification.manual_trigger_roles` | Vai trò được kích hoạt thủ công | Checkbox: Nghiên cứu, Xét duyệt, Chủ nhiệm đề tài (theo đúng đề tài của hạng mục), Quản trị hệ thống |
+| Key | Ô nhập |
+|---|---|
+| `ai_verification.trigger_mode` | Radio "Tự động khi gửi xét duyệt" (`auto`) / "Thủ công" (`manual`) |
+| `ai_verification.manual_trigger_roles` | Checkbox: Nghiên cứu, Xét duyệt, Chủ nhiệm đề tài (theo đúng đề tài của hạng mục), Quản trị hệ thống |
 
 - Khi đổi chế độ (chưa lưu): banner vàng ngay dưới radio — "Đổi chế độ không tự xử lý lại các Hạng mục tri thức đang chờ. Hạng mục đang ở 'Chờ xét duyệt' vẫn phải kích hoạt AI Verification thủ công (D-ADM-013 (¶4.13))." (R-CFG-006 (§2.8.4.1)).
 - Chế độ Thủ công mà không tick vai trò nào → lỗi phía client "Chọn ít nhất một vai trò khi dùng chế độ Thủ công", không cho Lưu (backend cũng kiểm — D-SD07-005 (¶3.2)).
 
 **Nhóm Tài khoản & bảo mật** (R-CFG-007 (§2.8.4.2))
 
-| Key | Nhãn | Đơn vị |
-|---|---|---|
-| `identity.invite_token_ttl_hours` | Thời hạn đường dẫn mời | giờ |
-| `identity.password_reset_token_ttl_minutes` | Thời hạn đường dẫn đặt lại mật khẩu | phút |
-| `identity.access_token_ttl_minutes` | Thời hạn access token | phút |
-| `identity.refresh_token_ttl_days` | Thời hạn phiên đăng nhập (refresh token) | ngày |
-| `identity.password_min_length` | Độ dài mật khẩu tối thiểu | ký tự |
-| `identity.password_require_letter_and_digit` | Mật khẩu phải có cả chữ và số | toggle |
-| `identity.password_require_special_char` | Mật khẩu phải có ký tự đặc biệt | toggle |
-| `identity.login_max_failed_attempts` | Số lần sai mật khẩu trước khi tạm khoá | lần (0 = tắt tạm khoá) |
-| `identity.login_lockout_minutes` | Thời gian tạm khoá | phút |
+| Key | Đơn vị |
+|---|---|
+| `identity.invite_token_ttl_hours` | giờ |
+| `identity.password_reset_token_ttl_minutes` | phút |
+| `identity.access_token_ttl_minutes` | phút |
+| `identity.refresh_token_ttl_days` | ngày |
+| `identity.password_min_length` | ký tự |
+| `identity.password_require_letter_and_digit` | toggle |
+| `identity.password_require_special_char` | toggle |
+| `identity.login_max_failed_attempts` | lần (0 = tắt tạm khoá) |
+| `identity.login_lockout_minutes` | phút |
 
 - Chú thích cho nhóm chính sách mật khẩu: "Chỉ áp dụng khi đặt mật khẩu mới; không buộc Nhân viên đổi mật khẩu hiện có."
 
@@ -579,33 +628,33 @@
 
 **Nhóm AI Văn Minh Việt** (R-CFG-009 (§2.8.4.4))
 
-| Key | Nhãn | Ô nhập / đơn vị |
-|---|---|---|
-| `assistant.retrieve_top_k` | Số đoạn nội dung truy xuất mỗi lượt hỏi | đoạn |
-| `assistant.history_turns` | Số lượt hỏi trước dùng làm ngữ cảnh | lượt (0 = mỗi lượt hỏi độc lập) |
-| `assistant.rewrite_query_enabled` | Viết lại câu hỏi nối tiếp theo ngữ cảnh | toggle |
-| `assistant.conversation_ttl_hours` | Thời hạn giữ hội thoại phía người dùng | giờ |
-| `assistant.no_context_answer` | Câu trả lời khi không có thông tin | textarea, 1–500 ký tự |
-| `assistant.disclaimer_text` | Câu miễn trừ trách nhiệm | textarea, 0–500 ký tự (để trống = không hiển thị) |
-| `assistant.query_log_retention_days` | **Thời hạn lưu nhật ký hỏi đáp** | ngày (30–3650, mặc định 180) |
-| `assistant.public_rate_limit_enabled` | Bật giới hạn lượt hỏi kênh công khai | toggle |
-| `assistant.public_rate_limit_max_requests` | Số lượt hỏi tối đa mỗi địa chỉ IP | lượt |
-| `assistant.public_rate_limit_window_seconds` | Trong khoảng thời gian | giây |
+| Key | Ô nhập / đơn vị |
+|---|---|
+| `assistant.retrieve_top_k` | đoạn |
+| `assistant.history_turns` | lượt (0 = mỗi lượt hỏi độc lập) |
+| `assistant.rewrite_query_enabled` | toggle |
+| `assistant.conversation_ttl_hours` | giờ |
+| `assistant.no_context_answer` | textarea, 1–500 ký tự |
+| `assistant.disclaimer_text` | textarea, 0–500 ký tự (để trống = không hiển thị) |
+| `assistant.query_log_retention_days` | ngày (30–3650, mặc định 180) |
+| `assistant.public_rate_limit_enabled` | toggle |
+| `assistant.public_rate_limit_max_requests` | lượt |
+| `assistant.public_rate_limit_window_seconds` | giây |
 
 - `assistant.query_log_retention_days` — mô tả: "Hội thoại không có lượt hỏi mới quá số ngày này bị xoá cùng toàn bộ lượt hỏi–đáp. Hệ thống dọn mỗi ngày." (R-AI-014 (§2.4.9.4), D-SD05-006 (¶3.3)).
 - Hai ô hạn mức kênh công khai hiện mờ (vẫn sửa được) khi toggle giới hạn đang tắt.
 
 **Nhóm Vận hành** (R-CFG-010 (§2.8.4.5))
 
-| Key | Nhãn | Ô nhập / đơn vị |
-|---|---|---|
-| `operations.source_sync_debounce_seconds` | Thời gian gom sự kiện đồng bộ Tư liệu gốc | giây |
-| `operations.job_retention_completed_hours` | Giữ job đã hoàn thành | giờ |
-| `operations.job_retention_cancelled_hours` | Giữ job đã huỷ | giờ |
-| `operations.job_retention_discarded_hours` | Giữ job lỗi hết lượt thử | giờ |
-| `operations.audit_log_retention_months` | **Thời hạn lưu audit log** | tháng (12–120, mặc định 24) |
-| `operations.source_cold_storage_after_days` | Chuyển phiên bản Tư liệu gốc cũ sang lưu trữ lạnh | toggle + ngày (tắt = không chuyển) |
-| `operations.admin_polling_interval_seconds` | Chu kỳ tự tải lại (Nhật ký hoạt động, Job nền) | giây |
+| Key | Ô nhập / đơn vị |
+|---|---|
+| `operations.source_sync_debounce_seconds` | giây |
+| `operations.job_retention_completed_hours` | giờ |
+| `operations.job_retention_cancelled_hours` | giờ |
+| `operations.job_retention_discarded_hours` | giờ |
+| `operations.audit_log_retention_months` | tháng (12–120, mặc định 24) |
+| `operations.source_cold_storage_after_days` | toggle + ngày (tắt = không chuyển) |
+| `operations.admin_polling_interval_seconds` | giây |
 
 - `operations.source_sync_debounce_seconds` — mô tả: "Khi thư mục Tư liệu gốc có thay đổi, hệ thống chờ số giây này để gom các thay đổi liên tiếp rồi đồng bộ một lần. Nếu lúc đó đang có lượt đồng bộ khác chạy, hệ thống chờ thêm đúng khoảng này rồi thử lại." (D-SD03-017 (¶4.2), D-SD07-003 (¶2.3)).
 - `operations.audit_log_retention_months` — mô tả: "Không được đặt dưới 12 tháng (R-NFR-004 (§3.1.2)). Bản ghi quá thời hạn được xoá mỗi ngày." (D-SD07-009 (¶4.3)).
