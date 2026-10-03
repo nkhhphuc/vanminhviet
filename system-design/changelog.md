@@ -128,3 +128,7 @@
   - **01-architecture-and-tech-stack.md**: ¶1 (D-SD01-001) dòng mới "Console dữ liệu (chỉ DEV)" — pgAdmin 4, MinIO Console. ¶9 (D-SD01-009) biến `DEV_DB_CONSOLE_URL`, `DEV_STORAGE_CONSOLE_URL`; `auth.getEnvironment` trả thêm 2 trường; khối mới "Console cơ sở dữ liệu và lưu trữ ở DEV" — pgAdmin tại `/pgadmin/` (đăng nhập tài khoản pgAdmin, server khai báo sẵn, role DB của ứng dụng), MinIO Console tại `/minio/` (tài khoản quản trị MinIO), không publish cổng, chỉ ở DEV; ⚠ toàn quyền trên dữ liệu, ⚠ chức năng quản trị MinIO Console phụ thuộc phiên bản; link "Cơ sở dữ liệu DEV", "Lưu trữ DEV".
   - **02-identity.md** ¶5.1 (D-SD02-009): `auth.getEnvironment` trả `{dev_mailbox_url, dev_db_console_url, dev_storage_console_url}`.
   - **00-claude-instructions.md** mục 8: thêm việc tồn đọng "Xem lại lựa chọn Object storage".
+- DC-20261003-02 (đề xuất của admin-web, khối "Công khai & SEO"):
+  - **04-encyclopedia.md**: ¶3.6 (D-SD04-021) thêm thao tác `edit_seo` (`encyclopedia.updateEntrySeo`, `reason_code` `no_public_version`); ¶5.1 (D-SD04-015) `encyclopedia.getEntry` thêm `seo.image.candidates: [{file_id}]`.
+  - **01-architecture-and-tech-stack.md** ¶3 (D-SD01-003): danh mục `reason_code` thêm `no_public_version`.
+  - **00-claude-instructions.md** mục 8: thêm việc tồn đọng "Tên file của `entry_file` và `knowledge_object_file`", "Xem nội dung một phiên bản Mục từ đã chốt".
