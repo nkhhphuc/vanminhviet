@@ -72,6 +72,8 @@ Nhận diện thương hiệu (màu, font, logo, phong cách ảnh) dùng chung 
   - Dòng cuối: "© 2026 Văn Minh Việt. All rights reserved." · "Bản sắc – Tiếp nối – Khai mở".
   - Màn hình rộng chia 4 cột. Màn hình hẹp: khối logo chiếm một hàng, các cột còn lại chia 2 cột.
 - **Card hình chữ nhật bo góc** (radius 16px, ¶5) dùng cho danh sách nội dung nổi bật, ảnh nền + gradient tối phía dưới để đè chữ.
+- **Ảnh mặc định của Mục từ** ⚠: một minh hoạ thuỷ mặc tông sáng cố định (¶6). Dùng khi Mục từ không có ảnh bìa (`cover_image = null`) ở card Mục từ, đồng thời là hình chia sẻ mặc định của website (D-SD04-023 (¶3.7)).
+- **Cương vực đầu tiên của Mục từ:** phần tử đầu của `cultural_domain_ids`, tức Cương vực được gán sớm nhất (D-SD04-018 (¶5.4)). Tên Cương vực lấy từ `public.listCulturalDomains`. Mục từ chưa gán Cương vực thì không hiện nhãn này.
 - **Nút CTA chính:** nền đỏ, chữ trắng, bo góc, dùng cho hành động chính (vd: "Chơi ngay", "Tìm hiểu ngay").
 - **Search bar:** bo tròn/bo góc lớn, nền sáng hơn/khác tông nhẹ so với nền chính (viền mảnh xám kem), icon kính lúp bên phải, placeholder dạng câu hỏi gợi ý.
 - **Chia sẻ:** nếu trình duyệt hỗ trợ thì mở hộp chia sẻ của hệ thống (Web Share API). Nếu không, sao chép URL của màn hình vào clipboard và hiện thông báo ngắn "Đã sao chép liên kết".
@@ -164,12 +166,12 @@ Header và Footer theo D-PUB-012 (¶2.3), mục "Trang chủ" ở trạng thái 
 
 **Section "Mục từ nổi bật":**
 - Nhãn "BÁCH KHOA TOÀN THƯ", H2 "Mục từ nổi bật", link "Xem tất cả →" mở D-PUB-003 (¶4.3).
-- ⚠ Section hiển thị 4 Mục từ mới công khai gần nhất. Việc này cần `public.listEntries` hỗ trợ sắp xếp theo thời điểm chọn phiên bản công khai, hiện chưa có ở system-design.
+- Section hiển thị 4 Mục từ được công khai lần đầu gần nhất, lấy bằng `public.listEntries` với `sort=latest&limit=4` (D-SD04-018 (¶5.4)). Đổi phiên bản công khai không làm Mục từ đổi vị trí. Chưa có Mục từ công khai nào thì ẩn section. ⚠
 - Mỗi card ứng với một Mục từ của Bách Khoa Toàn Thư (Business Requirements R-ENC-002 (§2.3.1)–R-ENC-003 (§2.3.2)). Card gồm:
-  - Ảnh bìa tỉ lệ 4:3 (`cover_image`).
-  - Tên Cương vực đầu tiên, chữ nhỏ màu Accent.
+  - Ảnh bìa tỉ lệ 4:3 (`cover_image`). Không có ảnh bìa thì dùng Ảnh mặc định của Mục từ (D-PUB-012 (¶2.3)).
+  - Cương vực đầu tiên (D-PUB-012 (¶2.3)), chữ nhỏ màu Accent.
   - Tiêu đề Mục từ dạng H3 (R-ENC-005 (§2.3.2.2)).
-  - Trích đoạn `excerpt`, tối đa 2 dòng.
+  - Trích đoạn `excerpt`, tối đa 2 dòng. `excerpt = null` thì bỏ dòng này.
 - Bấm card thì mở D-PUB-004 (¶4.4).
 - Màn hình rộng dùng lưới 4 cột. Màn hình hẹp dùng carousel vuốt ngang (¶5).
 
@@ -210,8 +212,18 @@ Header và Footer theo D-PUB-012 (¶2.3), mục "Trang chủ" ở trạng thái 
 **Khung chat:**
 - Tin nhắn người dùng: bong bóng bo góc, căn phải, nền đỏ nhạt/hồng phấn.
 - Tin nhắn AI: avatar icon tròn (logo trống đồng, nền đỏ) bên trái + bong bóng text căn trái, nền trắng, viền xám kem nhạt.
-- AI có thể trả lời kèm **dải ảnh minh họa ngang** (3 ảnh nhỏ bo góc) ngay dưới câu trả lời text.
-- Dưới mỗi câu trả lời của AI, hiển thị **danh sách trích dẫn Mục từ nguồn** đã dùng để trả lời (dạng chip nhỏ, ví dụ: "Nguồn: Đình Làng Việt · Trống Đồng Đông Sơn") — bấm vào một trích dẫn để mở Trang chi tiết Mục từ tương ứng (Business Requirements R-PUB-007 (§2.6.3), R-PUB-010 (§2.6.4.2)).
+- **Dải ảnh minh hoạ ngang** ngay dưới câu trả lời text: tối đa 3 ảnh nhỏ bo góc, lấy `cover_image` của các Mục từ trong sự kiện `citations` theo thứ tự trích dẫn.
+  - Mục từ không có ảnh bìa thì bỏ qua, không dùng Ảnh mặc định.
+  - Không có ảnh nào thì ẩn dải.
+  - Bấm một ảnh thì mở Trang chi tiết Mục từ tương ứng. ⚠
+- Dưới mỗi câu trả lời của AI, hiển thị **danh sách trích dẫn Mục từ nguồn** đã dùng để trả lời (dạng chip nhỏ, ví dụ: "Nguồn: Đình Làng Việt · Trống Đồng Đông Sơn") — bấm vào một trích dẫn để mở Trang chi tiết Mục từ tương ứng (Business Requirements R-PUB-007 (§2.6.3), R-PUB-010 (§2.6.4.2)). Nhãn chip là `title` trong sự kiện `citations`.
+
+**Dữ liệu câu trả lời:** `assistant.chat` trả về các sự kiện SSE (D-SD05-012 (¶5.1)):
+- `token`: nối dần vào bong bóng câu trả lời.
+- `citations`: hiện chip trích dẫn và dải ảnh minh hoạ.
+- `done`: kết thúc lượt hỏi.
+- `error`: hiện thông báo lỗi ngắn dưới câu trả lời, phần câu trả lời đã hiển thị giữ nguyên.
+- Kênh `public` không có sự kiện `self_audit`, và `done` chỉ có `turn_index`. Vì vậy màn hình không hiển thị cảnh báo kiểm tra câu trả lời.
 
 **Gợi ý câu hỏi nhanh (Quick reply chips):** dạng nút bo tròn nhỏ, xếp dạng wrap, ví dụ: "Nguồn gốc đình làng", "Kiến trúc đình làng", "Vai trò đình làng".
 
@@ -227,11 +239,13 @@ Header và Footer theo D-PUB-012 (¶2.3), mục "Trang chủ" ở trạng thái 
 
 **Thanh tìm kiếm:** placeholder "Tìm mục từ theo tên hoặc nội dung...", tìm theo tiêu đề, nội dung (Business Requirements R-PUB-004 (§2.6.2.1)).
 
-**Bộ lọc Cương vực** (filter chips, đa chọn; cuộn ngang ở màn hình hẹp, xuống dòng ở màn hình rộng): "Văn minh đình làng việt", "Văn minh gia lễ việt", "Văn minh quân sự việt", "Văn minh trống đồng" (R-PUB-005 (§2.6.2.2), R-ENC-032 (§2.3.7) — danh sách "dự kiến", có thể mở rộng khi Nhân viên tạo thêm Cương vực).
+**Bộ lọc Cương vực** (filter chips, đa chọn; cuộn ngang ở màn hình hẹp, xuống dòng ở màn hình rộng): mỗi Cương vực trong `public.listCulturalDomains` là một chip (R-PUB-005 (§2.6.2.2), R-ENC-032 (§2.3.7)).
+- Chọn nhiều Cương vực thì hiện các Mục từ thuộc ít nhất một Cương vực đã chọn. Không chọn Cương vực nào thì không lọc.
+- Các Cương vực đã chọn gửi lên `public.listEntries` bằng tham số `cultural_domain_id` lặp lại (D-SD04-018 (¶5.4)).
 
 **Danh sách Mục từ — lưới 2 cột (màn hình hẹp), 4 cột (màn hình rộng):** mỗi ô là một card dọc gồm:
-- Ảnh minh hoạ tỉ lệ vuông (1:1), bo góc, lấy từ file đính kèm của Mục từ.
-- Nhãn Cương vực đầu tiên (nếu có), dạng chip nhỏ đặt đè góc trên-trái của ảnh.
+- Ảnh tỉ lệ vuông (1:1), bo góc, lấy từ `cover_image`. Không có ảnh bìa thì dùng Ảnh mặc định của Mục từ (D-PUB-012 (¶2.3)).
+- Nhãn Cương vực đầu tiên (D-PUB-012 (¶2.3)), dạng chip nhỏ đặt đè góc trên-trái của ảnh.
 - Tiêu đề Mục từ bên dưới ảnh, đậm, tối đa 2 dòng (không hiện mô tả phụ do khổ card hẹp).
 - Gap ngang/dọc giữa các card ~12–16px, container padding 16–20px hai bên (nhất quán ¶5).
 
@@ -247,7 +261,7 @@ Mở từ một Cương vực (card ở Trang chủ, menu Header) thì bộ lọ
 
 **Icon share** đặt cạnh tiêu đề Mục từ.
 
-**Header:** Tiêu đề Mục từ (lớn, đậm), chip Cương vực ngay dưới tiêu đề (có thể nhiều).
+**Header:** Tiêu đề Mục từ (lớn, đậm), chip Cương vực ngay dưới tiêu đề (có thể nhiều), theo thứ tự `cultural_domain_ids`.
 
 **Nội dung:** render tuần tự theo danh sách block đã đặc tả (R-ENC-007 (§2.3.2.3.1)) — kiểu trang wiki:
 - Block đoạn văn/tiêu đề phụ/chú thích: typography Body/H2-H3 (¶2.2).
@@ -259,7 +273,7 @@ Mở từ một Cương vực (card ở Trang chủ, menu Header) thì bộ lọ
 
 > ⚠️ **Thiết kế đi trước đặc tả nghiệp vụ**: section "Mục từ liên quan" (gợi ý các Mục từ khác cùng Cương vực) bên dưới nội dung — chưa có cơ sở trong Business Requirements, là đề xuất UI thêm để tăng khả năng khám phá nội dung.
 
-Là màn hình đích khi: bấm card ở "Khám phá nổi bật" (D-PUB-001 (¶4.1)), bấm trích dẫn Mục từ nguồn ở Chat AI (D-PUB-002 (¶4.2), R-PUB-007 (§2.6.3)), hoặc bấm một Mục từ ở màn hình Bách Khoa (D-PUB-003 (¶4.3)).
+Là màn hình đích khi: bấm card ở "Mục từ nổi bật" (D-PUB-001 (¶4.1)), bấm trích dẫn Mục từ nguồn ở Chat AI (D-PUB-002 (¶4.2), R-PUB-007 (§2.6.3)), hoặc bấm một Mục từ ở màn hình Bách Khoa (D-PUB-003 (¶4.3)).
 
 ---
 

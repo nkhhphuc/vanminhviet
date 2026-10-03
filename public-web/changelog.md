@@ -22,3 +22,13 @@
   - Trang chủ gồm: Hero thuỷ mặc kèm ô hỏi AI và 3 câu hỏi gợi ý cố định, Hôm nay, Khám phá theo Cương vực, Mục từ nổi bật (4 Mục từ mới công khai gần nhất), Trợ lý AI, Sắp ra mắt.
   - "Top bar" ở 4.2–4.9 đổi thành "Vùng tiêu đề".
   - File: **public-web-design.md** (2.1, 2.3, 3, 4.1–4.9, 5, 6, 7), **00-claude-instructions.md** (6, 7).
+
+## 2026-10-03
+
+- DC-20261001-01, DC-20261001-03, DC-20261002-03: căn theo API nhóm `public`.
+  - Card Mục từ dùng `cover_image`; không có ảnh bìa thì dùng Ảnh mặc định của Mục từ (thành phần mới ở 2.3, cũng là hình chia sẻ mặc định); `excerpt` null thì bỏ dòng trích đoạn.
+  - Cương vực đầu tiên theo thứ tự gán (`cultural_domain_ids`), quy tắc chung ở 2.3.
+  - Bộ lọc Cương vực ở 4.3 lấy động từ `public.listCulturalDomains`, chọn nhiều theo ngữ nghĩa OR.
+  - Chat AI: dải ảnh minh hoạ lấy `cover_image` trong `citations` (tối đa 3, bấm mở Mục từ); thêm khối "Dữ liệu câu trả lời" theo sự kiện SSE kênh `public`, không có `self_audit`.
+  - "Mục từ nổi bật" dùng `sort=latest&limit=4`, ẩn section khi chưa có Mục từ công khai.
+  - File: **public-web-design.md** (2.3, 4.1, 4.2, 4.3, 4.4).
