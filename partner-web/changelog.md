@@ -40,3 +40,30 @@
 - DC-20261001-04: căn nhận diện theo D-PUB-011 (¶2.1). File **partner-web-design.md**:
   - Mục 3: bảng màu mới — Accent `#C4171D`, Accent đậm `#9C2B2B` (hover/pressed), Chữ trên nền Accent `#FFFFFF`, chữ `#252421`/`#6D6A64`, viền `#E6E0D7`, Sidebar/Topbar `#F7F2EA`, nền nội dung giữ `#FDFBF6`; không dùng 2 màu phụ vàng đồng/xanh rêu; thêm quy tắc tương phản chữ/nền. Thêm bullet Typography (Be Vietnam Pro; Lora cho logo/H1, subset `vietnamese`) và bullet Bo góc & hình ảnh (8px, chip/badge pill, không ảnh trang trí, logo của landing vanminhviet.org).
   - Mục 1: bullet "Mức độ đặc tả" nhắc thêm font, bo góc và landing vanminhviet.org.
+
+## 2026-10-03
+
+- DC-20261001-05, CR-20261001-07, CR-20261002-01: đối chiếu, không cần sửa `partner-web-design.md` (Cổng không mount `identity`, không có quản lý người dùng/Tổ chức theo R-PTN-010 (§2.7.4); SEO/"Hôm nay" ngoài phạm vi Cổng). Mốc đồng bộ partner-web: DC-20261002-01.
+- DC-20261002-03: căn theo phiên đăng nhập gắn với kênh và response theo nhóm route. File **partner-web-design.md**:
+  - Mục 1: ⚠ Nhân viên Tổ chức nội bộ cũng đăng nhập được Cổng này (phiên riêng với Admin nội bộ); chỉ role theo phạm vi Đề tài có hiệu lực, `roles` chỉ gồm role theo phạm vi, role chức năng (kể cả `quan_tri_he_thong`) không cho thêm quyền; token kênh `partner` không dùng được ở Admin nội bộ và ngược lại.
+  - Mục 3: Topbar hiện `organization_name` (Văn Minh Việt với Nhân viên nội bộ); `session_revoked` thêm nguyên nhân đổi Tổ chức và token khác kênh; "Cưỡng chế nhả" ghi rõ role `quan_tri_he_thong` không có hiệu lực ở Cổng này.
+  - Mục 4.1: nhận mọi Nhân viên đang hoạt động, kể cả Nhân viên nội bộ. Mục 4.2: lời nhắn liên hệ Quản trị hệ thống ghi thao tác quản trị chỉ ở Admin nội bộ.
+  - Mục 4.4: ⚠ thêm thông báo danh sách rỗng.
+  - Mục 4.5: cảnh báo Tư liệu gốc theo `has_missing_files`. Mục 4.7: file Tư liệu gốc hiển thị và chọn theo `relative_path`.
+  - Mục 4.6, 6: `quan_tri_he_thong` ghi là không có hiệu lực ở Cổng này.
+  - File **00-claude-instructions.md** mục 1: ghi chú Nhân viên nội bộ cũng đăng nhập được.
+- DC-20261002-02, DC-20261003-01: chip "DEV" cùng cách hiển thị với D-ADM-029 (¶3). File **partner-web-design.md**:
+  - Mục 3: thêm bullet "Bố cục trước đăng nhập" (chip "DEV" ở góc trên phải màn hình 4.1–4.3); Topbar thêm chip "DEV" — gọi `auth.getEnvironment` khi tải app, hiện khi có ít nhất một URL DEV khác `null`, menu "Hộp thư DEV" / "Cơ sở dữ liệu DEV" / "Lưu trữ DEV" mở tab mới.
+  - Mục 4.1–4.3: thêm `auth.getEnvironment` vào API.
+- CR-20261002-01: sửa kết luận "không cần sửa" ghi ở trên — R-NFR-032 (§3.6.6) áp cho mọi giao diện Nhân viên. File **partner-web-design.md** mục 3: thêm bullet "Không lập chỉ mục" (`robots.txt` chặn toàn bộ, header `X-Robots-Tag: noindex, nofollow` — D-SD01-007 (¶7)). Mốc đồng bộ partner-web: CR-20261002-01.
+- CR-20261002-02, DC-20261003-03: tính dễ hiểu của giao diện Nhân viên (R-NFR-037 (§3.7)). File **partner-web-design.md**:
+  - Mục 1: bullet "Nguyên tắc giao diện" nhắc R-NFR-037.
+  - Mục 3: thêm bullet "Thao tác theo `actions`" (hiện nút theo `actions`, lý do theo `reason_code`, dòng "→ trạng thái đích · Xử lý tiếp: vai trò" theo `transitions`, tải lại chi tiết sau thao tác, danh sách không có thao tác trên dòng), "Tham số cấu hình tại nơi thao tác" (`clientSettings.getSettings` kênh `partner`, dòng chữ phụ kèm ⓘ; 4.7: `ai_verification.trigger_mode`, `ai_verification.manual_trigger_roles`; 4.12: `identity.login_max_failed_attempts`, `identity.login_lockout_minutes`), "Thời hạn tự xử lý" (Cổng hiện không có đối tượng loại này); khối Người phụ trách theo `claim`/`release`; quy ước (b) thêm Gỡ Nhân viên khỏi đề tài, (c) theo `reason_code`.
+  - Mục 4.5: nút theo `actions` của `knowledge.getResearchTopic`; nút "+ Tạo Hạng mục tri thức" theo `create_knowledge_object`; ⚠ dòng quy trình "Chuẩn bị tư liệu → Tư liệu sẵn sàng" dưới badge.
+  - Mục 4.6: bỏ nút "Xoá" trên dòng (danh sách không có `actions`).
+  - Mục 4.7: nút theo `actions`; chỉnh sửa theo `edit_content`; bỏ `can_trigger_ai_verification`, nút kích hoạt theo `trigger_ai_verification`; dòng tham số AI Verification ở `dang_nghien_cuu`, `cho_xet_duyet`; hộp thoại Xoá chuyển về mục này; sau kích hoạt tải lại và điều hướng theo `status`.
+  - Mục 4.8: nút theo `actions` (`claim`/`release`, `review_claims`, `approve`/`reject`, `trigger_ai_verification`), bỏ `can_trigger_ai_verification`. Mục 4.9: "Mở lại" theo `reopen`/`transitions`.
+  - Mục 4.10: ⚠ dòng quy trình Đề tài; thêm/gỡ Nhân viên theo `manage_members`, ⚠ hộp thoại xác nhận khi Gỡ; Xoá theo `delete` của từng dòng; API thêm `knowledge.getResearchTopic`.
+  - Mục 4.12: dòng tham số tạm khoá đăng nhập dưới ô Mật khẩu hiện tại; API thêm `clientSettings.getSettings`.
+  - Mục 6: nút Xoá ở 4.7/4.10 theo `delete` của `actions`.
+  - Mốc đồng bộ partner-web: DC-20261003-03.

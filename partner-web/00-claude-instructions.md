@@ -1,6 +1,6 @@
 # Đặc Tả Giao Diện Cổng Nhân Viên Tổ Chức Khác — Khung & Nguyên Tắc
 
-> Tài liệu điều phối cho quá trình thiết kế giao diện Cổng Nhân viên Tổ chức khác (Quasar SPA, app/deploy riêng khỏi Admin nội bộ — dành cho Nhân viên thuộc Tổ chức khác, R-GEN-010 (§1.2.3.2)/R-PTN-001 (§2.7) đặc tả gốc). Đọc `common/00-claude-instructions.md` trước, rồi đọc file này trước khi chỉnh sửa `partner-web-design.md`, kể cả ở một session khác.
+> Tài liệu điều phối cho quá trình thiết kế giao diện Cổng Nhân viên Tổ chức khác (Quasar SPA, app/deploy riêng khỏi Admin nội bộ — dành cho Nhân viên thuộc Tổ chức khác (⚠ Nhân viên Tổ chức nội bộ cũng đăng nhập được, chỉ role theo phạm vi Đề tài có hiệu lực — D-SD02-004 (¶3.2)), R-GEN-010 (§1.2.3.2)/R-PTN-001 (§2.7) đặc tả gốc). Đọc `common/00-claude-instructions.md` trước, rồi đọc file này trước khi chỉnh sửa `partner-web-design.md`, kể cả ở một session khác.
 
 ## 1. Mục tiêu
 
